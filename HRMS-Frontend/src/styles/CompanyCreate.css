@@ -1,0 +1,235 @@
+
+.company-container {
+  padding: 20px;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
+  color: #fff;
+  min-height: calc(100vh - 80px);
+}
+
+.company-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  background: linear-gradient(90deg, #4a90e2, #e10624);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 30px;
+}
+
+.company-form {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.company-form:hover {
+  background: rgba(225, 6, 36, 0.2);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #ccc;
+}
+
+.company-input {
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 1rem;
+}
+
+.company-input:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 5px rgba(74, 144, 226, 0.5);
+}
+
+.company-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.company-button {
+  padding: 10px 20px;
+  background: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.company-button:hover {
+  background: #e10624;
+}
+
+.company-button:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+
+.company-message {
+  text-align: center;
+  font-size: 1.2rem;
+  margin: 10px 0;
+}
+
+.company-error {
+  color: #e10624;
+}
+
+.company-success {
+  color: #50c878;
+}
+
+.company-table-container {
+  overflow-x: auto;
+  margin-top: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.company-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+}
+
+.company-table th,
+.company-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.company-table th {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-weight: 600;
+}
+
+.company-table td {
+  color: #fff;
+}
+
+.company-table tr:hover {
+  background: rgba(225, 6, 36, 0.2); /* #e10624 hover */
+}
+
+.company-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.company-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.company-search {
+  padding: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 1rem;
+}
+
+.company-search:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 5px rgba(74, 144, 226, 0.5);
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.pagination-button {
+  background: #4a90e2;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.pagination-button:hover {
+  background: #e10624;
+}
+
+.pagination-button:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 1rem;
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .company-form {
+    padding: 15px;
+  }
+
+  .company-title {
+    font-size: 2rem;
+  }
+
+  .company-button {
+    font-size: 0.9rem;
+    padding: 8px 16px;
+  }
+
+  .company-table-container {
+    padding: 0.5rem;
+  }
+
+  .company-table th,
+  .company-table td {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .company-search {
+    font-size: 0.9rem;
+    padding: 0.4rem;
+  }
+
+  .pagination-button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+}

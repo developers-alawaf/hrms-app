@@ -1,0 +1,358 @@
+/* Shift Attendance Page Styles - Similar to Attendance.css */
+
+.shift-attendance-container {
+  padding: 20px;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
+  color: #fff;
+  min-height: calc(100vh - 80px);
+}
+
+.shift-attendance-container .employee-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  background: linear-gradient(90deg, #4a90e2, #e10624);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 20px;
+}
+
+.shift-attendance-container .attendance-filters {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-width: 800px;
+  margin: 0 auto 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  align-items: end;
+}
+
+.shift-attendance-container .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shift-attendance-container .form-group label {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #ddd;
+}
+
+.shift-attendance-container .employee-input {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.shift-attendance-container .employee-input:focus {
+  outline: none;
+  border-color: #e10624;
+}
+
+.shift-attendance-container .employee-input::placeholder {
+  color: #aaa;
+}
+
+.shift-attendance-container .employee-input[type="date"] {
+  appearance: none;
+  color: #fff;
+}
+
+.shift-attendance-container .employee-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+.shift-attendance-container .employee-input option {
+  background: #2a2a3f;
+  color: #fff;
+}
+
+.shift-attendance-container .employee-button {
+  padding: 12px 20px;
+  background: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shift-attendance-container .employee-button:hover {
+  background: #e10624;
+}
+
+.shift-attendance-container .attendance-table-container {
+  overflow-x: auto;
+  margin-bottom: 20px;
+  border-radius: 12px;
+}
+
+.shift-attendance-container .attendance-table {
+  width: 100%;
+  min-width: 1200px;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.shift-attendance-container .attendance-table th,
+.shift-attendance-container .attendance-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fff;
+}
+
+.shift-attendance-container .attendance-table th {
+  background: #4a90e2;
+  color: #fff;
+  font-weight: 600;
+}
+
+.shift-attendance-container .attendance-table tr:hover {
+  background: rgba(225, 6, 36, 0.2);
+}
+
+.shift-attendance-container .attendance-table tbody tr {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.shift-attendance-container .pagination-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  align-items: center;
+}
+
+.shift-attendance-container .pagination-button {
+  padding: 8px 16px;
+  background: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  margin: 0 5px;
+}
+
+.shift-attendance-container .pagination-button:hover:not(:disabled) {
+  background: #e10624;
+}
+
+.shift-attendance-container .pagination-button:disabled {
+  background: #555;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.shift-attendance-container .employee-message {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #ccc;
+  margin: 20px 0;
+}
+
+.shift-attendance-container .employee-error {
+  color: #e10624;
+}
+
+.shift-attendance-container .employee-success {
+  color: #50c878;
+}
+
+/* Status Badge Styles */
+.shift-attendance-container .status-badge {
+  padding: 0.3em 0.6em;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  display: inline-block;
+  min-width: 80px;
+  text-transform: capitalize;
+}
+
+.shift-attendance-container .status-present {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.shift-attendance-container .status-absent {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.shift-attendance-container .status-incomplete {
+  background-color: #fd7e14;
+  color: #fff;
+}
+
+.shift-attendance-container .status-holiday {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.shift-attendance-container .status-leave {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.shift-attendance-container .status-weekend {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+.shift-attendance-container .wfh-yes {
+  color: #50c878;
+  font-weight: bold;
+}
+
+.shift-attendance-container .wfh-no {
+  color: #94a3b8;
+  font-weight: bold;
+}
+
+.shift-attendance-container .total-hours {
+  font-weight: bold;
+  color: #fff;
+}
+
+.shift-attendance-container .attendance-table-wrapper {
+  overflow-x: auto;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.shift-attendance-container .shift-attendance-message {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #ccc;
+  margin: 20px 0;
+}
+
+.shift-attendance-container .shift-attendance-error {
+  color: #e10624;
+}
+
+.shift-attendance-container .shift-attendance-success {
+  color: #50c878;
+}
+
+/* Use roster-card styles from Roster.css when inside shift-attendance-container */
+.shift-attendance-container .roster-card {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 32px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.shift-attendance-container .roster-card-title {
+  margin: 0 0 20px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.shift-attendance-container .planner-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  align-items: flex-end;
+}
+
+.shift-attendance-container .planner-control-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #fff;
+}
+
+.shift-attendance-container .planner-control-input {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 1rem;
+}
+
+.shift-attendance-container .planner-control-input:focus {
+  outline: none;
+  border-color: #e10624;
+}
+
+.shift-attendance-container .planner-control-input::placeholder {
+  color: #aaa;
+}
+
+.shift-attendance-container .planner-control-input[type="date"] {
+  appearance: none;
+  color: #fff;
+}
+
+.shift-attendance-container .planner-control-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+.shift-attendance-container .submit-roster-button {
+  padding: 14px 32px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.shift-attendance-container .submit-roster-button:hover {
+  background: #059669;
+}
+
+.shift-attendance-container .message-box {
+  padding: 12px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.shift-attendance-container .success-message-box {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.shift-attendance-container .error-message-box {
+  background: #fee2e2;
+  color: #991b1b;
+}

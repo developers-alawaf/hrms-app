@@ -1,0 +1,108 @@
+.list-container {
+  margin: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
+  color: #fff;
+  min-height: calc(100vh - 80px);
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.list-header h1 {
+  font-size: 1.8em;
+  color: #fff; /* Changed to white for better contrast on dark background */
+}
+
+.create-button {
+  padding: 10px 20px;
+  background-color: var(--primary-color); /* Assuming --primary-color is defined elsewhere */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.create-button:hover {
+  background-color: var(--secondary-color); /* Assuming --secondary-color is defined elsewhere */
+}
+
+.list-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px; /* Added margin-top for spacing */
+}
+
+.list-table th,
+.list-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #444; /* Darker border for dark background */
+  text-align: left;
+  color: #eee; /* Lighter text for dark background */
+}
+
+.list-table th {
+  background: #333; /* Darker background for header */
+  color: #fff;
+  font-weight: 600;
+}
+
+.list-table tbody tr:hover {
+  background-color: #3a3a3a; /* Darker hover for dark background */
+}
+
+.list-table-td {
+  text-align: center;
+}
+
+.list-action-button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-right: 8px; /* Spacing between buttons */
+}
+
+.list-action-button.view {
+  background-color: #3490dc; /* Blue */
+}
+
+.list-action-button.view:hover {
+  background-color: #2779bd;
+}
+
+.list-action-button.edit {
+  background-color: #38c172; /* Green */
+}
+
+.list-action-button.edit:hover {
+  background-color: #2d995b;
+}
+
+.list-action-button.delete {
+  background-color: #e3342f; /* Red */
+}
+
+.list-action-button.delete:hover {
+  background-color: #cb2d27;
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.2em;
+  color: #777;
+}

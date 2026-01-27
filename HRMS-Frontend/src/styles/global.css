@@ -1,0 +1,72 @@
+:root {
+  --primary-color: #4a90e2;
+  --secondary-color: #50c878;
+  --accent-color: #f7b731;
+  --background-color: #f8f9fa;
+  --text-color: #333;
+  --error-color: #dc3545;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  overflow-x: hidden;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
+  overflow-x: hidden;
+}
+
+/* ✅ NEW: Main content base styles */
+main.main-content {
+  flex-grow: 1;
+  padding-top: 60px;
+  margin-left: 0;
+  transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
+  position: relative;
+}
+
+/* ✅ NEW: Desktop Layout Adjustments - THIS WAS COMPLETELY MISSING! */
+@media (min-width: 769px) {
+  /* ✅ FIX: When sidebar is OPEN - push content right */
+  main.main-content.main-content-shifted {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+  }
+
+  /* ✅ FIX: When sidebar is CLOSED - content takes full width */
+  main.main-content.main-content-expanded {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+main:not(.main-content) {
+  margin-left: 0;
+  width: 100%;
+}
+
+footer {
+  margin-top: auto;
+}
+
+.login-container,
+.auth-container,
+.home-container {
+  margin-left: 0 !important;
+  width: 100vw !important;
+  position: relative;
+  z-index: 1;
+}

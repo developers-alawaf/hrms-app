@@ -1,0 +1,116 @@
+
+.outside-work-container {
+  padding: 20px;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
+  color: #fff;
+  min-height: calc(100vh - 80px);
+}
+
+.outside-work-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(90deg, #4a90e2, #e10624);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 20px;
+}
+
+.outside-work-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.outside-work-table th,
+.outside-work-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.outside-work-table th {
+  background-color: #4a90e2;
+}
+
+.outside-work-button {
+  padding: 8px 12px;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.approve-button {
+  background-color: #28a745;
+}
+
+.approve-button:hover {
+  background-color: #218838;
+}
+
+.deny-button {
+  background-color: #dc3545;
+}
+
+.deny-button:hover {
+  background-color: #c82333;
+}
+
+.outside-work-message {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #ccc;
+  margin: 20px 0;
+}
+
+.outside-work-error {
+  color: #e10624;
+}
+
+.outside-work-form {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+}
+
+.submit-button {
+    background-color: #4a90e2;
+}
+
+.submit-button:hover {
+    background-color: #357abd;
+}
+
+.no-requests {
+    text-align: center;
+    margin-top: 20px;
+    font-style: italic;
+    color: #ccc;
+}

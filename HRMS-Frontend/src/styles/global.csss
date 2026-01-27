@@ -1,0 +1,196 @@
+/* Old :root styles */
+/*
+:root {
+  --primary-color: #4a90e2;
+  --secondary-color: #50c878;
+  --accent-color: #f7b731;
+  --background-color: #f8f9fa;
+  --text-color: #333;
+  --error-color: #dc3545;
+}
+*/
+
+/* New :root styles (no change, keeping for context) */
+:root {
+  --primary-color: #4a90e2;
+  --secondary-color: #50c878;
+  --accent-color: #f7b731;
+  --background-color: #f8f9fa;
+  --text-color: #333;
+  --error-color: #dc3545;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Old body styles */
+/*
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  overflow-x: hidden; /* Prevent horizontal scroll during sidebar transition */
+}
+*/
+
+/* New body styles (no change, keeping for context) */
+body {
+  font-family: 'Roboto', Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--background-color);
+  overflow-x: hidden; /* Prevent horizontal scroll during sidebar transition */
+}
+
+/* Old .app styles */
+/*
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
+  overflow-x: hidden;  /* Prevent horizontal scroll from sidebar */
+}
+*/
+
+/* Reverted .app styles */
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
+  overflow-x: hidden;  /* Prevent horizontal scroll from sidebar */
+}
+
+/* Old main.main-content styles */
+/*
+main.main-content {
+  flex-grow: 1;
+  padding-top: 60px; /* Space for fixed header */
+  transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
+  position: relative; /* For positioning header */
+}
+*/
+
+/* New main.main-content styles for sidebar overlap fix */
+main.main-content {
+  flex-grow: 1;
+  padding-top: 60px; /* Space for fixed header */
+  transition: margin-left 0.3s ease; /* Smooth transition for margin-left */
+  position: relative; /* Keep for positioning children if needed */
+}
+
+/* Old main.main-content-expanded styles */
+/*
+main.main-content-expanded {
+  margin-left: 0;  /* When sidebar is closed - full width */
+}
+*/
+
+/* Reverted main.main-content-expanded styles */
+main.main-content-expanded {
+  margin-left: 0;  /* When sidebar is closed - full width */
+}
+
+/* Old Public pages - no sidebar margin */
+/*
+main:not(.main-content) {
+  margin-left: 0;
+  width: 100%;
+}
+*/
+
+/* Reverted Public pages - no sidebar margin */
+main:not(.main-content) {
+  margin-left: 0;
+  width: 100%;
+}
+
+
+footer {
+  margin-top: auto;
+}
+
+/* Old .sidebar styles (already commented in Sidebar.css, but keeping for context if it was here) */
+/*
+.sidebar {
+  width: 250px;
+  /* ... existing styles ... */
+  transition: width 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+*/
+
+/* Old .sidebar-collapsed styles (already commented in Sidebar.css, but keeping for context if it was here) */
+/*
+.sidebar-collapsed {
+  width: 80px;
+}
+*/
+
+/* Old Desktop styles (already commented in Sidebar.css, but keeping for context if it was here) */
+/*
+@media (min-width: 769px) {
+  .main-content.main-content-shifted {
+    margin-left: 250px;
+    width: calc(100% - 250px);
+  }
+
+  .main-content.main-content-collapsed {
+    margin-left: 80px;
+    width: calc(100% - 80px);
+  }
+
+  .header.header-shifted {
+    left: 250px;
+    width: calc(100% - 250px);
+  }
+
+  .header.header-collapsed {
+    left: 80px;
+    width: calc(100% - 80px);
+  }
+}
+*/
+
+/* Old Mobile responsiveness (already commented in Sidebar.css, but keeping for context if it was here) */
+/*
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0; /* Sidebar overlays on mobile, main content is full width */
+    width: 100%;
+  }
+
+  .header {
+    left: 0; /* Header is full width on mobile */
+    width: 100%;
+  }
+}
+*/
+
+/* Reverted .header styles */
+/* No specific .header styles here, as it was previously handled by Header.css or inline styles */
+
+/* New Ensure login/public pages have no sidebar artifacts for Bug #2 */
+.login-container,
+.auth-container,
+.home-container {
+  margin-left: 0 !important;
+  width: 100vw !important;
+  position: relative;
+  z-index: 1;
+}
+
+/* New media query for main content shifting */
+@media (min-width: 769px) {
+  main.main-content.main-content-shifted {
+    margin-left: 250px; /* When sidebar is open */
+  }
+
+  main.main-content.main-content-expanded {
+    margin-left: 0; /* When sidebar is closed */
+  }
+}

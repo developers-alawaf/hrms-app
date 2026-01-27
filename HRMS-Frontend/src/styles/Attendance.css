@@ -1,0 +1,251 @@
+
+.attendance-container {
+  padding: 20px;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
+  color: #fff;
+  min-height: calc(100vh - 80px);
+}
+
+.employee-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  background: linear-gradient(90deg, #4a90e2, #e10624);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 20px;
+}
+
+.attendance-filters {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-width: 800px;
+  margin: 0 auto 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  align-items: end;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #ddd;
+}
+
+.employee-input {
+  width: 100%;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.employee-input:focus {
+  outline: none;
+  border-color: #e10624;
+}
+
+.employee-input::placeholder {
+  color: #aaa;
+}
+
+.employee-input[type="date"] {
+  appearance: none;
+  color: #fff;
+}
+
+.employee-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+.employee-input option {
+  background: #2a2a3f;
+  color: #fff;
+}
+
+.employee-input option:hover,
+.employee-input option:focus,
+.employee-input option:active {
+  background: #e10624;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.employee-button {
+  padding: 12px 20px;
+  background: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.employee-button:hover {
+  background: #e10624;
+}
+
+.attendance-table-container {
+  overflow-x: auto;
+  margin-bottom: 20px;
+  border-radius: 12px;
+}
+
+.attendance-table {
+  width: 100%;
+  min-width: 800px;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.attendance-table th,
+.attendance-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attendance-table th {
+  background: #4a90e2;
+  color: #fff;
+  font-weight: 600;
+}
+
+.attendance-table tr:hover {
+  background: rgba(225, 6, 36, 0.2);
+}
+
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.pagination-button {
+  padding: 8px 16px;
+  background: #4a90e2;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.pagination-button:hover {
+  background: #e10624;
+}
+
+.pagination-button:disabled {
+  background: #555;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 1rem;
+  color: #ccc;
+  align-self: center;
+}
+
+.employee-message {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #ccc;
+  margin: 20px 0;
+}
+
+.employee-error {
+  color: #e10624;
+}
+
+.employee-success {
+  color: #50c878;
+}
+
+.table-wrapper {
+  overflow-x: auto;           /* horizontal scroll */
+  -webkit-overflow-scrolling: touch; /* smooth on mobile */
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  margin-top: 1rem;
+}
+
+.review-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 120px;
+}
+
+.review-actions textarea {
+  width: 100%;
+  min-height: 50px;
+  resize: vertical;
+}
+
+.review-actions button {
+  width: 100%;
+}
+/* Status Badge Styles */
+.status-badge {
+  padding: 0.3em 0.6em;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+  display: inline-block;
+  min-width: 80px;
+}
+
+.status-present {
+  background-color: #28a745; /* Green */
+}
+
+.status-absent {
+  background-color: #dc3545; /* Red */
+}
+
+.status-holiday {
+  background-color: #007bff; /* Blue */
+}
+
+.status-leave {
+  background-color: #ffc107; /* Yellow */
+  color: #212529;
+}
+
+.status-incomplete {
+  background-color: #fd7e14; /* Orange */
+}
+
+.status-weekend {
+  background-color: #6c757d; /* Gray */
+}
+
+.status-remote {
+    background-color: #17a2b8; /* Cyan */
+}

@@ -1,0 +1,117 @@
+.shifting-roster-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+.shifting-roster-header {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.shifting-roster-title {
+    margin: 0;
+    color: #333;
+    font-size: 28px;
+    font-weight: 600;
+}
+
+.shifting-roster-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    background-color: #ffffff;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
+}
+
+.tab-button {
+    padding: 10px 20px;
+    border: 2px solid #ddd;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+    transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+    border-color: #007bff;
+    color: #007bff;
+    background-color: #f0f8ff;
+}
+
+.tab-button.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.shifting-roster-content {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.shifting-roster-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+    font-size: 18px;
+    color: #d9534f;
+    font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .shifting-roster-container {
+        padding: 15px;
+    }
+
+    .shifting-roster-header {
+        padding: 15px;
+    }
+
+    .shifting-roster-title {
+        font-size: 24px;
+    }
+
+    .shifting-roster-tabs {
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .tab-button {
+        width: 100%;
+        padding: 12px 15px;
+    }
+
+    .shifting-roster-content {
+        padding: 15px;
+    }
+}

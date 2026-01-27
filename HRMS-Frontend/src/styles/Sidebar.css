@@ -1,0 +1,247 @@
+
+/* New .sidebar styles for Bug #1 and scroll fix */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 250px;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.3s ease;  /* Changed from width transition */
+  z-index: 1000;
+  transform: translateX(0);  /* Open state - visible */
+  overflow-y: auto; /* Added for scroll fix */
+}
+
+/* Old .sidebar-closed styles */
+/*
+.sidebar-collapsed {
+  width: 80px;
+}
+*/
+
+/* New .sidebar-closed styles for Bug #1 */
+.sidebar-closed {
+  transform: translateX(-100%);  /* Slide completely off screen */
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.sidebar-logo {
+  width: 150px;
+  height: auto;
+}
+
+.close-sidebar {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  display: none; /* Hidden on desktop, shown on mobile */
+}
+
+.sidebar-links {
+  list-style: none;
+  padding: 0;
+  flex-grow: 1;
+}
+
+.sidebar-links li {
+  margin-bottom: 10px;
+  flex-shrink: 0; /* FIX: Prevents list items from shrinking and pushing submenus down */
+}
+
+.sidebar-link,
+.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  color: #fff;
+  text-decoration: none;
+  padding: 10px 15px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.sidebar-link:hover,
+.dropdown-toggle:hover {
+  background-color: #4a90e2;
+}
+
+.nav-icon {
+  margin-right: 10px;
+  width: 20px;
+  height: 20px;
+}
+
+.dropdown-menu {
+  list-style: none;
+  padding-left: 20px;
+  background: #2c2c3e;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+}
+
+/* Old .dropdown-menu .dropdown-item styles */
+/*
+.dropdown-menu .dropdown-item {
+  display: block;
+  color: #fff;
+  text-decoration: none;
+  padding: 8px 0 8px 15px;
+  transition: background-color 0.2s;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background-color: #e10624;
+}
+*/
+
+/* New .dropdown-menu .dropdown-item styles for Bug #3 */
+.dropdown-menu .dropdown-item {
+  display: block;
+  padding: 10px 16px;
+  color: #ddd;  /* ✅ FIXED: Light gray default, NOT white */
+  text-decoration: none;
+  font-size: 0.9rem;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background: rgba(225, 6, 36, 0.2);  /* Red background on hover */
+  color: #e10624;  /* Red text on hover */
+}
+
+/* New Specific logout button styling for Bug #3 */
+.logout-button,
+.dropdown-item.logout-button {
+  color: #ddd;  /* Default light gray */
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 4px;
+}
+
+.logout-button:hover,
+.dropdown-item.logout-button:hover {
+  background: rgba(225, 6, 36, 0.3);
+  color: #fff;  /* White text on red hover */
+}
+
+/*
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 10px 15px;
+  border-radius: 5px;
+  transition: background-color 0.2s;
+}
+
+.user-profile:hover {
+  background-color: #4a90e2;
+}
+
+.user-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+  object-fit: cover;
+  border: 2px solid #4a90e2;
+}
+
+.user-name {
+  font-weight: bold;
+  color: #fff;
+}
+*/
+
+/* New .sidebar-toggle styles for Bug #1 */
+.sidebar-toggle {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1001;  /* Above sidebar */
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  transition: left 0.3s ease;
+  color: #fff;
+}
+
+.sidebar-toggle:hover {
+  background: #4a90e2;
+}
+
+.sidebar-open .sidebar-toggle {
+  left: 270px;  /* 250px sidebar width + 20px margin */
+}
+
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 100%;  /* Full width when open on mobile */
+  }
+
+  .sidebar-open {
+    transform: translateX(0);
+  }
+
+  /* Main content always full width on mobile */
+  main.main-content {
+    margin-left: 0 !important;
+  }
+
+  /* Toggle button stays in place on mobile */
+  .sidebar-toggle {
+    left: 10px;
+    top: 10px;
+  }
+
+  .sidebar-open .sidebar-toggle {
+    left: 10px;  /* Don't move on mobile */
+  }
+
+  /* Overlay backdrop when sidebar is open */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    z-index: 999;
+    display: none;
+  }
+
+  .sidebar-overlay.active {
+    display: block;
+  }
+
+  .close-sidebar {
+    display: block; /* Show close button on mobile */
+  }
+}

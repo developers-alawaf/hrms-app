@@ -1,0 +1,188 @@
+.shift-form-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1050; /* Increased z-index */
+  backdrop-filter: blur(5px);
+}
+
+.shift-form-container {
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 28px;
+  width: 90%; /* Use a percentage for better responsiveness */
+  max-width: 400px; /* Reduced max-width */
+  max-height: 90vh; /* Ensure scrollability */
+  overflow-y: auto; /* Enable vertical scrolling */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  color: #fff;
+}
+
+.shift-form-title {
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(90deg, #4a90e2, #e10624);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0 0 24px 0;
+  text-align: center;
+}
+
+.shift-form-group {
+  margin-bottom: 18px;
+}
+
+.shift-form-group label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #e0e0e0;
+  margin-bottom: 8px;
+}
+
+.shift-form-group input,
+.shift-form-group select {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.shift-form-group input:focus,
+.shift-form-group select:focus {
+  outline: none;
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+}
+
+.shift-form-group select option {
+  background: #2a2a3f !important;
+  color: #fff !important;
+}
+
+.shift-form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.shift-form-submit-button,
+.shift-form-cancel-button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.shift-form-submit-button {
+  background: linear-gradient(90deg, #4a90e2, #50c878);
+  color: white;
+}
+
+.shift-form-submit-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(74, 144, 226, 0.4);
+}
+
+.shift-form-cancel-button {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.shift-form-cancel-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.error {
+  border: 1px solid #e74c3c !important;
+}
+
+.error-text {
+  color: #e74c3c;
+  font-size: 0.8rem;
+  display: block;
+  margin-top: 4px;
+}
+
+.help-text {
+  color: #7f8c8d;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.shift-form-group {
+  margin-bottom: 1rem;
+}
+
+.shift-form-group input,
+.shift-form-group select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+
+/* Weekend Days Styles */
+.weekend-days-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.weekend-day-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.weekend-day-label:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.weekend-day-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #4a90e2;
+}
+
+.weekend-day-label input[type="checkbox"]:checked + span {
+  color: #4a90e2;
+  font-weight: 600;
+}
+
+.weekend-day-label span {
+  color: #e0e0e0;
+  font-size: 0.95rem;
+}

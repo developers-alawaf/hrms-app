@@ -1,0 +1,259 @@
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
+  position: relative;
+  overflow: hidden;
+  padding: 20px;
+}
+
+.particle-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  animation: float-particle 8s infinite linear;
+}
+
+.particle-0 { width: 7px; height: 7px; top: 15%; left: 10%; animation-delay: 0s; }
+.particle-1 { width: 10px; height: 10px; top: 25%; left: 20%; animation-delay: 1s; }
+.particle-2 { width: 5px; height: 5px; top: 35%; left: 30%; animation-delay: 2s; }
+.particle-3 { width: 8px; height: 8px; top: 45%; left: 40%; animation-delay: 3s; }
+.particle-4 { width: 12px; height: 12px; top: 55%; left: 50%; animation-delay: 4s; }
+.particle-5 { width: 6px; height: 6px; top: 65%; left: 60%; animation-delay: 5s; }
+.particle-6 { width: 9px; height: 9px; top: 75%; left: 70%; animation-delay: 6s; }
+.particle-7 { width: 11px; height: 11px; top: 85%; left: 80%; animation-delay: 7s; }
+.particle-8 { width: 13px; height: 13px; top: 20%; left: 15%; animation-delay: 0.5s; }
+.particle-9 { width: 7px; height: 7px; top: 30%; left: 25%; animation-delay: 1.5s; }
+.particle-10 { width: 10px; height: 10px; top: 40%; left: 35%; animation-delay: 2.5s; }
+.particle-11 { width: 12px; height: 12px; top: 50%; left: 45%; animation-delay: 3.5s; }
+.particle-12 { width: 6px; height: 6px; top: 60%; left: 55%; animation-delay: 4.5s; }
+.particle-13 { width: 9px; height: 9px; top: 70%; left: 65%; animation-delay: 5.5s; }
+.particle-14 { width: 11px; height: 11px; top: 80%; left: 75%; animation-delay: 6.5s; }
+
+@keyframes float-particle {
+  0% { transform: translateY(0) scale(1); opacity: 0.2; }
+  50% { transform: translateY(-40px) scale(1.15); opacity: 0.4; }
+  100% { transform: translateY(0) scale(1); opacity: 0.2; }
+}
+
+.login-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  padding: 40px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  max-width: 400px;
+  width: 100%;
+  position: relative;
+  z-index: 10;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.login-glow {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  right: -20px;
+  bottom: -20px;
+  background: radial-gradient(circle, rgba(74, 144, 226, 0.3) 0%, transparent 70%);
+  filter: blur(20px);
+  animation: pulse 4s infinite;
+}
+
+.logo-container {
+  text-align: center;
+  margin-bottom: 20px;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+.login-logo {
+  width: 250px;
+  height: auto;
+}
+
+.login-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-sweep 5s infinite;
+  margin-bottom: 30px;
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ddd;
+  text-decoration: none;
+  margin-bottom: 20px;
+  font-size: 1rem;
+  transition: color 0.3s ease;
+}
+
+.back-link:hover {
+  color: #fff;
+}
+
+.back-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.input-group {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: #aaa;
+}
+
+.login-input {
+  width: 100%;
+  padding: 12px 12px 12px 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 10px rgba(74, 144, 226, 0.5);
+}
+
+.login-input::placeholder {
+  color: #aaa;
+}
+
+.login-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: var(--error-color);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.login-button {
+  padding: 12px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(74, 144, 226, 0.5);
+}
+
+.login-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.login-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+}
+
+.login-button:hover::before {
+  left: 100%;
+}
+
+.invitation-link {
+  text-align: center;
+  margin-top: 20px;
+  color: #ddd;
+  font-size: 0.9rem;
+}
+
+.invitation-link a {
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.invitation-link a:hover {
+  color: var(--secondary-color);
+}
+
+.powered-by {
+  text-align: center;
+  margin-top: 15px;
+  color: #aaa;
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 0.5; }
+}
+
+@keyframes gradient-sweep {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #aaa;
+}

@@ -1,0 +1,152 @@
+/* ==== Header – dark glass-morphic style ==== */
+.header {
+  background: rgba(30, 30, 47, 0.85);           /* dark semi-transparent */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #fff;
+  padding: 10px 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  z-index: 999;
+  transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.header-logo h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(90deg, #4a90e2, #50c878);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0;
+}
+
+/* Hamburger */
+.hamburger-menu {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  margin-right: 15px;
+  display: block;
+  padding: 4px;
+}
+
+/* Desktop shift */
+@media (min-width: 769px) {
+  .header.header-shifted {
+    left: 250px;
+    width: calc(100% - 250px);
+  }
+
+  .header.header-expanded {
+    left: 0;
+    width: 100%;
+  }
+}
+
+/* ==== Right side (user dropdown) ==== */
+.header-right {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.header-nav {
+  display: flex;
+  height: 100%;
+}
+
+.header-nav-list {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+}
+
+.header-nav-list > li {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* Dropdown toggle */
+.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  color: #fff;
+  text-decoration: none;
+  height: 100%;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  gap: 8px;
+}
+
+.dropdown-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Dropdown menu */
+.header-nav-list .dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;                       /* align to the right of the avatar */
+  background: #2c2c3e;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  min-width: 180px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  z-index: 1002;
+  margin-top: 4px;
+  padding: 8px 0;
+  list-style: none;
+}
+
+.header-nav-list .dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  color: #ddd;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.header-nav-list .dropdown-item:hover {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+/* Avatar */
+.user-image {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary-color);
+}
+
+/* Keep the rest of your global styles untouched */
