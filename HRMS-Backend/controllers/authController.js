@@ -29,6 +29,14 @@ exports.login = async (req, res) => {
     const { email, password } = req.body;
     console.log('login - Request body:', { email });
     user = await User.findOne({ email }).select('+password');
+
+    // Debug: verify what the login endpoint is actually seeing
+    console.log('login debug:', { email, hasUser: !!user });
+    if (user) {
+      const ok = await user.comparePassword(password);
+      console.log('login debug compare:', { ok, pwd: password });
+    }
+
     if (!user || !await user.comparePassword(password)) {
       console.log('login - Invalid credentials for email:', email);
       // Log failed login attempt (non-blocking)
