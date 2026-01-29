@@ -30,7 +30,9 @@ const RemoteList = () => {
       const token = localStorage.getItem('token');
       const data = await getLeaveRequests(token);
       if (data.success) {
-        const remoteOnly = data.data.filter(request => request.type === 'remote');
+        const remoteOnly = data.data
+          .filter(request => request.type === 'remote')
+          .sort((a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate));
         setRemoteRequests(remoteOnly);
         setFilteredRequests(remoteOnly);
       } else {
@@ -44,7 +46,7 @@ const RemoteList = () => {
   };
 
   useEffect(() => {
-    let filtered = remoteRequests;
+    let filtered = [...remoteRequests];
 
     if (searchQuery) {
       filtered = filtered.filter(request =>
@@ -52,6 +54,9 @@ const RemoteList = () => {
          request.employeeId?.newEmployeeCode?.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
+
+    // Keep newest first (in case filter changed order)
+    filtered.sort((a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate));
 
     setFilteredRequests(filtered);
     setCurrentPage(1);
