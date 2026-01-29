@@ -19,7 +19,7 @@ const RemoteList = () => {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const requestsPerPage = 10;
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
     fetchRemoteRequests();
@@ -125,10 +125,10 @@ const RemoteList = () => {
   };
 
   // Pagination logic
-  const indexOfLastRequest = currentPage * requestsPerPage;
-  const indexOfFirstRequest = indexOfLastRequest - requestsPerPage;
+  const indexOfLastRequest = currentPage * rowsPerPage;
+  const indexOfFirstRequest = indexOfLastRequest - rowsPerPage;
   const currentRequests = filteredRequests.slice(indexOfFirstRequest, indexOfLastRequest);
-  const totalPages = Math.ceil(filteredRequests.length / requestsPerPage);
+  const totalPages = Math.ceil(filteredRequests.length / rowsPerPage) || 1;
 
   const handlePrevious = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
@@ -271,27 +271,45 @@ const RemoteList = () => {
               </tbody>
             </table>
           </div>
-          {filteredRequests.length > requestsPerPage && (
-            <div className="pagination-controls">
-              <button
-                onClick={handlePrevious}
-                disabled={currentPage === 1}
-                className="pagination-button"
-              >
-                Previous
-              </button>
-              <span className="pagination-info">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={handleNext}
-                disabled={currentPage === totalPages}
-                className="pagination-button"
-              >
-                Next
-              </button>
-            </div>
-          )}
+
+          <div className="pagination-controls">
+            <label htmlFor="rowsPerPageRemote" className="rows-per-page-label">Rows per page</label>
+            <select
+              id="rowsPerPageRemote"
+              value={rowsPerPage}
+              onChange={(e) => {
+                setRowsPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="employee-input rows-per-page-select"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={100}>100</option>
+            </select>
+            {filteredRequests.length > rowsPerPage && (
+              <>
+                <button
+                  onClick={handlePrevious}
+                  disabled={currentPage === 1}
+                  className="pagination-button"
+                >
+                  Previous
+                </button>
+                <span className="pagination-info">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={handleNext}
+                  disabled={currentPage === totalPages}
+                  className="pagination-button"
+                >
+                  Next
+                </button>
+              </>
+            )}
+          </div>
         </>
       )}
     </div>
