@@ -66,6 +66,11 @@ const LeaveList = () => {
   useEffect(() => {
     let filtered = leaveRequests;
 
+    // Exclude Remote type from Leave History list
+    filtered = filtered.filter(request =>
+      (request.type || '').toLowerCase() !== 'remote'
+    );
+
     if (searchQuery) {
       filtered = filtered.filter(request =>
         (request.employeeId?.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
