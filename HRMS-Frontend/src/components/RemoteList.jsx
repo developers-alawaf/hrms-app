@@ -288,27 +288,23 @@ const RemoteList = () => {
               <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
-            {filteredRequests.length > rowsPerPage && (
-              <>
-                <button
-                  onClick={handlePrevious}
-                  disabled={currentPage === 1}
-                  className="pagination-button"
-                >
-                  Previous
-                </button>
-                <span className="pagination-info">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  onClick={handleNext}
-                  disabled={currentPage === totalPages}
-                  className="pagination-button"
-                >
-                  Next
-                </button>
-              </>
-            )}
+            <button
+              onClick={handlePrevious}
+              disabled={currentPage === 1}
+              className="pagination-button"
+            >
+              Previous
+            </button>
+            <span className="pagination-info">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={handleNext}
+              disabled={currentPage === totalPages}
+              className="pagination-button"
+            >
+              Next
+            </button>
           </div>
         </>
       )}
