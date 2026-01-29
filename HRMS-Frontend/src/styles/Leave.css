@@ -149,6 +149,18 @@
   max-width: 300px;
 }
 
+.rows-per-page-label {
+  font-size: 0.95rem;
+  color: #ccc;
+  white-space: nowrap;
+}
+
+.rows-per-page-select {
+  width: auto;
+  min-width: 70px;
+  padding: 8px 12px;
+}
+
 .leave-table-container {
   overflow-x: auto;
   margin-bottom: 20px;
@@ -188,8 +200,10 @@
 .pagination-controls {
   display: flex;
   justify-content: center;
-  gap: 10px;
+  align-items: center;
+  gap: 16px;
   margin-top: 20px;
+  flex-wrap: wrap;
 }
 
 .pagination-button {
