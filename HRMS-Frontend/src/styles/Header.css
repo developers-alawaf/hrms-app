@@ -1,11 +1,12 @@
-/* ==== Header – dark glass-morphic style ==== */
+/* Header – same font & colors as Dashboard / Sidebar */
 .header {
-  background: rgba(30, 30, 47, 0.85);           /* dark semi-transparent */
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: rgba(15, 23, 42, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  color: #fff;
+  color: #f1f5f9;
   padding: 10px 20px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -16,7 +17,7 @@
   height: 60px;
   z-index: 999;
   transition: left 0.3s ease-in-out, width 0.3s ease-in-out;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(71, 85, 105, 0.4);
 }
 
 .header-content {
@@ -26,20 +27,21 @@
 }
 
 .header-logo h1 {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
-  background: linear-gradient(90deg, #4a90e2, #50c878);
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   margin: 0;
 }
 
-/* Hamburger */
 .hamburger-menu {
   background: none;
   border: none;
-  color: #fff;
+  color: #f1f5f9;
   cursor: pointer;
   margin-right: 15px;
   display: block;
@@ -87,34 +89,35 @@
   align-items: center;
 }
 
-/* Dropdown toggle */
-.dropdown-toggle {
+.header-nav .dropdown-toggle {
   display: flex;
   align-items: center;
   padding: 0 15px;
-  color: #fff;
+  color: #f1f5f9;
   text-decoration: none;
   height: 100%;
   cursor: pointer;
-  transition: background-color 0.2s;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
   gap: 8px;
 }
 
-.dropdown-toggle:hover {
-  background: rgba(255, 255, 255, 0.1);
+.header-nav .dropdown-toggle:hover {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
 }
 
-/* Dropdown menu */
 .header-nav-list .dropdown-menu {
   position: absolute;
   top: 100%;
-  right: 0;                       /* align to the right of the avatar */
-  background: #2c2c3e;
+  right: 0;
+  background: rgba(30, 41, 59, 0.98);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 10px;
   min-width: 180px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   z-index: 1002;
   margin-top: 4px;
   padding: 8px 0;
@@ -128,25 +131,25 @@
   border: none;
   background: none;
   text-align: left;
-  color: #ddd;
+  color: #94a3b8;
   text-decoration: none;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 500;
   transition: background-color 0.2s, color 0.2s;
 }
 
 .header-nav-list .dropdown-item:hover {
-  background: var(--primary-color);
-  color: #fff;
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
 }
 
-/* Avatar */
-.user-image {
+.header .user-image {
   width: 38px;
   height: 38px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid var(--primary-color);
+  border: 2px solid rgba(96, 165, 250, 0.6);
 }
 
 /* Keep the rest of your global styles untouched */
