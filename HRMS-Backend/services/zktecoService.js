@@ -12,11 +12,14 @@ const UserDevice = require('../models/userDevice'); // Adjust the path based on 
 
 class ZKService {
   constructor() {
+    const port = Number(process.env.ZKTECO_DEVICE_PORT) || 4370;
+    const timeout = Number(process.env.ZKTECO_INPORT) || 5200;
+    const inport = 20000;
     this.device = new Zkteco(
       process.env.ZKTECO_DEVICE_IP,
-      process.env.ZKTECO_DEVICE_PORT || 4370,
-      process.env.ZKTECO_INPORT || 5200,
-      20000
+      port,
+      timeout,
+      inport
     );
     this.connected = false;
   }
