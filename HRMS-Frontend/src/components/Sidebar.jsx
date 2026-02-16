@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { Users, Calendar, FileText, Lock, LogOut, Menu, X, Briefcase, LayoutDashboard, ClipboardList, ChevronDown } from 'lucide-react';
 import '../styles/Sidebar.css';
@@ -9,7 +9,13 @@ const defaultAvatar = '/default-avatar.png';
 const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
   const authContext = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
   const [openDropdown, setOpenDropdown] = useState(null);
+
+  const isActive = (path) => {
+    if (!path) return false;
+    return location.pathname === path || location.pathname.startsWith(path + '/');
+  };
 
   // Safety check: if context is not available or still loading, don't render
   if (!authContext) {
@@ -56,13 +62,13 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
       </div>
       <ul className="sidebar-links">
         <li>
-          <Link to="/dashboard" className="sidebar-link" onClick={handleLinkClick}>
+          <Link to="/dashboard" className={`sidebar-link ${isActive('/dashboard') ? 'active' : ''}`} onClick={handleLinkClick}>
             <LayoutDashboard className="nav-icon" />
             Dashboard
           </Link>
         </li>
         <li>
-          <Link to="/company-policies" className="sidebar-link" onClick={handleLinkClick}>
+          <Link to="/company-policies" className={`sidebar-link ${isActive('/company-policies') ? 'active' : ''}`} onClick={handleLinkClick}>
             <FileText className="nav-icon" />
             Company Policies
           </Link>
@@ -75,7 +81,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
         </li> */}
         {(user?.role === 'Super Admin' || user?.role === 'HR Manager' || user?.role === 'Company Admin' || user?.role === 'C-Level Executive') && (
           <li>
-            <Link to="/employees" className="sidebar-link" onClick={handleLinkClick}>
+            <Link to="/employees" className={`sidebar-link ${isActive('/employees') ? 'active' : ''}`} onClick={handleLinkClick}>
               <Users className="nav-icon" />
               Employees
             </Link>
@@ -89,7 +95,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
         </li>
         {(user?.role === 'Employee' || user?.role === 'Manager' || user?.role === 'HR Manager' || user?.role === 'Super Admin' || user?.role === 'Company Admin' || user?.role === 'C-Level Executive') && (
           <li>
-            <Link to="/attendance/adjustments" className="sidebar-link" onClick={handleLinkClick}>
+            <Link to="/attendance/adjustments" className={`sidebar-link ${isActive('/attendance/adjustments') ? 'active' : ''}`} onClick={handleLinkClick}>
               <Calendar className="nav-icon" />
               Manual Attendance
             </Link>
@@ -97,7 +103,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
         )}
         {(user?.role === 'Super Admin' || user?.role === 'HR Manager' || user?.role === 'Company Admin' || user?.role === 'C-Level Executive') && (
           <li>
-            <Link to="/company" className="sidebar-link" onClick={handleLinkClick}>
+            <Link to="/company" className={`sidebar-link ${isActive('/company') ? 'active' : ''}`} onClick={handleLinkClick}>
               <Briefcase className="nav-icon" />
               Company
             </Link>
@@ -108,6 +114,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
             <div className="sidebar-link dropdown-toggle" onClick={() => toggleDropdown('admin')}>
               <Briefcase className="nav-icon" />
               HR Tools
+              <ChevronDown className="dropdown-chevron" size={18} />
             </div>
             {openDropdown === 'admin' && (
               <ul className="dropdown-menu">
@@ -122,17 +129,17 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
                   </Link>
                 </li> */}
                 <li>
-                  <Link to="/departments" className="dropdown-item" onClick={handleLinkClick}>
+                  <Link to="/departments" className={`dropdown-item ${isActive('/departments') ? 'active' : ''}`} onClick={handleLinkClick}>
                     Departments
                   </Link>
                 </li>
                 <li>
-                  <Link to="/designations" className="dropdown-item" onClick={handleLinkClick}>
+                  <Link to="/designations" className={`dropdown-item ${isActive('/designations') ? 'active' : ''}`} onClick={handleLinkClick}>
                     Designations
                   </Link>
                 </li>
                 <li>
-                  <Link to="/shifts" className="dropdown-item" onClick={handleLinkClick}>
+                  <Link to="/shifts" className={`dropdown-item ${isActive('/shifts') ? 'active' : ''}`} onClick={handleLinkClick}>
                     Shifts
                   </Link>
                 </li>
@@ -143,7 +150,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
                 </li> */}
                 {(user?.role === 'Super Admin' || user?.role === 'HR Manager') && (
                   <li>
-                    <Link to="/holidays" className="dropdown-item" onClick={handleLinkClick}>
+                    <Link to="/holidays" className={`dropdown-item ${isActive('/holidays') ? 'active' : ''}`} onClick={handleLinkClick}>
                       Holiday Calendar
                     </Link>
                   </li>
@@ -151,17 +158,17 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
                   {(user?.role === 'Super Admin' || user?.role === 'Company Admin' || user?.role === 'HR Manager' || user?.role === 'C-Level Executive') && (
                 <>
                   <li>
-                    <Link to="/leave/policy" className="dropdown-item" onClick={handleLinkClick}>
+                    <Link to="/leave/policy" className={`dropdown-item ${isActive('/leave/policy') ? 'active' : ''}`} onClick={handleLinkClick}>
                       Leave Policy
                     </Link>
                   </li>
                   <li>
-                    <Link to="/leave/entitlements" className="dropdown-item" onClick={handleLinkClick}>
+                    <Link to="/leave/entitlements" className={`dropdown-item ${isActive('/leave/entitlements') ? 'active' : ''}`} onClick={handleLinkClick}>
                       Leave Entitlements
                     </Link>
                   </li>
                   <li>
-                    <Link to="/leave/history" className="dropdown-item" onClick={handleLinkClick}>
+                    <Link to="/leave/history" className={`dropdown-item ${isActive('/leave/history') ? 'active' : ''}`} onClick={handleLinkClick}>
                       Leave History
                     </Link>
                   </li>
@@ -176,31 +183,32 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
                 <div className="sidebar-link dropdown-toggle" onClick={() => toggleDropdown('shiftingRoster')}>
                     <ClipboardList className="nav-icon" />
                     Shifting Roster
+                    <ChevronDown className="dropdown-chevron" size={18} />
                 </div>
                 {openDropdown === 'shiftingRoster' && (
                     <ul className="dropdown-menu">
                         <li>
-                            <Link to="/shift-management/shifts" className="dropdown-item" onClick={handleLinkClick}>
+                            <Link to="/shift-management/shifts" className={`dropdown-item ${isActive('/shift-management/shifts') ? 'active' : ''}`} onClick={handleLinkClick}>
                                 Shift Management
                             </Link>
                         </li>
                         <li>
-                            <Link to="/shift-management/roster" className="dropdown-item" onClick={handleLinkClick}>
+                            <Link to="/shift-management/roster" className={`dropdown-item ${isActive('/shift-management/roster') ? 'active' : ''}`} onClick={handleLinkClick}>
                                 Roster Management
                             </Link>
                         </li>
                         <li>
-                            <Link to="/shift-management/attendance" className="dropdown-item" onClick={handleLinkClick}>
+                            <Link to="/shift-management/attendance" className={`dropdown-item ${isActive('/shift-management/attendance') ? 'active' : ''}`} onClick={handleLinkClick}>
                                 Roster Attendance
                             </Link>
                         </li>
                         <li>
-                            <Link to="/shift-management/wfh" className="dropdown-item" onClick={handleLinkClick}>
+                            <Link to="/shift-management/wfh" className={`dropdown-item ${isActive('/shift-management/wfh') ? 'active' : ''}`} onClick={handleLinkClick}>
                                 WFH Requests
                             </Link>
                         </li>
                         <li>
-                            <Link to="/shift-management/outside-work" className="dropdown-item" onClick={handleLinkClick}>
+                            <Link to="/shift-management/outside-work" className={`dropdown-item ${isActive('/shift-management/outside-work') ? 'active' : ''}`} onClick={handleLinkClick}>
                                 Outside Work Requests
                             </Link>
                         </li>
@@ -217,6 +225,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
           <div className="sidebar-link dropdown-toggle" onClick={() => toggleDropdown('requests')}>
             <Briefcase className="nav-icon" />
             Requests
+            <ChevronDown className="dropdown-chevron" size={18} />
           </div>
           {openDropdown === 'requests' && (
             <ul className="dropdown-menu">
@@ -247,7 +256,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
                   
                   {(user?.role === 'HR Manager') && (
                     <li>
-                      <Link to="/leave/balance" className="dropdown-item" onClick={handleLinkClick}>
+                      <Link to="/leave/balance" className={`dropdown-item ${isActive('/leave/balance') ? 'active' : ''}`} onClick={handleLinkClick}>
                         All Employee Leave Balance
                       </Link>
                     </li>
@@ -267,7 +276,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
         </li>
         {(user?.role === 'Super Admin' || user?.role === 'HR Manager' || user?.role === 'Company Admin' || user?.role === 'C-Level Executive') && (
           <li>
-            <Link to="/documents" className="sidebar-link" onClick={handleLinkClick}>
+            <Link to="/documents" className={`sidebar-link ${isActive('/documents') ? 'active' : ''}`} onClick={handleLinkClick}>
               <FileText className="nav-icon" />
               Documents
             </Link>
@@ -293,12 +302,12 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
           {openDropdown === 'user' && (
             <ul className="sidebar-footer-dropdown">
               <li>
-                <Link to="/profile" className="dropdown-item" onClick={handleLinkClick}>
+                <Link to="/profile" className={`dropdown-item ${isActive('/profile') ? 'active' : ''}`} onClick={handleLinkClick}>
                   My Profile
                 </Link>
               </li>
               <li>
-                <Link to="/change-password" className="dropdown-item" onClick={handleLinkClick}>
+                <Link to="/change-password" className={`dropdown-item ${isActive('/change-password') ? 'active' : ''}`} onClick={handleLinkClick}>
                   Change Password
                 </Link>
               </li>

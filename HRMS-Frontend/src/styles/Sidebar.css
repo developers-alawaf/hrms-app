@@ -93,10 +93,31 @@
   color: #93c5fd;
 }
 
+.sidebar-link.active {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.sidebar .dropdown-menu .dropdown-item.active {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+
 .nav-icon {
   margin-right: 10px;
   width: 20px;
   height: 20px;
+}
+
+.sidebar .dropdown-toggle .dropdown-chevron {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+}
+
+.sidebar-links li.dropdown:has(ul.dropdown-menu) .dropdown-chevron {
+  transform: rotate(180deg);
 }
 
 .sidebar .dropdown-menu {
