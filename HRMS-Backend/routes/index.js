@@ -20,7 +20,7 @@ const activityLogRoutes = require('./activityLogRoutes');
 router.use('/employees', employeeRoutes);
 router.use('/auth', authRoutes);
 router.use('/deviceLogs', deviceLogsRoutes);
-router.use('/dashboard',  dashboardRoutes);
+router.use('/dashboard', authenticate('jwt', { session: false }), dashboardRoutes);
 router.use('/attendance', authenticate('jwt', { session: false }), attendanceRoutes);
 router.use('/leave', authenticate('jwt', { session: false }), leaveRoutes);
 router.use('/payslips', payslipRoutes);

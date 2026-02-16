@@ -1,11 +1,19 @@
 /* ============================================
-   GENERAL ROSTER STYLES (Light theme - for other pages)
+   ROSTER STYLES – same design system as Sidebar & Dashboard
    ============================================ */
 
+.roster-container {
+  padding: 0;
+  background: transparent;
+  color: var(--app-text);
+  font-family: var(--app-font);
+}
+
 .roster-title {
-  font-size: 2.5rem;
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
   font-weight: 700;
-  background: linear-gradient(90deg, #4a90e2, #e10624);
+  letter-spacing: -0.025em;
+  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -13,70 +21,73 @@
 }
 
 .roster-form {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: var(--app-surface);
+  backdrop-filter: blur(12px);
   padding: 30px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  border: 1px solid var(--app-border);
   max-width: 800px;
   margin: 0 auto 20px;
 }
 
-.form-group {
+.roster-form .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.form-group label {
-  font-size: 1.1rem;
+.roster-form .form-group label {
+  font-size: 0.9375rem;
   font-weight: 500;
-  color: #ddd;
+  color: var(--app-text-muted);
 }
 
 .roster-input {
   width: 100%;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--app-border);
   border-radius: 8px;
-  color: #fff;
+  color: var(--app-text);
   font-size: 1rem;
 }
 
 .roster-input:focus {
   outline: none;
-  border-color: #e10624;
+  border-color: var(--app-accent);
+  background: var(--app-accent-soft);
 }
 
 .roster-input::placeholder {
-  color: #aaa;
+  color: var(--app-text-muted);
 }
 
 .roster-button {
   padding: 12px 20px;
-  background: #4a90e2;
+  background: var(--app-accent);
   color: #fff;
   border: none;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s, color 0.2s;
 }
 
 .roster-button:hover {
-  background: #e10624;
+  background: #2563eb;
+  color: var(--app-accent-light);
 }
 
 .roster-message {
   text-align: center;
-  font-size: 1.2rem;
-  color: #ccc;
+  font-size: 1rem;
+  color: var(--app-text-muted);
   margin: 20px 0;
 }
 
 .roster-error {
-  color: #e10624;
+  color: #f87171;
 }
 
 .roster-success {

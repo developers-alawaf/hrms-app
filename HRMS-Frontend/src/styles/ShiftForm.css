@@ -13,22 +13,24 @@
 }
 
 .shift-form-container {
-  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--app-surface-solid);
+  border: 1px solid var(--app-border);
   border-radius: 16px;
   padding: 28px;
-  width: 90%; /* Use a percentage for better responsiveness */
-  max-width: 400px; /* Reduced max-width */
-  max-height: 90vh; /* Ensure scrollability */
-  overflow-y: auto; /* Enable vertical scrolling */
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  color: #fff;
+  width: 90%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  color: var(--app-text);
+  backdrop-filter: blur(12px);
 }
 
 .shift-form-title {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
-  background: linear-gradient(90deg, #4a90e2, #e10624);
+  letter-spacing: -0.025em;
+  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -42,9 +44,9 @@
 
 .shift-form-group label {
   display: block;
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 500;
-  color: #e0e0e0;
+  color: var(--app-text-muted);
   margin-bottom: 8px;
 }
 
@@ -53,10 +55,10 @@
   display: block;
   width: 100%;
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--app-border);
   border-radius: 8px;
-  color: #fff;
+  color: var(--app-text);
   font-size: 1rem;
   transition: border-color 0.2s ease;
   box-sizing: border-box;
@@ -65,8 +67,8 @@
 .shift-form-group input:focus,
 .shift-form-group select:focus {
   outline: none;
-  border-color: #4a90e2;
-  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 2px var(--app-accent-soft);
 }
 
 .shift-form-group select option {
@@ -93,24 +95,26 @@
 }
 
 .shift-form-submit-button {
-  background: linear-gradient(90deg, #4a90e2, #50c878);
-  color: white;
+  background: var(--app-accent);
+  color: #fff;
 }
 
 .shift-form-submit-button:hover {
+  background: #2563eb;
+  color: var(--app-accent-light);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(74, 144, 226, 0.4);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
 }
 
 .shift-form-cancel-button {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ccc;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--app-surface);
+  color: var(--app-text-muted);
+  border: 1px solid var(--app-border);
 }
 
 .shift-form-cancel-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: var(--app-accent-soft);
+  color: var(--app-accent-light);
 }
 
 .error {

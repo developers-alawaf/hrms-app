@@ -14,22 +14,24 @@ const Dashboard = () => {
 
   useEffect(() => {
     const fetchDashboard = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
       try {
         const [empRes, statsRes, presentRes, remoteRes, leaveRes] = await Promise.all([
           fetch(`${import.meta.env.VITE_API_URL}/api/dashboard`, {
-            headers: { Authorization: `Bearer ${user?.token}` },
+            headers: { Authorization: `Bearer ${token}` },
           }),
           fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/dashboard-stats`, {
-            headers: { Authorization: `Bearer ${user?.token}` },
+            headers: { Authorization: `Bearer ${token}` },
           }),
           fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/present-today`, {
-            headers: { Authorization: `Bearer ${user?.token}` },
+            headers: { Authorization: `Bearer ${token}` },
           }),
           fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/remote-today`, {
-            headers: { Authorization: `Bearer ${user?.token}` },
+            headers: { Authorization: `Bearer ${token}` },
           }),
           fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/leave-today`, {
-            headers: { Authorization: `Bearer ${user?.token}` },
+            headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
 

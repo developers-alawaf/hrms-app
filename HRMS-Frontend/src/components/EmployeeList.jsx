@@ -1,13 +1,13 @@
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { getEmployees, getEmployeeProfile } from '../api/employee';
+import { getEmployees, getEmployeeProfile, deleteEmployee } from '../api/employee';
 import { resendInvitation } from '../api/auth';
 import { getCompanies } from '../api/company';
 import * as XLSX from 'xlsx';
 import '../styles/Employee.css';
 // import { Eye } from 'lucide-react';
-import { Download, Edit, Eye } from 'lucide-react';
+import { Download, Edit, Eye, Trash2, Search, UserPlus } from 'lucide-react';
 
 const defaultAvatar = '/default-avatar.png';
 
@@ -23,8 +23,12 @@ const EmployeeList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const employeesPerPage = 10;
   const authorized = user?.role === 'Super Admin' || user?.role === 'HR Manager';
+  const tableContainerRef = useRef(null);
+  const topScrollRef = useRef(null);
+  const scrollSyncRef = useRef(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,6 +93,34 @@ const EmployeeList = () => {
     setCurrentPage(1);
   }, [searchQuery, employees]);
 
+  useEffect(() => {
+    const tableEl = tableContainerRef.current;
+    const topEl = topScrollRef.current;
+    if (!tableEl || !topEl) return;
+    const updateSpacerWidth = () => {
+      const spacer = topEl.querySelector('.employee-table-scroll-spacer');
+      if (spacer) spacer.style.width = `${tableEl.scrollWidth}px`;
+    };
+    updateSpacerWidth();
+    const ro = new ResizeObserver(updateSpacerWidth);
+    ro.observe(tableEl);
+    return () => ro.disconnect();
+  }, [filteredEmployees, currentPage, employeesPerPage]);
+
+  const syncScrollFromTable = () => {
+    if (scrollSyncRef.current) return;
+    scrollSyncRef.current = true;
+    if (topScrollRef.current) topScrollRef.current.scrollLeft = tableContainerRef.current?.scrollLeft ?? 0;
+    scrollSyncRef.current = false;
+  };
+
+  const syncScrollFromTop = () => {
+    if (scrollSyncRef.current) return;
+    scrollSyncRef.current = true;
+    if (tableContainerRef.current) tableContainerRef.current.scrollLeft = topScrollRef.current?.scrollLeft ?? 0;
+    scrollSyncRef.current = false;
+  };
+
   const getCompanyName = (companyId) => {
     const company = companies.find(c => c._id === companyId);
     return company ? company.name : '-';
@@ -147,6 +179,33 @@ const EmployeeList = () => {
       }
     } catch (err) {
       setError(err.error || 'Something went wrong');
+    }
+  };
+
+  const handleDelete = async (employee) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${employee.fullName}" (${employee.newEmployeeCode})? This will remove the employee and all related data (user account, leave, attendance, documents, etc.). This action cannot be undone.`
+    );
+    if (!confirmed) return;
+    setDeletingId(employee._id);
+    setError('');
+    try {
+      const token = localStorage.getItem('token');
+      const response = await deleteEmployee(employee._id, token);
+      if (response.success) {
+        setEmployees((prev) => prev.filter((e) => e._id !== employee._id));
+        setFilteredEmployees((prev) => prev.filter((e) => e._id !== employee._id));
+        if (selectedEmployee?._id === employee._id) {
+          setShowModal(false);
+          setSelectedEmployee(null);
+        }
+      } else {
+        setError(response.error || 'Failed to delete employee');
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || err.error || 'Failed to delete employee');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -214,20 +273,26 @@ const EmployeeList = () => {
       <div className="employee-header">
         <h2 className="employee-title">Employees</h2>
         <div className="employee-controls">
-          <input
-            type="text"
-            placeholder="Search by name, code, or email"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="employee-input employee-search"
-          />
+          <div className="employee-search-wrap">
+            <Search size={18} className="employee-search-icon" aria-hidden />
+            <input
+              type="text"
+              placeholder="Search by name, code, or email"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="employee-input employee-search"
+              aria-label="Search employees"
+            />
+          </div>
           {authorized && (
-            <Link to="/employees/create" className="employee-button">
-              Add Employee
+            <Link to="/employees/create" className="employee-button employee-btn-primary">
+              <UserPlus size={18} className="employee-btn-icon" />
+              <span>Add Employee</span>
             </Link>
           )}
-          <button onClick={handleExport} className="employee-button export-button">
-            <Download className="button-icon" /> Export
+          <button type="button" onClick={handleExport} className="employee-button employee-btn-export">
+            <Download size={18} className="employee-btn-icon" />
+            <span>Export</span>
           </button>
         </div>
       </div>
@@ -235,8 +300,21 @@ const EmployeeList = () => {
         <div className="employee-message">No employees found.</div>
       ) : (
         <>
-          <div className="employee-table-container">
-            <table className="employee-table">
+          <div className="employee-table-scroll-wrapper">
+            <div
+              ref={topScrollRef}
+              className="employee-table-scroll-top"
+              onScroll={syncScrollFromTop}
+              aria-hidden
+            >
+              <div className="employee-table-scroll-spacer" />
+            </div>
+            <div
+              ref={tableContainerRef}
+              className="employee-table-container"
+              onScroll={syncScrollFromTable}
+            >
+              <table className="employee-table">
               <thead>
                 <tr>
                   <th>Profile Image</th>
@@ -282,25 +360,42 @@ const EmployeeList = () => {
                     {/* <td>{employee.ageOfService || '-'}</td> */}
                     <td>{employee.employeeStatus || '-'}</td>
                     <td>
-                      <button
-                        onClick={() => handleView(employee._id)}
-                        className="employee-button view-button"
-                      >
-                        <Eye className="button-icon" /> View
-                      </button>
-                      {['pending', 'expired', 'sent'].includes(employee.invitationStatus) && (
+                      <div className="employee-actions">
                         <button
-                          onClick={() => handleResendInvitation(employee.email)}
-                          className="employee-button resend-button"
+                          onClick={() => handleView(employee._id)}
+                          className="employee-button employee-action-btn view-button"
+                          title="View details"
                         >
-                          Resend Invitation
+                          <Eye size={14} className="employee-action-icon" />
+                          <span>View</span>
                         </button>
-                      )}
+                        {authorized && (
+                          <button
+                            onClick={() => handleDelete(employee)}
+                            disabled={deletingId === employee._id}
+                            className="employee-button employee-action-btn delete-button"
+                            title="Delete employee"
+                          >
+                            <Trash2 size={14} className="employee-action-icon" />
+                            <span>{deletingId === employee._id ? 'Deleting…' : 'Delete'}</span>
+                          </button>
+                        )}
+                        {['pending', 'expired', 'sent'].includes(employee.invitationStatus) && (
+                          <button
+                            onClick={() => handleResendInvitation(employee.email)}
+                            className="employee-button employee-action-btn resend-button"
+                            title="Resend invitation"
+                          >
+                            <span>Resend</span>
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
           {filteredEmployees.length > employeesPerPage && (
             <div className="pagination-controls">
@@ -412,9 +507,21 @@ const EmployeeList = () => {
                     Close
                   </button>
                   {authorized && (
-                    <Link to={`/employees/${selectedEmployee._id}/edit`} className="employee-button modal-button">
-                      Edit
-                    </Link>
+                    <>
+                      <Link to={`/employees/${selectedEmployee._id}/edit`} className="employee-button modal-button">
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setShowModal(false);
+                          handleDelete(selectedEmployee);
+                        }}
+                        disabled={deletingId === selectedEmployee._id}
+                        className="employee-button modal-button delete-button"
+                      >
+                        <Trash2 className="button-icon" /> Delete
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

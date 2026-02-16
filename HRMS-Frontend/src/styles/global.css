@@ -1,10 +1,28 @@
+/* ========== Design system – same as Sidebar & Dashboard ========== */
 :root {
-  --primary-color: #4a90e2;
-  --secondary-color: #50c878;
-  --accent-color: #f7b731;
-  --background-color: #f8f9fa;
-  --text-color: #333;
-  --error-color: #dc3545;
+  --app-bg: linear-gradient(160deg, #0f172a 0%, #1e293b 45%, #0f172a 100%);
+  --app-surface: rgba(30, 41, 59, 0.6);
+  --app-surface-solid: rgba(30, 41, 59, 0.95);
+  --app-border: rgba(71, 85, 105, 0.4);
+  --app-text: #f1f5f9;
+  --app-text-muted: #94a3b8;
+  --app-accent: #3b82f6;
+  --app-accent-soft: rgba(59, 130, 246, 0.15);
+  --app-accent-light: #93c5fd;
+  --app-success: #10b981;
+  --app-success-soft: rgba(16, 185, 129, 0.15);
+  --app-warning: #f59e0b;
+  --app-warning-soft: rgba(245, 158, 11, 0.15);
+  --app-error: #ef4444;
+  --app-error-soft: rgba(239, 68, 68, 0.2);
+  --app-font: 'Plus Jakarta Sans', system-ui, sans-serif;
+  /* Legacy aliases for gradual migration */
+  --primary-color: #3b82f6;
+  --secondary-color: #10b981;
+  --accent-color: #f59e0b;
+  --background-color: #0f172a;
+  --text-color: #f1f5f9;
+  --error-color: #ef4444;
 }
 
 * {
@@ -14,28 +32,43 @@
 }
 
 body {
-  font-family: 'Roboto', Arial, sans-serif;
+  font-family: var(--app-font);
   line-height: 1.6;
-  color: var(--text-color);
-  background-color: var(--background-color);
+  color: var(--app-text);
+  background: var(--app-bg);
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 .app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
+  background: var(--app-bg);
   overflow-x: hidden;
 }
 
-/* Main content: no top bar, only sidebar */
+/* Main content: no top bar, only sidebar – same look as Dashboard */
 main.main-content {
   flex-grow: 1;
-  padding-top: 0;
+  padding: 1.5rem 1.25rem 2.5rem;
   margin-left: 0;
+  min-height: calc(100vh - 80px);
+  background: var(--app-bg);
+  color: var(--app-text);
+  font-family: var(--app-font);
   transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
   position: relative;
+}
+
+/* Shared page container for all pages (Dashboard pattern) */
+.page-container {
+  font-family: var(--app-font);
+  padding: 1.5rem 1.25rem 2.5rem;
+  min-height: calc(100vh - 80px);
+  background: var(--app-bg);
+  color: var(--app-text);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ✅ NEW: Desktop Layout Adjustments - THIS WAS COMPLETELY MISSING! */

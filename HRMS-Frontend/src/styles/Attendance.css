@@ -1,16 +1,18 @@
-
+/* Attendance – same design system as Sidebar & Dashboard */
 .attendance-container {
-  padding: 20px;
-  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
-  color: #fff;
-  min-height: calc(100vh - 80px);
+  padding: 0;
+  background: transparent;
+  color: var(--app-text);
+  min-height: auto;
+  font-family: var(--app-font);
 }
 
-.employee-title {
-  font-size: 2.5rem;
+.attendance-container .employee-title {
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
   font-weight: 700;
+  letter-spacing: -0.025em;
   text-align: center;
-  background: linear-gradient(90deg, #4a90e2, #e10624);
+  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -18,11 +20,11 @@
 }
 
 .attendance-filters {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: var(--app-surface);
+  backdrop-filter: blur(12px);
   padding: 20px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  border: 1px solid var(--app-border);
   max-width: 800px;
   margin: 0 auto 20px;
   display: grid;
@@ -31,166 +33,106 @@
   align-items: end;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-group label {
-  font-size: 1.1rem;
+.attendance-filters .form-group label {
+  font-size: 0.9375rem;
   font-weight: 500;
-  color: #ddd;
+  color: var(--app-text-muted);
 }
 
-.employee-input {
-  width: 100%;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  color: #fff;
-  font-size: 1rem;
+.attendance-filters .employee-input {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
 }
 
-.employee-input:focus {
-  outline: none;
-  border-color: #e10624;
+.attendance-filters .employee-input:focus {
+  border-color: var(--app-accent);
+  background: var(--app-accent-soft);
 }
 
-.employee-input::placeholder {
-  color: #aaa;
+.attendance-filters .employee-button {
+  background: var(--app-accent);
 }
 
-.employee-input[type="date"] {
-  appearance: none;
-  color: #fff;
-}
-
-.employee-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-}
-
-.employee-input option {
-  background: #2a2a3f;
-  color: #fff;
-}
-
-.employee-input option:hover,
-.employee-input option:focus,
-.employee-input option:active {
-  background: #e10624;
-}
-
-.filter-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.employee-button {
-  padding: 12px 20px;
-  background: #4a90e2;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.employee-button:hover {
-  background: #e10624;
+.attendance-filters .employee-button:hover {
+  background: #2563eb;
+  color: var(--app-accent-light);
 }
 
 .attendance-table-container {
   overflow-x: auto;
   margin-bottom: 20px;
   border-radius: 12px;
+  border: 1px solid var(--app-border);
 }
 
 .attendance-table {
   width: 100%;
   min-width: 800px;
   border-collapse: collapse;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  overflow: hidden;
+  background: var(--app-surface);
+  backdrop-filter: blur(12px);
+  font-size: 0.875rem;
 }
 
 .attendance-table th,
 .attendance-table td {
-  padding: 15px;
+  padding: 0.75rem 1rem;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid var(--app-border);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--app-text);
 }
 
 .attendance-table th {
-  background: #4a90e2;
-  color: #fff;
+  background: rgba(15, 23, 42, 0.7);
+  color: var(--app-text-muted);
   font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.attendance-table tr:hover {
-  background: rgba(225, 6, 36, 0.2);
+.attendance-table tbody tr:hover td {
+  background: rgba(51, 65, 85, 0.25);
 }
 
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 20px;
+.attendance-container .pagination-button {
+  background: var(--app-accent);
 }
 
-.pagination-button {
-  padding: 8px 16px;
-  background: #4a90e2;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
+.attendance-container .pagination-button:hover {
+  background: #2563eb;
+  color: var(--app-accent-light);
 }
 
-.pagination-button:hover {
-  background: #e10624;
+.attendance-container .pagination-button:disabled {
+  background: var(--app-surface);
+  color: var(--app-text-muted);
 }
 
-.pagination-button:disabled {
-  background: #555;
-  cursor: not-allowed;
+.attendance-container .pagination-info,
+.attendance-container .employee-message {
+  color: var(--app-text-muted);
 }
 
-.pagination-info {
-  font-size: 1rem;
-  color: #ccc;
-  align-self: center;
+.attendance-container .employee-error {
+  color: #f87171;
 }
 
-.employee-message {
-  text-align: center;
-  font-size: 1.2rem;
-  color: #ccc;
-  margin: 20px 0;
-}
-
-.employee-error {
-  color: #e10624;
-}
-
-.employee-success {
-  color: #50c878;
+.attendance-container .employee-success {
+  color: #34d399;
 }
 
 .table-wrapper {
-  overflow-x: auto;           /* horizontal scroll */
-  -webkit-overflow-scrolling: touch; /* smooth on mobile */
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
   margin-top: 1rem;
+  background: var(--app-surface);
 }
 
 .review-actions {
@@ -204,48 +146,59 @@
   width: 100%;
   min-height: 50px;
   resize: vertical;
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  border-radius: 8px;
+  padding: 8px;
 }
 
 .review-actions button {
   width: 100%;
 }
-/* Status Badge Styles */
+
+/* Status Badge Styles – aligned with Dashboard badges */
 .status-badge {
-  padding: 0.3em 0.6em;
-  border-radius: 4px;
-  font-size: 0.9em;
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #fff;
   text-align: center;
   display: inline-block;
   min-width: 80px;
 }
 
 .status-present {
-  background-color: #28a745; /* Green */
+  background: var(--app-success-soft);
+  color: #34d399;
 }
 
 .status-absent {
-  background-color: #dc3545; /* Red */
+  background: var(--app-error-soft);
+  color: #f87171;
 }
 
 .status-holiday {
-  background-color: #007bff; /* Blue */
+  background: var(--app-accent-soft);
+  color: var(--app-accent-light);
 }
 
 .status-leave {
-  background-color: #ffc107; /* Yellow */
-  color: #212529;
+  background: var(--app-warning-soft);
+  color: #fbbf24;
 }
 
 .status-incomplete {
-  background-color: #fd7e14; /* Orange */
+  background: rgba(100, 116, 139, 0.25);
+  color: var(--app-text-muted);
 }
 
 .status-weekend {
-  background-color: #6c757d; /* Gray */
+  background: rgba(148, 163, 184, 0.2);
+  color: #cbd5e1;
 }
 
 .status-remote {
-    background-color: #17a2b8; /* Cyan */
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
 }

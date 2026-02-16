@@ -7,5 +7,12 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    server: {
+      watch: {
+        // Fix: CSS/file changes not auto-reloading on Windows or network drives
+        usePolling: true,
+        interval: 500,
+      },
+    },
   }
 })

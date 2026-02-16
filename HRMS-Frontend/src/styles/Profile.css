@@ -1,16 +1,18 @@
-
+/* Profile – same design system as Sidebar & Dashboard */
 .profile-container {
-  padding: 20px;
-  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
-  color: #fff;
-  min-height: calc(100vh - 80px);
+  padding: 0;
+  background: transparent;
+  color: var(--app-text);
+  min-height: auto;
+  font-family: var(--app-font);
 }
 
-.employee-title {
-  font-size: 2.5rem;
+.profile-container .employee-title {
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
   font-weight: 700;
+  letter-spacing: -0.025em;
   text-align: center;
-  background: linear-gradient(90deg, #4a90e2, #e10624);
+  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -18,11 +20,11 @@
 }
 
 .profile-card {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: var(--app-surface);
+  backdrop-filter: blur(12px);
   padding: 20px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  border: 1px solid var(--app-border);
   max-width: 600px;
   margin: 0 auto;
   display: flex;
@@ -31,7 +33,7 @@
 }
 
 .profile-card:hover {
-  background: rgba(225, 6, 36, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
 }
 
 .profile-image {
@@ -39,7 +41,7 @@
   height: 150px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid #4a90e2;
+  border: 2px solid rgba(96, 165, 250, 0.5);
 }
 
 .profile-details {
@@ -54,31 +56,30 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(15, 23, 42, 0.4);
   border-radius: 8px;
+  border: 1px solid var(--app-border);
 }
 
 .profile-label {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 600;
-  color: #ccc;
+  color: var(--app-text-muted);
 }
 
 .profile-value {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 500;
-  color: #50c878;
+  color: var(--app-accent-light);
   text-transform: capitalize;
 }
 
-.employee-message {
-  text-align: center;
-  font-size: 1.2rem;
-  color: #ccc;
+.profile-container .employee-message {
+  color: var(--app-text-muted);
 }
 
-.employee-error {
-  color: #e10624;
+.profile-container .employee-error {
+  color: #f87171;
 }
 
 @media (max-width: 768px) {
@@ -107,7 +108,7 @@
     font-size: 0.9rem;
   }
 
-  .employee-title {
-    font-size: 2rem;
+  .profile-container .employee-title {
+    font-size: 1.5rem;
   }
 }

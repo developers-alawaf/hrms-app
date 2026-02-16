@@ -16,6 +16,11 @@ router.patch('/:id',
   uploadFiles, 
   employeeController.updateEmployee
 );
+router.delete('/:id',
+  authenticate('jwt', { session: false }),
+  restrictTo('HR Manager', 'Super Admin', 'Company Admin'),
+  employeeController.deleteEmployee
+);
 router.get('/', 
   authenticate('jwt', { session: false }), 
   restrictTo('HR Manager', 'Super Admin', 'Company Admin', 'C-Level Executive'), 

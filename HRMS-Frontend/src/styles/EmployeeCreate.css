@@ -1,18 +1,20 @@
-/* src/styles/EmployeeCreate.css */
+/* EmployeeCreate – same design system as Sidebar & Dashboard */
 .employee-create-container {
-  padding: 24px;
-  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
-  color: #fff;
-  min-height: calc(100vh - 80px);
+  padding: 0;
+  background: transparent;
+  color: var(--app-text);
+  min-height: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
+  font-family: var(--app-font);
 }
 
 .employee-create-title {
-  font-size: 2.5rem;
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
   font-weight: 700;
-  background: linear-gradient(90deg, #4a90e2, #e10624);
+  letter-spacing: -0.025em;
+  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -21,26 +23,26 @@
 }
 
 /* Tab Bar */
-.tab-bar {
+.employee-create-container .tab-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 24px;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--app-surface);
   padding: 8px;
   border-radius: 12px;
-  backdrop-filter: blur(8px);
+  border: 1px solid var(--app-border);
 }
 
-.tab-button {
+.employee-create-container .tab-button {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
   background: transparent;
-  color: #ccc;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--app-text-muted);
+  border: 1px solid var(--app-border);
   border-radius: 8px;
   font-size: 0.95rem;
   font-weight: 500;
@@ -48,35 +50,35 @@
   transition: all 0.2s ease;
 }
 
-.tab-button:hover {
-  background: rgba(74, 144, 226, 0.2);
-  color: #fff;
-  border-color: #4a90e2;
+.employee-create-container .tab-button:hover {
+  background: var(--app-accent-soft);
+  color: var(--app-accent-light);
+  border-color: var(--app-accent);
 }
 
-.tab-button.active {
-  background: #4a90e2;
-  color: white;
-  border-color: #4a90e2;
-  box-shadow: 0 0 12px rgba(74, 144, 226, 0.4);
+.employee-create-container .tab-button.active {
+  background: var(--app-accent);
+  color: #fff;
+  border-color: var(--app-accent);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
 }
 
 /* Form */
 .employee-create-form {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--app-surface);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--app-border);
   border-radius: 16px;
   padding: 28px;
   width: 100%;
   max-width: 900px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 }
 
 /* Section Card */
-.section-card {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+.employee-create-form .section-card {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid var(--app-border);
   border-radius: 12px;
   margin-bottom: 24px;
   overflow: hidden;
@@ -84,8 +86,9 @@
 }
 
 .section-header {
-  background: linear-gradient(135deg, #4a90e2, #50c878);
-  color: white;
+  background: var(--app-accent-soft);
+  border-bottom: 1px solid var(--app-border);
+  color: var(--app-accent-light);
   padding: 14px 18px;
   display: flex;
   align-items: center;
@@ -142,7 +145,7 @@
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #4a90e2;
+  border-color: var(--app-accent);
   box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.3);
 }
 
@@ -154,7 +157,7 @@
 
 .form-group input[type="checkbox"] {
   width: auto;
-  accent-color: #4a90e2;
+  accent-color: var(--app-accent);
 }
 
 /* File Preview */
@@ -192,7 +195,7 @@
   margin-top: 20px;
   width: 100%;
   padding: 14px;
-  background: linear-gradient(90deg, #4a90e2, #50c878);
+  background: var(--app-accent);
   color: white;
   border: none;
   border-radius: 10px;
@@ -203,8 +206,10 @@
 }
 
 .submit-button:hover:not(:disabled) {
+  background: #2563eb;
+  color: var(--app-accent-light);
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(74, 144, 226, 0.4);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
 }
 
 .submit-button:disabled {
@@ -247,7 +252,7 @@
 .form-group select option:focus,
 .form-group select option:active,
 .form-group select option:checked {
-  background: #e10624 !important;
+  background: var(--app-error) !important;
   color: #fff !important;
 }
 

@@ -1,9 +1,11 @@
+/* Home / Landing – same gradient & accent as Sidebar & Dashboard */
 .home-container {
   min-height: 100vh;
   position: relative;
-  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
-  color: #fff;
+  background: linear-gradient(160deg, #0f172a 0%, #1e293b 45%, #0f172a 100%);
+  color: var(--app-text);
   overflow: hidden;
+  font-family: var(--app-font);
 }
 
 .particle-background {
@@ -17,7 +19,7 @@
 
 .particle {
   position: absolute;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(148, 163, 184, 0.25);
   border-radius: 50%;
   animation: float-particle 10s infinite linear;
 }
@@ -73,7 +75,7 @@
   left: -20px;
   right: -20px;
   bottom: -20px;
-  background: radial-gradient(circle, rgba(225, 6, 36, 0.5) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.25) 0%, transparent 70%);
   filter: blur(20px);
   animation: pulse 4s infinite;
 }
@@ -84,20 +86,19 @@
 }
 
 .hero-title {
-  font-size: 4rem;
+  font-size: clamp(2rem, 5vw, 4rem);
   font-weight: 700;
-  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color), #e10624);
-  background-size: 200% 100%;
+  letter-spacing: -0.025em;
+  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: gradient-sweep 5s infinite;
   margin-bottom: 20px;
 }
 
 .hero-subtitle {
-  font-size: 1.5rem;
-  color: #ddd;
+  font-size: 1.25rem;
+  color: var(--app-text-muted);
   margin-bottom: 30px;
   display: flex;
   justify-content: center;
@@ -108,16 +109,16 @@
 .sparkles-icon {
   width: 24px;
   height: 24px;
-  color: var(--accent-color);
+  color: var(--app-accent-light);
   animation: pulse 2s infinite;
 }
 
-.login-button {
+.home-container .login-button {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   padding: 15px 30px;
-  background: linear-gradient(90deg, var(--primary-color), #e10624);
+  background: var(--app-accent);
   color: #fff;
   text-decoration: none;
   border-radius: 50px;
@@ -125,12 +126,14 @@
   font-weight: 600;
   position: relative;
   overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: background 0.2s, color 0.2s, transform 0.2s ease;
 }
 
-.login-button:hover {
+.home-container .login-button:hover {
+  background: #2563eb;
+  color: var(--app-accent-light);
   transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(225, 6, 36, 0.5);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.35);
 }
 
 .login-button::before {
@@ -166,9 +169,9 @@
 }
 
 .features-title {
-  font-size: 2.5rem;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
   font-weight: 700;
-  color: #fff;
+  color: var(--app-text);
   margin-bottom: 40px;
   animation: fade-in 1s ease-out;
 }
@@ -182,13 +185,13 @@
 }
 
 .feature-card {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--app-surface);
   padding: 20px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  border: 1px solid var(--app-border);
   position: relative;
   overflow: hidden;
-  transition: transform 0.5s ease, box-shadow 0.5s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.2s ease;
 }
 
 .feature-card-0 { animation: slide-in 0.5s ease-out 0.2s backwards; }
@@ -197,14 +200,16 @@
 .feature-card-3 { animation: slide-in 0.5s ease-out 0.8s backwards; }
 
 .feature-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-6px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+  border-color: rgba(59, 130, 246, 0.5);
 }
 
 .feature-icon {
   display: inline-flex;
   padding: 10px;
-  background: linear-gradient(45deg, var(--primary-color), #e10624);
+  background: var(--app-accent-soft);
+  border: 1px solid var(--app-border);
   border-radius: 8px;
   margin-bottom: 15px;
   transition: transform 0.3s ease;
@@ -215,15 +220,15 @@
 }
 
 .feature-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: #fff;
+  color: var(--app-text);
   margin-bottom: 10px;
 }
 
 .feature-description {
-  font-size: 1rem;
-  color: #ccc;
+  font-size: 0.9375rem;
+  color: var(--app-text-muted);
 }
 
 .feature-glow {
@@ -232,7 +237,7 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(225, 6, 36, 0.3) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
   opacity: 0;
   transition: opacity 0.5s ease;
 }
@@ -244,7 +249,8 @@
 .cta-section {
   padding: 60px 20px;
   text-align: center;
-  background: linear-gradient(135deg, var(--primary-color) 0%, #e10624 100%);
+  background: var(--app-accent-soft);
+  border-top: 1px solid var(--app-border);
   position: relative;
   z-index: 10;
 }
@@ -255,25 +261,27 @@
 }
 
 .cta-title {
-  font-size: 2.5rem;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
   font-weight: 700;
-  color: #fff;
+  color: var(--app-text);
   margin-bottom: 20px;
 }
 
 .cta-subtitle {
-  font-size: 1.5rem;
-  color: #eee;
+  font-size: 1.25rem;
+  color: var(--app-text-muted);
   margin-bottom: 30px;
 }
 
 .cta-button {
-  background: #fff;
-  color: var(--primary-color);
+  background: var(--app-accent);
+  color: #fff;
 }
 
 .cta-button:hover {
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  background: #2563eb;
+  color: var(--app-accent-light);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.35);
 }
 
 @keyframes fade-in {

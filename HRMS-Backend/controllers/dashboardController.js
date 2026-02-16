@@ -7,10 +7,16 @@ const moment = require('moment-timezone');
 
 exports.getEmployeeDashboard = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
     const { employeeId, companyId } = req.user;
-    // if (req.user.role !== 'Employee') {
-    //   return res.status(403).json({ success: false, error: 'Access restricted to Employee role' });
-    // }
+    if (!employeeId || !companyId) {
+      return res.status(400).json({
+        success: false,
+        error: 'User is not linked to an employee. Dashboard is available for users with an employee record.',
+      });
+    }
 
     const employee = await Employee.findOne({ _id: employeeId, companyId }).select(
       'fullName newEmployeeCode designation assignedDepartment joiningDate email personalPhoneNumber'

@@ -17,6 +17,11 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
+  const isActiveExact = (path) => {
+    if (!path) return false;
+    return location.pathname === path;
+  };
+
   // Safety check: if context is not available or still loading, don't render
   if (!authContext) {
     console.warn('AuthContext is not available in Sidebar');
@@ -221,6 +226,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
                 )}
             </li>
         )}
+        
         <li className="dropdown">
           <div className="sidebar-link dropdown-toggle" onClick={() => toggleDropdown('requests')}>
             <Briefcase className="nav-icon" />
@@ -230,12 +236,12 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
           {openDropdown === 'requests' && (
             <ul className="dropdown-menu">
               <li>
-                <Link to="/leave" className="dropdown-item" onClick={handleLinkClick}>
+                <Link to="/leave" className={`dropdown-item ${isActiveExact('/leave') ? 'active' : ''}`} onClick={handleLinkClick}>
                   Leave Requests
                 </Link>
               </li>
               <li>
-                <Link to="/remote" className="dropdown-item" onClick={handleLinkClick}>
+                <Link to="/remote" className={`dropdown-item ${isActiveExact('/remote') ? 'active' : ''}`} onClick={handleLinkClick}>
                   Remote Requests
                 </Link>
               </li>
@@ -256,7 +262,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
                   
                   {(user?.role === 'HR Manager') && (
                     <li>
-                      <Link to="/leave/balance" className={`dropdown-item ${isActive('/leave/balance') ? 'active' : ''}`} onClick={handleLinkClick}>
+                      <Link to="/leave/balance" className={`dropdown-item ${isActiveExact('/leave/balance') ? 'active' : ''}`} onClick={handleLinkClick}>
                         All Employee Leave Balance
                       </Link>
                     </li>
@@ -265,7 +271,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
               )}
               {(user?.role === 'Employee' || user?.role === 'Manager' || user?.role === 'HR Manager' || user?.role === 'Super Admin' || user?.role === 'Company Admin' || user?.role === 'C-Level Executive') && (
                 <li>
-                  <Link to="/my-leave-balance" className="dropdown-item" onClick={handleLinkClick}>
+                  <Link to="/my-leave-balance" className={`dropdown-item ${isActiveExact('/my-leave-balance') ? 'active' : ''}`} onClick={handleLinkClick}>
                     My Leave Balance
                   </Link>
                 </li>
@@ -274,6 +280,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
           )}
           
         </li>
+
         {(user?.role === 'Super Admin' || user?.role === 'HR Manager' || user?.role === 'Company Admin' || user?.role === 'C-Level Executive') && (
           <li>
             <Link to="/documents" className={`sidebar-link ${isActive('/documents') ? 'active' : ''}`} onClick={handleLinkClick}>

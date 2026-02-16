@@ -38,6 +38,13 @@ export const updateEmployee = async (employeeId, formData, token) => {
   return response.data;
 };
 
+export const deleteEmployee = async (employeeId, token) => {
+  const response = await axios.delete(`${API_URL}/api/employees/${employeeId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 export const getPotentialManagers = async (departmentId, token) => {
   try {
     const response = await axios.get(`${API_URL}/api/employees/department/${departmentId}/managers`, {

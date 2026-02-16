@@ -3,6 +3,14 @@ const Employee = require('../models/employee');
 const User = require('../models/user');
 const Invitation = require('../models/invitation');
 const Company = require('../models/company');
+const LeaveEntitlement = require('../models/leaveEntitlement');
+const LeaveRequest = require('../models/leaveRequest');
+const Document = require('../models/document');
+const Payslip = require('../models/payslip');
+const Salary = require('../models/salary');
+const EmployeesAttendance = require('../models/employeesAttendance');
+const ShiftManagement = require('../models/shiftManagement');
+const AttendanceAdjustmentRequest = require('../models/attendanceAdjustmentRequest');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const moment = require('moment-timezone');
@@ -733,6 +741,79 @@ exports.getPotentialManagers = async (req, res) => {
     res.status(200).json({ success: true, data: potentialManagers });
   } catch (error) {
     console.error('getPotentialManagers - Error:', error);
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+
+// ================= DELETE EMPLOYEE =================
+exports.deleteEmployee = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const employee = await Employee.findById(id);
+    if (!employee) {
+      return res.status(404).json({ success: false, error: 'Employee not found' });
+    }
+
+    // Optional: restrict to same company (if req.user has companyId)
+    if (req.user?.companyId && employee.companyId?.toString() !== req.user.companyId.toString()) {
+      return res.status(403).json({ success: false, error: 'Not allowed to delete employee from another company' });
+    }
+
+    const employeeId = employee._id;
+    const employeeName = employee.fullName;
+    const employeeCode = employee.newEmployeeCode;
+
+    // Cascade: remove or unlink all related data
+    await User.deleteOne({ employeeId });
+    await Invitation.deleteOne({ employeeId });
+    await LeaveEntitlement.deleteMany({ employeeId });
+    await LeaveRequest.deleteMany({ employeeId });
+    await Document.deleteMany({ employeeId });
+    await Payslip.deleteMany({ employeeId });
+    await Salary.deleteMany({ employeeId });
+    await EmployeesAttendance.deleteMany({ employeeId });
+    await ShiftManagement.deleteMany({ employee: employeeId });
+    await AttendanceAdjustmentRequest.deleteMany({ employeeId });
+    await Employee.updateMany({ managerId: employeeId }, { $set: { managerId: null } });
+
+    await Employee.deleteOne({ _id: employeeId });
+
+    // Activity log (non-blocking)
+    const userInfo = activityLogService.extractUserInfo(req);
+    if (userInfo?.userId) {
+      activityLogService.logDelete(
+        userInfo.userId,
+        'Employee',
+        employeeId,
+        `Deleted employee: ${employeeName} (${employeeCode})`,
+        {
+          employeeId,
+          companyId: employee.companyId,
+          ipAddress: activityLogService.extractIpAddress(req),
+          userAgent: activityLogService.extractUserAgent(req),
+          metadata: { employeeCode, fullName: employeeName }
+        }
+      ).catch(() => {});
+    }
+
+    res.status(200).json({ success: true, message: 'Employee deleted successfully' });
+  } catch (error) {
+    console.error('deleteEmployee - Error:', error);
+    const userInfo = activityLogService.extractUserInfo(req);
+    if (userInfo?.userId) {
+      activityLogService.logError(
+        userInfo.userId,
+        'DELETE_EMPLOYEE',
+        'Employee',
+        'Failed to delete employee',
+        error.message,
+        {
+          entityId: req.params.id,
+          ipAddress: activityLogService.extractIpAddress(req),
+          userAgent: activityLogService.extractUserAgent(req)
+        }
+      ).catch(() => {});
+    }
     res.status(400).json({ success: false, error: error.message });
   }
 };

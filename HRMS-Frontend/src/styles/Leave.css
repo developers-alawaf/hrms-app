@@ -1,15 +1,17 @@
-
+/* Leave – same design system as Sidebar & Dashboard */
 .leave-container {
-  padding: 20px;
-  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
-  color: #fff;
-  min-height: calc(100vh - 80px);
+  padding: 0;
+  background: transparent;
+  color: var(--app-text);
+  min-height: auto;
+  font-family: var(--app-font);
 }
 
-.employee-title {
-  font-size: 2.5rem;
+.leave-container .employee-title {
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
   font-weight: 700;
-  background: linear-gradient(90deg, #4a90e2, #e10624);
+  letter-spacing: -0.025em;
+  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -17,119 +19,66 @@
 }
 
 .leave-form {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  background: var(--app-surface);
+  backdrop-filter: blur(12px);
   padding: 30px;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  border: 1px solid var(--app-border);
   max-width: 800px;
   margin: 0 auto 20px;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-group-checkbox {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-}
-
-.form-group label {
-  font-size: 1.1rem;
+.leave-form .form-group label {
+  font-size: 0.9375rem;
   font-weight: 500;
-  color: #ddd;
+  color: var(--app-text-muted);
 }
 
-.employee-input {
-  width: 100%;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  color: #fff;
-  font-size: 1rem;
+.leave-form .employee-input {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
 }
 
-.employee-input:focus {
-  outline: none;
-  border-color: #e10624;
+.leave-form .employee-input:focus {
+  border-color: var(--app-accent);
+  background: var(--app-accent-soft);
 }
 
-.employee-input::placeholder {
-  color: #aaa;
+.leave-form .employee-input::placeholder {
+  color: var(--app-text-muted);
 }
 
-.employee-input[type="date"] {
-  appearance: none;
-  color: #fff;
+.leave-form .employee-checkbox {
+  accent-color: var(--app-accent);
 }
 
-.employee-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
+.leave-form .employee-button {
+  background: var(--app-accent);
 }
 
-.employee-input option {
-  background: #2a2a3f;
-  color: #fff;
-}
-
-.employee-input option:hover,
-.employee-input option:focus,
-.employee-input option:active {
-  background: #e10624;
-}
-
-.employee-checkbox {
-  width: 20px;
-  height: 20px;
-  accent-color: #4a90e2;
-}
-
-.employee-checkbox:checked {
-  accent-color: #e10624;
-}
-
-.employee-button {
-  padding: 12px 20px;
-  background: #4a90e2;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.employee-button:hover {
-  background: #e10624;
+.leave-form .employee-button:hover {
+  background: #2563eb;
+  color: var(--app-accent-light);
 }
 
 .approve-button {
-  background: #50c878;
+  background: var(--app-success);
   margin-right: 10px;
 }
 
 .approve-button:hover {
-  background: #e10624;
+  background: #059669;
+  color: #6ee7b7;
 }
 
 .deny-button {
-  background: #e10624;
+  background: var(--app-error);
 }
 
 .deny-button:hover {
-  background: #4a90e2;
+  background: #dc2626;
+  color: #fca5a5;
 }
 
 .leave-header {
@@ -145,13 +94,16 @@
   align-items: center;
 }
 
-.employee-search {
+.leave-container .employee-search {
   max-width: 300px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
 }
 
 .rows-per-page-label {
-  font-size: 0.95rem;
-  color: #ccc;
+  font-size: 0.9375rem;
+  color: var(--app-text-muted);
   white-space: nowrap;
 }
 
@@ -159,89 +111,64 @@
   width: auto;
   min-width: 70px;
   padding: 8px 12px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
 }
 
 .leave-table-container {
   overflow-x: auto;
   margin-bottom: 20px;
   border-radius: 12px;
+  border: 1px solid var(--app-border);
 }
 
-.employee-table {
-  width: 100%;
-  min-width: 800px;
-  border-collapse: collapse;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 12px;
-  overflow: hidden;
+.leave-container .employee-table {
+  background: var(--app-surface);
+  backdrop-filter: blur(12px);
 }
 
-.employee-table th,
-.employee-table td {
-  padding: 15px;
-  text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.leave-container .employee-table th {
+  background: rgba(15, 23, 42, 0.7);
+  color: var(--app-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.employee-table th {
-  background: #4a90e2;
-  color: #fff;
-  font-weight: 600;
+.leave-container .employee-table th,
+.leave-container .employee-table td {
+  border-bottom: 1px solid var(--app-border);
+  color: var(--app-text);
 }
 
-.employee-table tr:hover {
-  background: rgba(225, 6, 36, 0.2);
+.leave-container .employee-table tr:hover {
+  background: rgba(51, 65, 85, 0.25);
 }
 
-.pagination-controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 16px;
-  margin-top: 20px;
-  flex-wrap: wrap;
+.leave-container .pagination-button {
+  background: var(--app-accent);
 }
 
-.pagination-button {
-  padding: 8px 16px;
-  background: #4a90e2;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  cursor: pointer;
+.leave-container .pagination-button:hover {
+  background: #2563eb;
+  color: var(--app-accent-light);
 }
 
-.pagination-button:hover {
-  background: #e10624;
+.leave-container .pagination-button:disabled {
+  background: var(--app-surface);
+  color: var(--app-text-muted);
 }
 
-.pagination-button:disabled {
-  background: #555;
-  cursor: not-allowed;
+.leave-container .pagination-info,
+.leave-container .employee-message {
+  color: var(--app-text-muted);
 }
 
-.pagination-info {
-  font-size: 1rem;
-  color: #ccc;
-  align-self: center;
+.leave-container .employee-error {
+  color: #f87171;
 }
 
-.employee-message {
-  text-align: center;
-  font-size: 1.2rem;
-  color: #ccc;
-  margin: 20px 0;
-}
-
-.employee-error {
-  color: #e10624;
-}
-
-.employee-success {
-  color: #50c878;
+.leave-container .employee-success {
+  color: #34d399;
 }
