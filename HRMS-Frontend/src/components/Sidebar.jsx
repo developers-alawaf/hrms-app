@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { Users, Calendar, FileText, Lock, LogOut, Menu, X, Briefcase, LayoutDashboard, ClipboardList } from 'lucide-react';
+import { Users, Calendar, FileText, Lock, LogOut, Menu, X, Briefcase, LayoutDashboard, ClipboardList, ChevronDown } from 'lucide-react';
 import '../styles/Sidebar.css';
 
 const defaultAvatar = '/default-avatar.png';
@@ -43,6 +43,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
 
   return (
     <div className={`sidebar ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+      <div className="sidebar-inner">
       <div className="sidebar-header">
         <Link to="/dashboard" onClick={handleLinkClick}>
           <img src="/Kloud_Technologies_Logo.svg" alt="Kloud Technologies Logo" className="sidebar-logo" />
@@ -273,23 +274,24 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
           </li>
         )}
       </ul>
-      {/* <div className="sidebar-footer">
-        <li className="user-dropdown">
-          <div className="user-profile" onClick={() => toggleDropdown('user')}>
+      <div className="sidebar-footer">
+        <div className="sidebar-user-dropdown">
+          <div className="sidebar-user-toggle" onClick={() => toggleDropdown('user')}>
             <img
               src={profileImage}
-              alt="User Profile"
-              className="user-image"
+              alt="User"
+              className="sidebar-user-image"
               onError={(e) => {
                 if (e.target.src !== defaultAvatar) {
                   e.target.src = defaultAvatar;
                 }
               }}
             />
-            <span className="user-name">{user?.fullName || 'User'}</span>
+            <span className="sidebar-user-name">{user?.fullName || 'User'}</span>
+            <ChevronDown className="sidebar-user-chevron" size={18} />
           </div>
           {openDropdown === 'user' && (
-            <ul className="dropdown-menu">
+            <ul className="sidebar-footer-dropdown">
               <li>
                 <Link to="/profile" className="dropdown-item" onClick={handleLinkClick}>
                   My Profile
@@ -307,8 +309,9 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
               </li>
             </ul>
           )}
-        </li>
-      </div> */}
+        </div>
+      </div>
+      </div>
     </div>
   );
 };

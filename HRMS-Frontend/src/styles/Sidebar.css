@@ -12,8 +12,22 @@
   transition: transform 0.3s ease;
   z-index: 1000;
   transform: translateX(0);
-  overflow-y: auto;
   color: #f1f5f9;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.sidebar-inner .sidebar-links {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 /* Old .sidebar-closed styles */
@@ -142,40 +156,96 @@
   color: #f87171;
 }
 
-/*
 .sidebar-footer {
+  flex-shrink: 0;
   margin-top: auto;
-  padding-top: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 1rem 15px 1.25rem;
+  border-top: 1px solid rgba(71, 85, 105, 0.4);
 }
 
-.user-profile {
+.sidebar-user-dropdown {
+  position: relative;
+}
+
+.sidebar-user-toggle {
   display: flex;
   align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
   cursor: pointer;
-  padding: 10px 15px;
-  border-radius: 5px;
-  transition: background-color 0.2s;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
-.user-profile:hover {
-  background-color: #4a90e2;
+.sidebar-user-toggle:hover {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
 }
 
-.user-image {
-  width: 40px;
-  height: 40px;
+.sidebar-user-image {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  margin-right: 10px;
   object-fit: cover;
-  border: 2px solid #4a90e2;
+  border: 2px solid rgba(96, 165, 250, 0.5);
+  flex-shrink: 0;
 }
 
-.user-name {
-  font-weight: bold;
-  color: #fff;
+.sidebar-user-name {
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-*/
+
+.sidebar-user-chevron {
+  flex-shrink: 0;
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+}
+
+.sidebar-user-dropdown:has(.sidebar-footer-dropdown) .sidebar-user-chevron {
+  transform: rotate(180deg);
+}
+
+.sidebar-footer-dropdown {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  margin: 0 0 8px 0;
+  padding: 8px 0;
+  list-style: none;
+  background: rgba(30, 41, 59, 0.98);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 10;
+}
+
+.sidebar-footer-dropdown .dropdown-item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  color: #94a3b8;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-footer-dropdown .dropdown-item:hover {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
 
 /* New .sidebar-toggle styles for Bug #1 */
 .sidebar-toggle {
@@ -203,6 +273,31 @@
   left: 270px;  /* 250px sidebar width + 20px margin */
 }
 
+
+/* Mobile: floating button to open sidebar when closed */
+.sidebar-mobile-toggle {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 999;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  border-radius: 10px;
+  color: #f1f5f9;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-mobile-toggle:hover {
+  background: rgba(59, 130, 246, 0.25);
+  color: #93c5fd;
+}
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {

@@ -29,10 +29,10 @@ body {
   overflow-x: hidden;
 }
 
-/* ✅ NEW: Main content base styles */
+/* Main content: no top bar, only sidebar */
 main.main-content {
   flex-grow: 1;
-  padding-top: 60px;
+  padding-top: 0;
   margin-left: 0;
   transition: margin-left 0.3s ease-in-out, width 0.3s ease-in-out;
   position: relative;
