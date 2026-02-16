@@ -4,6 +4,10 @@ import App from './App';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import PresentTodayPage from './pages/PresentTodayPage';
+import AbsentTodayPage from './pages/AbsentTodayPage';
+import RemoteTodayPage from './pages/RemoteTodayPage';
+import LeaveTodayPage from './pages/LeaveTodayPage';
 import EmployeeListPage from './pages/EmployeeListPage';
 import EmployeeCreatePage from './pages/EmployeeCreatePage';
 import EmployeeUpdatePage from './pages/EmployeeUpdatePage';
@@ -104,6 +108,38 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/dashboard/present-today',
+        element: (
+          <ProtectedRoute>
+            <PresentTodayPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/dashboard/absent-today',
+        element: (
+          <ProtectedRoute>
+            <AbsentTodayPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/dashboard/remote-today',
+        element: (
+          <ProtectedRoute>
+            <RemoteTodayPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/dashboard/leave-today',
+        element: (
+          <ProtectedRoute>
+            <LeaveTodayPage />
           </ProtectedRoute>
         ),
       },

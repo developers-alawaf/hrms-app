@@ -93,7 +93,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
           </li>
         )}
         <li>
-          <Link to="/attendance" className="sidebar-link" onClick={handleLinkClick}>
+          <Link to="/attendance" className={`sidebar-link ${isActiveExact('/attendance') ? 'active' : ''}`} onClick={handleLinkClick}>
             <Calendar className="nav-icon" />
             Attendance
           </Link>

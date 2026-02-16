@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Employee = require('../models/employee');
 const EmployeesAttendance = require('../models/employeesAttendance');
 const Payslip = require('../models/payslip');
@@ -108,11 +109,6 @@ exports.getDashboardStats = async (req, res) => {
       status: 'Present'
     });
 
-    const absentToday = await EmployeesAttendance.countDocuments({
-      date: today.toDate(),
-      status: 'Absent'
-    });
-
     const remoteToday = await EmployeesAttendance.countDocuments({
       date: today.toDate(),
       status: 'Remote'
@@ -124,6 +120,9 @@ exports.getDashboardStats = async (req, res) => {
       endDate: { $gte: today.toDate() }
     });
 
+    // Absent = total employees minus (present + remote + on leave) from attendance/leave data
+    const absentToday = Math.max(0, totalEmployees - presentToday - remoteToday - leaveToday);
+
     res.json({
       totalEmployees,
       presentToday,
@@ -133,6 +132,53 @@ exports.getDashboardStats = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+// List of employees absent today (not present, not remote, not on leave)
+exports.getAbsentToday = async (req, res) => {
+  try {
+    const today = moment().tz('Asia/Dhaka').startOf('day').toDate();
+
+    const presentRecords = await EmployeesAttendance.find({
+      date: today,
+      status: 'Present'
+    })
+      .select('employeeId')
+      .lean();
+    const presentIds = presentRecords.map((r) => r.employeeId).filter(Boolean);
+
+    const onLeaveOrRemote = await LeaveRequest.find({
+      status: 'approved',
+      startDate: { $lte: today },
+      endDate: { $gte: today }
+    })
+      .select('employeeId')
+      .lean();
+    const onLeaveOrRemoteIds = [...new Set(onLeaveOrRemote.map((r) => r.employeeId?.toString()).filter(Boolean))];
+    const allExcludeStr = [...new Set([...presentIds.map((id) => id.toString()), ...onLeaveOrRemoteIds])];
+    const excludeIds = allExcludeStr.map((id) => new mongoose.Types.ObjectId(id));
+
+    const employees = await Employee.find({
+      _id: { $nin: excludeIds },
+      employeeStatus: 'active'
+    })
+      .populate({ path: 'department', select: 'name' })
+      .populate({ path: 'designation', select: 'name' })
+      .select('fullName newEmployeeCode department designation')
+      .sort({ fullName: 1 })
+      .lean();
+
+    const absentList = employees.map((emp) => ({
+      fullName: emp.fullName,
+      employeeCode: emp.newEmployeeCode,
+      department: emp.department?.name || '—',
+      designation: emp.designation?.name || '—'
+    }));
+
+    res.json({ success: true, data: absentList });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 

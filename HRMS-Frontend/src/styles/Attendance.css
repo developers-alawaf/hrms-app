@@ -20,23 +20,56 @@
 }
 
 .attendance-filters {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   background: var(--app-surface);
   backdrop-filter: blur(12px);
   padding: 20px;
   border-radius: 16px;
   border: 1px solid var(--app-border);
-  max-width: 800px;
-  margin: 0 auto 20px;
+  margin: 0 0 20px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
   gap: 20px;
   align-items: end;
+}
+
+.attendance-filters .form-group {
+  min-width: 0;
+}
+
+.attendance-filters .form-group input,
+.attendance-filters .form-group select {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .attendance-filters .form-group label {
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--app-text-muted);
+}
+
+.attendance-filters .filter-buttons {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 12px;
+  min-width: 0;
+}
+
+.attendance-filters .filter-buttons .employee-button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .attendance-filters {
+    grid-template-columns: 1fr;
+    padding: 16px;
+    gap: 16px;
+  }
 }
 
 .attendance-filters .employee-input {

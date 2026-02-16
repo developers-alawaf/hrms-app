@@ -61,6 +61,19 @@ const AttendanceList = () => {
     return match ? match[1] : "-";
   };
 
+  // Format time as 12-hour with AM/PM (e.g. "09:36 AM", "08:18 PM")
+  const formatTime12h = (ts) => {
+    const timeStr = extractOriginalTime(ts);
+    if (!timeStr || timeStr === "-") return "-";
+    const parts = timeStr.split(":");
+    const hours = parseInt(parts[0], 10);
+    const minutes = parts[1] != null ? String(parseInt(parts[1], 10) || 0).padStart(2, "0") : "00";
+    if (Number.isNaN(hours)) return timeStr;
+    const period = hours >= 12 ? "PM" : "AM";
+    const h12 = hours % 12 || 12;
+    return `${String(h12).padStart(2, "0")}:${minutes} ${period}`;
+  };
+
   // Fetch Employees
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -214,6 +227,7 @@ const AttendanceList = () => {
           <button onClick={handleFilter} className="employee-button">Filter</button>
           <button onClick={exportToExcel} className="employee-button">Export to Excel</button>
         </div>
+        
       </div>
 
       <div className="attendance-table-container">
@@ -224,6 +238,7 @@ const AttendanceList = () => {
               <th>Name</th>
               
               <th>Date</th>
+              <th>Day</th>
               <th>In</th>
               <th>Out</th>
               <th>Hours</th>
@@ -246,8 +261,9 @@ const AttendanceList = () => {
                   <td>{record.fullName}</td>
                   
                   <td>{record.date}</td>
-                  <td>{extractOriginalTime(record.check_in)}</td>
-                  <td>{extractOriginalTime(record.check_out)}</td>
+                  <td>{new Date(record.date).toLocaleDateString('en-US', { weekday: 'long' })}</td>
+                  <td>{formatTime12h(record.check_in)}</td>
+                  <td>{formatTime12h(record.check_out)}</td>
                   <td>{typeof record.work_hours === 'string' ? record.work_hours : (record.work_hours ? record.work_hours.toFixed(2) : "0.00")}</td>
                   <td>
                     <span className={`status-badge ${getStatusClass(record.status)}`}>
@@ -282,6 +298,7 @@ const AttendanceList = () => {
           </button>
         </div>
       )}
+
     </div>
   );
 };
