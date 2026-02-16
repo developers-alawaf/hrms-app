@@ -54,7 +54,7 @@ const Dashboard = () => {
           </div>
           <div className="stat-card">
             <h4>Present Today</h4>
-            <p>{stats.absentToday}</p>
+            <p>{stats.presentToday ?? 0}</p>
           </div>
           <div className="stat-card">
             <h4>Remote Today</h4>

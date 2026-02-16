@@ -97,6 +97,11 @@ exports.getDashboardStats = async (req, res) => {
 
     const totalEmployees = await Employee.countDocuments();
 
+    const presentToday = await EmployeesAttendance.countDocuments({
+      date: today.toDate(),
+      status: 'Present'
+    });
+
     const absentToday = await EmployeesAttendance.countDocuments({
       date: today.toDate(),
       status: 'Absent'
@@ -115,6 +120,7 @@ exports.getDashboardStats = async (req, res) => {
 
     res.json({
       totalEmployees,
+      presentToday,
       absentToday,
       remoteToday,
       leaveToday
