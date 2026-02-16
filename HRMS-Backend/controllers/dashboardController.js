@@ -97,6 +97,11 @@ exports.getDashboardStats = async (req, res) => {
 
     const totalEmployees = await Employee.countDocuments();
 
+    const presentToday = await EmployeesAttendance.countDocuments({
+      date: today.toDate(),
+      status: 'Present'
+    });
+
     const absentToday = await EmployeesAttendance.countDocuments({
       date: today.toDate(),
       status: 'Absent'
@@ -115,11 +120,127 @@ exports.getDashboardStats = async (req, res) => {
 
     res.json({
       totalEmployees,
+      presentToday,
       absentToday,
       remoteToday,
       leaveToday
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+// List of employees present today (for dashboard)
+exports.getPresentToday = async (req, res) => {
+  try {
+    const today = moment().tz('Asia/Dhaka').startOf('day').toDate();
+    const list = await EmployeesAttendance.find({
+      date: today,
+      status: 'Present'
+    })
+      .populate({
+        path: 'employeeId',
+        select: 'fullName newEmployeeCode department designation',
+        populate: [
+          { path: 'department', select: 'name' },
+          { path: 'designation', select: 'name' }
+        ]
+      })
+      .sort({ check_in: 1 })
+      .lean();
+
+    const presentList = list
+      .filter((a) => a.employeeId)
+      .map((a) => ({
+        fullName: a.employeeId.fullName,
+        employeeCode: a.employeeId.newEmployeeCode,
+        department: a.employeeId.department?.name || '—',
+        designation: a.employeeId.designation?.name || '—',
+        check_in: a.check_in ? moment(a.check_in).tz('Asia/Dhaka').format('HH:mm') : null,
+        check_out: a.check_out ? moment(a.check_out).tz('Asia/Dhaka').format('HH:mm') : null,
+        work_hours: a.work_hours != null ? Number(a.work_hours).toFixed(1) : null
+      }));
+
+    res.json({ success: true, data: presentList });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// List of employees working remote today (approved LeaveRequest type 'remote')
+exports.getRemoteToday = async (req, res) => {
+  try {
+    const today = moment().tz('Asia/Dhaka').startOf('day').toDate();
+    const list = await LeaveRequest.find({
+      status: 'approved',
+      type: 'remote',
+      startDate: { $lte: today },
+      endDate: { $gte: today }
+    })
+      .populate({
+        path: 'employeeId',
+        select: 'fullName newEmployeeCode department designation',
+        populate: [
+          { path: 'department', select: 'name' },
+          { path: 'designation', select: 'name' }
+        ]
+      })
+      .sort({ startDate: 1 })
+      .lean();
+
+    const remoteList = list
+      .filter((r) => r.employeeId)
+      .map((r) => ({
+        fullName: r.employeeId.fullName,
+        employeeCode: r.employeeId.newEmployeeCode,
+        department: r.employeeId.department?.name || '—',
+        designation: r.employeeId.designation?.name || '—',
+        startDate: moment(r.startDate).format('YYYY-MM-DD'),
+        endDate: moment(r.endDate).format('YYYY-MM-DD')
+      }));
+
+    res.json({ success: true, data: remoteList });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// List of employees on leave today (approved LeaveRequest, type not 'remote')
+exports.getLeaveToday = async (req, res) => {
+  try {
+    const today = moment().tz('Asia/Dhaka').startOf('day').toDate();
+    const list = await LeaveRequest.find({
+      status: 'approved',
+      type: { $ne: 'remote' },
+      startDate: { $lte: today },
+      endDate: { $gte: today }
+    })
+      .populate({
+        path: 'employeeId',
+        select: 'fullName newEmployeeCode department designation',
+        populate: [
+          { path: 'department', select: 'name' },
+          { path: 'designation', select: 'name' }
+        ]
+      })
+      .sort({ startDate: 1 })
+      .lean();
+
+    const leaveList = list
+      .filter((r) => r.employeeId)
+      .map((r) => ({
+        fullName: r.employeeId.fullName,
+        employeeCode: r.employeeId.newEmployeeCode,
+        department: r.employeeId.department?.name || '—',
+        designation: r.employeeId.designation?.name || '—',
+        type: r.type,
+        startDate: moment(r.startDate).format('YYYY-MM-DD'),
+        endDate: moment(r.endDate).format('YYYY-MM-DD'),
+        isHalfDay: r.isHalfDay || false
+      }));
+
+    res.json({ success: true, data: leaveList });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
 };

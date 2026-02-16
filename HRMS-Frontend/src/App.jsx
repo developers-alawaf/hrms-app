@@ -106,9 +106,9 @@
 
 import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
+import { Menu } from 'lucide-react';
 import './styles/global.css';
 
 function App() {
@@ -137,21 +137,25 @@ function App() {
   return (
     <div className="app">
       {!isPublicRoute && (
-        <Sidebar
-          isSidebarOpen={isSidebarOpen}
-          toggleSidebar={toggleSidebar}
-          isDesktop={isDesktop}
-        />
-      )}
-      {/* ✅ FIX: Added dynamic className logic - KEY CHANGE */}
-      <main className={!isPublicRoute ? `main-content ${isDesktop && isSidebarOpen ? 'main-content-shifted' : 'main-content-expanded'}` : ''}>
-        {!isPublicRoute && (
-          <Header
+        <>
+          <Sidebar
+            isSidebarOpen={isSidebarOpen}
             toggleSidebar={toggleSidebar}
             isDesktop={isDesktop}
-            isSidebarOpen={isSidebarOpen}
           />
-        )}
+          {!isDesktop && !isSidebarOpen && (
+            <button
+              type="button"
+              className="sidebar-mobile-toggle"
+              onClick={toggleSidebar}
+              aria-label="Open menu"
+            >
+              <Menu size={24} />
+            </button>
+          )}
+        </>
+      )}
+      <main className={!isPublicRoute ? `main-content ${isDesktop && isSidebarOpen ? 'main-content-shifted' : 'main-content-expanded'}` : ''}>
         <Outlet />
       </main>
       {!isPublicRoute && <Footer />}

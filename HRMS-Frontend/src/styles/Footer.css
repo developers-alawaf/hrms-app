@@ -1,7 +1,9 @@
+/* Footer – matches Dashboard / Sidebar theme */
 .footer {
-  background: linear-gradient(135deg, #1e1e2f 0%, #2a1a3f 50%, #1e1e2f 100%);
-  padding: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: linear-gradient(160deg, #0f172a 0%, #1e293b 45%, #0f172a 100%);
+  padding: 1rem 1.25rem;
+  margin-top: auto;
 }
 
 .footer-content {
@@ -13,11 +15,9 @@
 }
 
 .footer-text {
-  color: #fff;
-  font-size: 0.9rem;
-  background: linear-gradient(90deg, #4a90e2, #e10624);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: #94a3b8;
+  font-size: 0.875rem;
+  font-weight: 500;
   text-align: center;
+  margin: 0;
 }
