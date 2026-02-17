@@ -257,6 +257,80 @@ exports.getRemoteToday = async (req, res) => {
   }
 };
 
+// Current month attendance day counts for the logged-in employee (for all users with employeeId)
+exports.getMonthSummary = async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+    const { employeeId, companyId } = req.user;
+    if (!employeeId || !companyId) {
+      return res.status(400).json({
+        success: false,
+        error: 'User is not linked to an employee. Month summary is available for users with an employee record.',
+      });
+    }
+
+    const tz = 'Asia/Dhaka';
+    const monthStart = moment().tz(tz).startOf('month');
+    const today = moment().tz(tz).startOf('day');
+
+    // Working days = weekdays (Mon–Fri) from 1st of month to today inclusive, minus company holidays in that range
+    const holidayCalendar = await HolidayCalendar.findOne({ companyId, year: monthStart.year() });
+    const holidayDates = new Set();
+    if (holidayCalendar && holidayCalendar.holidays && holidayCalendar.holidays.length) {
+      holidayCalendar.holidays.forEach((h) => {
+        const start = moment(h.startDate).tz(tz).startOf('day');
+        const end = h.endDate ? moment(h.endDate).tz(tz).startOf('day') : start;
+        for (let d = moment(start); d.isSameOrBefore(end, 'day'); d.add(1, 'day')) {
+          if (d.isSameOrAfter(monthStart, 'day') && d.isSameOrBefore(today, 'day')) {
+            holidayDates.add(d.format('YYYY-MM-DD'));
+          }
+        }
+      });
+    }
+
+    let workingDays = 0;
+    for (let d = moment(monthStart); d.isSameOrBefore(today, 'day'); d.add(1, 'day')) {
+      const dayOfWeek = d.isoWeekday(); // 1 = Mon, 7 = Sun
+      const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+      const isHoliday = holidayDates.has(d.format('YYYY-MM-DD'));
+      if (isWeekday && !isHoliday) workingDays++;
+    }
+
+    const monthStartDate = monthStart.toDate();
+    const todayDate = today.toDate();
+
+    const records = await EmployeesAttendance.find({
+      employeeId,
+      companyId,
+      date: { $gte: monthStartDate, $lte: todayDate },
+    })
+      .select('status')
+      .lean();
+
+    const presentDays = records.filter((r) => r.status === 'Present').length;
+    const remoteDays = records.filter((r) => r.status === 'Remote').length;
+    const leaveDays = records.filter((r) => r.status === 'Leave').length;
+    // Absent = working days minus (present + remote + leave); cap at 0
+    const absentDays = Math.max(0, workingDays - presentDays - remoteDays - leaveDays);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        workingDays,
+        presentDays,
+        absentDays,
+        remoteDays,
+        leaveDays,
+        month: moment().tz(tz).format('YYYY-MM'),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 // List of employees on leave today (approved LeaveRequest, type not 'remote')
 exports.getLeaveToday = async (req, res) => {
   try {

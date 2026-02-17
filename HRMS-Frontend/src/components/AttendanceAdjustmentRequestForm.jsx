@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { createAdjustmentRequest } from '../api/attendance';
 import { AuthContext } from '../context/AuthContext';
+import '../styles/Employee.css';
 import '../styles/Attendance.css';
 
 const AttendanceAdjustmentRequestForm = ({ onFormSubmit }) => {
@@ -61,61 +62,82 @@ const AttendanceAdjustmentRequestForm = ({ onFormSubmit }) => {
   };
 
   return (
-    <div className="attendance-adjustment-form-container attendance-form">
-      <h3>Submit Attendance Adjustment Request</h3>
-      <form onSubmit={handleSubmit} className="attendance-adjustment-form">
-        <div className="form-group">
-          <label htmlFor="attendanceDate">Attendance Date:</label>
-          <input
-            type="date"
-            id="attendanceDate"
-            name="attendanceDate"
-            value={formData.attendanceDate}
-            onChange={handleChange}
-            required
-            className="employee-input"
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="proposedCheckIn">Proposed Check-in Time:</label>
-          <input
-            type="time"
-            id="proposedCheckIn"
-            name="proposedCheckIn"
-            value={formData.proposedCheckIn}
-            onChange={handleChange}
-            className="employee-input"
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="proposedCheckOut">Proposed Check-out Time:</label>
-          <input
-            type="time"
-            id="proposedCheckOut"
-            name="proposedCheckOut"
-            value={formData.proposedCheckOut}
-            onChange={handleChange}
-            className="employee-input"
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="reason">Reason:</label>
-          <textarea
-            id="reason"
-            name="reason"
-            value={formData.reason}
-            onChange={handleChange}
-            rows="3"
-            required
-            className="employee-input"
-          ></textarea>
-        </div>
-        {error && <p className="error-message">{error}</p>}
-        {success && <p className="success-message">{success}</p>}
-        <button type="submit" disabled={loading || (!formData.proposedCheckIn && !formData.proposedCheckOut)} className="employee-button">
-          {loading ? 'Submitting...' : 'Submit Request'}
-        </button>
-      </form>
+    <div className="section-card attendance-adjustment-section">
+      <div className="section-header">
+        <h3>Submit Attendance Adjustment Request</h3>
+      </div>
+      <div className="section-body">
+        <form onSubmit={handleSubmit} className="employee-form attendance-adjustment-form">
+          <div className="form-grid attendance-adjustment-grid">
+            <div className="form-group">
+              <label htmlFor="attendanceDate">Attendance Date</label>
+              <input
+                type="date"
+                id="attendanceDate"
+                name="attendanceDate"
+                value={formData.attendanceDate}
+                onChange={handleChange}
+                required
+                className="employee-input"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="proposedCheckIn">Proposed Check-in</label>
+              <input
+                type="time"
+                id="proposedCheckIn"
+                name="proposedCheckIn"
+                value={formData.proposedCheckIn}
+                onChange={handleChange}
+                className="employee-input"
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="proposedCheckOut">Proposed Check-out</label>
+              <input
+                type="time"
+                id="proposedCheckOut"
+                name="proposedCheckOut"
+                value={formData.proposedCheckOut}
+                onChange={handleChange}
+                className="employee-input"
+              />
+            </div>
+            <div className="form-group full-span">
+              <label htmlFor="reason">Reason</label>
+              <textarea
+                id="reason"
+                name="reason"
+                value={formData.reason}
+                onChange={handleChange}
+                rows="3"
+                placeholder="Explain why this adjustment is needed..."
+                required
+                className="employee-input employee-textarea"
+              />
+            </div>
+          </div>
+          {error && (
+            <div className="employee-message employee-error" role="alert">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="employee-message employee-success">
+              {success}
+            </div>
+          )}
+          <div className="attendance-adjustment-form-actions">
+            <button
+              type="submit"
+              disabled={loading || (!formData.proposedCheckIn && !formData.proposedCheckOut)}
+              className="employee-button employee-btn-primary"
+            >
+              {loading ? 'Submitting...' : 'Submit Request'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

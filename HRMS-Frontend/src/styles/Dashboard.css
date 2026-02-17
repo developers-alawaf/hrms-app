@@ -140,6 +140,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.stat-card__sublabel {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--dash-text-muted);
+}
+
 .stat-card--total:hover { border-color: rgba(59, 130, 246, 0.5); }
 .stat-card--total .stat-card__value { color: #93c5fd; }
 

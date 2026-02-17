@@ -235,3 +235,53 @@
   background: rgba(139, 92, 246, 0.15);
   color: #a78bfa;
 }
+
+/* Attendance Adjustment Request form – section card + form grid */
+.attendance-adjustment-section .attendance-adjustment-form {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
+}
+
+.attendance-adjustment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.attendance-adjustment-grid .full-span {
+  grid-column: 1 / -1;
+}
+
+.attendance-adjustment-grid .form-group label {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--app-text-muted);
+}
+
+.attendance-adjustment-form .employee-input.employee-textarea {
+  min-height: 80px;
+  resize: vertical;
+  padding: 12px;
+}
+
+.attendance-adjustment-form .employee-message {
+  margin-bottom: 16px;
+}
+
+.attendance-adjustment-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .attendance-adjustment-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -7,6 +7,7 @@ const Dashboard = () => {
   const { user, loading } = useContext(AuthContext);
   const [employeeData, setEmployeeData] = useState(null);
   const [stats, setStats] = useState(null);
+  const [monthSummary, setMonthSummary] = useState(null);
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
@@ -14,20 +15,31 @@ const Dashboard = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
       try {
-        const [empRes, statsRes] = await Promise.all([
+        const isSuperAdmin = user?.role === 'Super Admin';
+        const [empRes, statsRes, monthRes] = await Promise.all([
           fetch(`${import.meta.env.VITE_API_URL}/api/dashboard`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/dashboard-stats`, {
+          isSuperAdmin
+            ? fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/dashboard-stats`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+            : Promise.resolve(null),
+          fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/month-summary`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
 
         const empData = await empRes.json();
-        const statsData = await statsRes.json();
-
         if (empData.success) setEmployeeData(empData.data);
-        if (statsData) setStats(statsData);
+
+        if (isSuperAdmin && statsRes) {
+          const statsData = await statsRes.json();
+          if (statsData) setStats(statsData);
+        }
+
+        const monthData = await monthRes.json();
+        if (monthData.success && monthData.data) setMonthSummary(monthData.data);
       } catch (err) {
         console.error("Error fetching dashboard:", err);
       } finally {
@@ -70,7 +82,37 @@ const Dashboard = () => {
         <p className="dashboard-date">{todayFormatted}</p>
       </header>
 
-      {stats && (
+      {monthSummary && (
+        <section className="dashboard-stats" aria-label="This month summary">
+          <div className="stat-card stat-card--total">
+            <span className="stat-card__label">Working days this month</span>
+            <span className="stat-card__value">{monthSummary.workingDays}</span>
+            <span className="stat-card__sublabel">days</span>
+          </div>
+          <div className="stat-card stat-card--present">
+            <span className="stat-card__label">Present this month</span>
+            <span className="stat-card__value">{monthSummary.presentDays}</span>
+            <span className="stat-card__sublabel">days</span>
+          </div>
+          <div className="stat-card stat-card--absent">
+            <span className="stat-card__label">Absent this month</span>
+            <span className="stat-card__value">{monthSummary.absentDays}</span>
+            <span className="stat-card__sublabel">days</span>
+          </div>
+          <div className="stat-card stat-card--remote">
+            <span className="stat-card__label">Remote this month</span>
+            <span className="stat-card__value">{monthSummary.remoteDays}</span>
+            <span className="stat-card__sublabel">days</span>
+          </div>
+          <div className="stat-card stat-card--leave">
+            <span className="stat-card__label">Leave this month</span>
+            <span className="stat-card__value">{monthSummary.leaveDays}</span>
+            <span className="stat-card__sublabel">days</span>
+          </div>
+        </section>
+      )}
+
+      {stats && user.role === 'Super Admin' && (
         <section className="dashboard-stats" aria-label="Overview statistics">
           <Link to="/employees" className="stat-card stat-card--total stat-card--link">
             <span className="stat-card__label">Total Employees</span>

@@ -4,6 +4,7 @@ const dashboardController = require('../controllers/dashboardController');
 
 router.get('/', dashboardController.getEmployeeDashboard);
 router.get('/dashboard-stats', dashboardController.getDashboardStats);
+router.get('/month-summary', dashboardController.getMonthSummary);
 router.get('/present-today', dashboardController.getPresentToday);
 router.get('/absent-today', dashboardController.getAbsentToday);
 router.get('/remote-today', dashboardController.getRemoteToday);
