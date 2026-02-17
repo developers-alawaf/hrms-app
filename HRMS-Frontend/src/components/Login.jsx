@@ -86,7 +86,7 @@ const Login = () => {
           Back to Home
         </Link>
         <div className="logo-container">
-          <img src="/Kloud Technologies Logo.png" alt="Alawaf HRMS Logo" className="login-logo" />
+          <img src="/Kloud_Technologies_Logo.svg" alt="Alawaf HRMS Logo" className="login-logo" />
         </div>
         <h2 className="login-title">Login to HRMS</h2>
         <form onSubmit={handleSubmit} className="login-form">

@@ -42,10 +42,25 @@ const CommonDocuments = () => {
     setFile(e.target.files[0]);
   };
 
+  // Get a valid MongoDB ObjectId string from user (handles string or populated object)
+  const getValidCompanyId = () => {
+    const raw = user?.companyId;
+    if (raw == null) return null;
+    const id = typeof raw === 'object' && raw !== null && raw._id != null ? raw._id : raw;
+    const str = String(id).trim();
+    return /^[a-fA-F0-9]{24}$/.test(str) ? str : null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!file || !description) {
       setUploadError('Please provide a file and a description.');
+      return;
+    }
+
+    const companyId = getValidCompanyId();
+    if (!companyId) {
+      setUploadError('Your account is not linked to a company, or the company ID is invalid. Please contact your administrator.');
       return;
     }
 
@@ -55,7 +70,7 @@ const CommonDocuments = () => {
     formData.append('description', description);
     formData.append('isCommon', 'true');
     formData.append('documentType', 'policy');
-    formData.append('companyId', user.companyId);
+    formData.append('companyId', companyId);
 
     setUploading(true);
     setUploadError('');
@@ -113,36 +128,57 @@ const CommonDocuments = () => {
       <h2 className="employee-title">Company Policies</h2>
 
       {canUpload && (
-        <div className="upload-form-container">
-          <h3>Upload New Policy</h3>
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label htmlFor="description">Description</label>
-              <input
-                type="text"
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="file">Document File</label>
-              <input
-                type="file"
-                id="file"
-                onChange={handleFileChange}
-                required
-              />
-            </div>
-            {uploadError && <div className="employee-message employee-error">{uploadError}</div>}
-            <button type="submit" className="employee-button" disabled={uploading}>
-              {uploading ? 'Uploading...' : 'Upload'} 
-            </button>
-            
-          </form>
+        <div className="section-card common-docs-upload-section">
+          <div className="section-header">
+            <h3>Upload New Policy</h3>
+          </div>
+          <div className="section-body">
+            <form onSubmit={handleSubmit} className="employee-form common-docs-upload-form">
+              <div className="common-docs-upload-row">
+                <div className="form-group common-docs-upload-desc">
+                  <label htmlFor="description">Description</label>
+                  <input
+                    type="text"
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    className="employee-input"
+                    placeholder="e.g. Leave Policy 2024"
+                    required
+                  />
+                </div>
+                <div className="form-group common-docs-upload-file">
+                  <label htmlFor="file">Document File</label>
+                  <input
+                    type="file"
+                    id="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileChange}
+                    className="employee-input employee-file-input"
+                    required
+                  />
+                  {file && <span className="common-docs-file-name">{file.name}</span>}
+                </div>
+                <div className="form-group common-docs-upload-btn">
+                  <label>&nbsp;</label>
+                  <button
+                    type="submit"
+                    className="employee-button employee-btn-primary"
+                    disabled={uploading}
+                  >
+                    {uploading ? 'Uploading...' : 'Upload'}
+                  </button>
+                </div>
+              </div>
+              {uploadError && (
+                <div className="employee-message employee-error" role="alert">
+                  {uploadError}
+                </div>
+              )}
+            </form>
+          </div>
         </div>
-      )}<br/>
+      )}
 
       {documents.length === 0 ? (
         <div className="employee-message">No company policies found.</div>
@@ -158,22 +194,35 @@ const CommonDocuments = () => {
             </thead>
             <tbody>
               {documents.map((doc) => {
-                const canDelete = user.role === 'Super Admin' || user.role === 'HR Manager' || user.role === "Company Admin" || (doc.uploadedBy && doc.uploadedBy._id === user._id);
+                const canDelete = user.role === 'Super Admin';
                 return (
                   <tr key={doc._id}>
                     <td>{doc.description || '-'}</td>
                     <td>{getUploaderName(doc.uploadedBy)}</td>
-                    <td className="button-icon">
-                      <a href={`${import.meta.env.VITE_API_URL}${doc.fileUrl}`} target="_blank" rel="noopener noreferrer"  
-                        className="employee-button download-button"
-                        style={{ marginLeft: '8px' }}>
-                         <Download className="button-icon" /> Download
-                      </a>
-                      {canDelete && (
-                        <button onClick={() => handleDelete(doc._id)} className="employee-button delete-button" style={{ marginLeft: '8px' }}>
-                          <Trash2 className="button-icon" />
-                        </button>
-                      )}
+                    <td>
+                      <div className="employee-actions">
+                        <a
+                          href={`${import.meta.env.VITE_API_URL}${doc.fileUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="employee-button employee-action-btn download-button"
+                          title="Download document"
+                        >
+                          <Download className="employee-action-icon" size={16} />
+                          Download
+                        </a>
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(doc._id)}
+                            className="employee-button employee-action-btn delete-button"
+                            title="Delete document"
+                            aria-label="Delete document"
+                          >
+                            <Trash2 className="employee-action-icon" size={16} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

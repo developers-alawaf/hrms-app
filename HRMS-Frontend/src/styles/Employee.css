@@ -530,3 +530,78 @@
   margin: 0;
   font-size: 1rem;
 }
+
+.section-body {
+  padding: 24px;
+}
+
+/* Common Documents – upload form inside section card */
+.common-docs-upload-section .employee-form.common-docs-upload-form {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
+}
+
+/* One-row upload: Description | File | Button */
+.common-docs-upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.common-docs-upload-row .form-group {
+  margin-bottom: 0;
+}
+
+.common-docs-upload-desc {
+  flex: 1;
+  min-width: 180px;
+}
+
+.common-docs-upload-file {
+  flex: 1;
+  min-width: 200px;
+}
+
+.common-docs-upload-btn {
+  flex-shrink: 0;
+}
+
+.employee-file-input {
+  padding: 10px 12px;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.employee-file-input::file-selector-button {
+  margin-right: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--app-border);
+  background: var(--app-accent-soft);
+  color: var(--app-accent-light);
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--app-font);
+}
+
+.employee-file-input::file-selector-button:hover {
+  background: var(--app-accent);
+  color: #fff;
+  border-color: var(--app-accent);
+}
+
+.common-docs-file-name {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.8125rem;
+  color: var(--app-text-muted);
+}
+
+.common-docs-upload-form .employee-message.employee-error {
+  margin-top: 12px;
+}
