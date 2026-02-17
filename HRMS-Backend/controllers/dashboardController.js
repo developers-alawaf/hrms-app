@@ -306,7 +306,7 @@ exports.getMonthSummary = async (req, res) => {
       companyId,
       date: { $gte: monthStartDate, $lte: todayDate },
     })
-      .select('status')
+      .select('status lateBy overtimeHours')
       .lean();
 
     const presentDays = records.filter((r) => r.status === 'Present').length;
@@ -314,6 +314,13 @@ exports.getMonthSummary = async (req, res) => {
     const leaveDays = records.filter((r) => r.status === 'Leave').length;
     // Absent = working days minus (present + remote + leave); cap at 0
     const absentDays = Math.max(0, workingDays - presentDays - remoteDays - leaveDays);
+
+    // Total late by (minutes) and overtime (overtimeHours stored as decimal hours → convert to minutes for display)
+    const totalLateByMinutes = records.reduce((sum, r) => sum + (Number(r.lateBy) || 0), 0);
+    const totalOvertimeMinutes = records.reduce((sum, r) => {
+      const hours = Number(r.overtimeHours);
+      return sum + (Number.isNaN(hours) ? 0 : Math.round(hours * 60));
+    }, 0);
 
     res.status(200).json({
       success: true,
@@ -323,6 +330,8 @@ exports.getMonthSummary = async (req, res) => {
         absentDays,
         remoteDays,
         leaveDays,
+        totalLateByMinutes,
+        totalOvertimeMinutes,
         month: moment().tz(tz).format('YYYY-MM'),
       },
     });

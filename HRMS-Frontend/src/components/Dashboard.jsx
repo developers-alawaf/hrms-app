@@ -57,6 +57,14 @@ const Dashboard = () => {
     year: "numeric",
   });
 
+  // Format total minutes as "Xh Ym" (e.g. 90 → "1h 30m", 0 → "0h 0m")
+  const formatMinutesToHoursMinutes = (totalMinutes) => {
+    const mins = Math.max(0, Math.round(Number(totalMinutes) || 0));
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h}h ${m}m`;
+  };
+
   if (loading || fetching) {
     return (
       <div className="dashboard-container">
@@ -108,6 +116,16 @@ const Dashboard = () => {
             <span className="stat-card__label">Leave this month</span>
             <span className="stat-card__value">{monthSummary.leaveDays}</span>
             <span className="stat-card__sublabel">days</span>
+          </div>
+          <div className="stat-card stat-card--late">
+            <span className="stat-card__label">Late by this month</span>
+            <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalLateByMinutes)}</span>
+            <span className="stat-card__sublabel">total</span>
+          </div>
+          <div className="stat-card stat-card--overtime">
+            <span className="stat-card__label">Overtime this month</span>
+            <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalOvertimeMinutes)}</span>
+            <span className="stat-card__sublabel">total</span>
           </div>
         </section>
       )}
