@@ -86,6 +86,29 @@ log_info "Frontend build completed."
 echo ""
 
 # -----------------------------------------------------------------------------
+log_info "Step 4.1/5: Reloading/Restarting nginx (if available)..."
+if command -v systemctl &> /dev/null; then
+  log_info "Reloading nginx via systemctl..."
+  sudo systemctl reload nginx 2>/dev/null || {
+    log_warn "systemctl reload failed, trying restart..."
+    sudo systemctl restart nginx 2>/dev/null || log_warn "Failed to restart nginx via systemctl."
+  }
+elif command -v nginx &> /dev/null; then
+  log_info "Reloading nginx via nginx -s reload..."
+  sudo nginx -t >/dev/null 2>&1 && sudo nginx -s reload 2>/dev/null || log_warn "nginx reload failed."
+elif command -v service &> /dev/null; then
+  log_info "Reloading nginx via service..."
+  sudo service nginx reload 2>/dev/null || {
+    log_warn "service reload failed; attempting restart..."
+    sudo service nginx restart 2>/dev/null || log_warn "Failed to restart nginx via service."
+  }
+else
+  log_warn "No known service manager found to reload nginx. Skipping."
+fi
+log_info "Nginx reload/restart step completed (if available)."
+echo ""
+
+# -----------------------------------------------------------------------------
 log_info "Step 5/5: PM2 restart all services..."
 if command -v pm2 &> /dev/null; then
   pm2 restart all 2>/dev/null || pm2 restart "$PM2_PROCESS" 2>/dev/null || {
