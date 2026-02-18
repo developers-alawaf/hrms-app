@@ -267,9 +267,20 @@ exports.getMonthSummary = async (req, res) => {
     }
     const { employeeId, companyId } = req.user;
     if (!employeeId || !companyId) {
-      return res.status(400).json({
-        success: false,
-        error: 'User is not linked to an employee. Month summary is available for users with an employee record.',
+      // Return 200 with zeroed data so dashboard section still shows (e.g. Super Admin without employee link)
+      const tz = 'Asia/Dhaka';
+      return res.status(200).json({
+        success: true,
+        data: {
+          workingDays: 0,
+          presentDays: 0,
+          absentDays: 0,
+          remoteDays: 0,
+          leaveDays: 0,
+          totalLateByMinutes: 0,
+          totalOvertimeMinutes: 0,
+          month: moment().tz(tz).format('YYYY-MM'),
+        },
       });
     }
 
