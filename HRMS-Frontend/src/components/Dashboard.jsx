@@ -85,13 +85,14 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
-        <h1 className="dashboard-title">Welcome222 back, <span className="dashboard-title-accent">{employeeData?.personalInfo?.fullName || "User"}</span></h1>
+        <h1 className="dashboard-title">Welcome back, <span className="dashboard-title-accent">{employeeData?.personalInfo?.fullName || "User"}</span></h1>
         <p className="dashboard-subtitle">{user.role} Dashboard</p>
         <p className="dashboard-date">{todayFormatted}</p>
       </header>
 
       {monthSummary && (
         <section className="dashboard-stats" aria-label="This month summary">
+          <h1>test1</h1>
           <div className="stat-card stat-card--total">
             <span className="stat-card__label">Working days this month</span>
             <span className="stat-card__value">{monthSummary.workingDays}</span>
@@ -127,8 +128,10 @@ const Dashboard = () => {
             <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalOvertimeMinutes)}</span>
             <span className="stat-card__sublabel">total</span>
           </div>
+          <h1>test2</h1>
         </section>
       )}
+      <h1>test3</h1>
 
       {stats && user.role === 'Super Admin' && (
         <section className="dashboard-stats" aria-label="Overview statistics">

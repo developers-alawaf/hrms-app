@@ -104,9 +104,10 @@ exports.getDashboardStats = async (req, res) => {
 
     const totalEmployees = await Employee.countDocuments();
 
+    // Count anyone who has checked in (in time) today as present — not only status 'Present'
     const presentToday = await EmployeesAttendance.countDocuments({
       date: today.toDate(),
-      status: 'Present'
+      check_in: { $exists: true, $ne: null }
     });
 
     const remoteToday = await EmployeesAttendance.countDocuments({
@@ -140,9 +141,10 @@ exports.getAbsentToday = async (req, res) => {
   try {
     const today = moment().tz('Asia/Dhaka').startOf('day').toDate();
 
+    // Anyone with check-in (in time) today is considered present
     const presentRecords = await EmployeesAttendance.find({
       date: today,
-      status: 'Present'
+      check_in: { $exists: true, $ne: null }
     })
       .select('employeeId')
       .lean();
@@ -182,13 +184,13 @@ exports.getAbsentToday = async (req, res) => {
   }
 };
 
-// List of employees present today (for dashboard)
+// List of employees present today (for dashboard) — anyone with check-in (in time) today
 exports.getPresentToday = async (req, res) => {
   try {
     const today = moment().tz('Asia/Dhaka').startOf('day').toDate();
     const list = await EmployeesAttendance.find({
       date: today,
-      status: 'Present'
+      check_in: { $exists: true, $ne: null }
     })
       .populate({
         path: 'employeeId',
