@@ -19,7 +19,7 @@ echo ""
 echo "1. LOGIN (superadmin@example.com)"
 LOGIN_RESP=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"email":"superadmin@example.com","password":"12345"}')
+  -d '{"email":"shamim.khaled@alawaf.com.bd","password":"shamim"}')
 HTTP_CODE=$(echo "$LOGIN_RESP" | tail -n1)
 BODY=$(echo "$LOGIN_RESP" | sed '$d')
 echo "   HTTP: $HTTP_CODE"
