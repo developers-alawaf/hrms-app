@@ -12,20 +12,22 @@ exports.getEmployeeDashboard = async (req, res) => {
     if (!req.user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
-    const { employeeId, companyId } = req.user;
+    const employeeId = req.user?.employeeId;
+    const companyId = req.user?.companyId;
     if (!employeeId || !companyId) {
       // Return 200 with minimal data so dashboard still shows in production (e.g. Super Admin)
       console.log('[dashboard] no employeeId/companyId, returning 200 minimal');
+      const fallbackName = req.user?.email || req.user?.fullName || 'User';
       return res.status(200).json({
         success: true,
         data: {
           personalInfo: {
-            fullName: req.user.email || 'User',
+            fullName: fallbackName,
             employeeCode: null,
             designation: null,
             department: null,
             joiningDate: null,
-            email: req.user.email || null,
+            email: req.user?.email || null,
             phone: null,
           },
           attendance: [],
@@ -45,12 +47,12 @@ exports.getEmployeeDashboard = async (req, res) => {
         success: true,
         data: {
           personalInfo: {
-            fullName: req.user.email || 'User',
+            fullName: req.user?.email || 'User',
             employeeCode: null,
             designation: null,
             department: null,
             joiningDate: null,
-            email: req.user.email || null,
+            email: req.user?.email || null,
             phone: null,
           },
           attendance: [],
@@ -312,7 +314,8 @@ exports.getMonthSummary = async (req, res) => {
     if (!req.user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
-    const { employeeId, companyId } = req.user;
+    const employeeId = req.user?.employeeId;
+    const companyId = req.user?.companyId;
     if (!employeeId || !companyId) {
       // Return 200 with zeroed data so dashboard section still shows (e.g. Super Admin without employee link)
       console.log('[dashboard] getMonthSummary no employeeId/companyId, returning 200 zeroed');
