@@ -5,6 +5,11 @@
 
 BASE_URL="${1:-http://localhost:5000}"
 
+# Extract token from JSON without jq (works on servers without jq)
+extract_token() {
+  echo "$1" | grep -o '"token":"[^"]*"' | head -1 | sed 's/"token":"//;s/"$//'
+}
+
 echo "=========================================="
 echo "Testing Dashboard APIs at $BASE_URL"
 echo "=========================================="
@@ -19,7 +24,7 @@ HTTP_CODE=$(echo "$LOGIN_RESP" | tail -n1)
 BODY=$(echo "$LOGIN_RESP" | sed '$d')
 echo "   HTTP: $HTTP_CODE"
 if [ "$HTTP_CODE" = "200" ]; then
-  TOKEN=$(echo "$BODY" | jq -r '.token')
+  TOKEN=$(extract_token "$BODY")
   if [ -n "$TOKEN" ] && [ "$TOKEN" != "null" ]; then
     echo "   OK - Token obtained"
   else
@@ -43,7 +48,6 @@ DASH_BODY=$(echo "$DASH_RESP" | sed '$d')
 echo "   HTTP: $DASH_CODE"
 if [ "$DASH_CODE" = "200" ]; then
   echo "   OK"
-  echo "$DASH_BODY" | jq -r '.success, .data.personalInfo.fullName // "N/A"' 2>/dev/null | head -5
 else
   echo "   FAIL - Response: $(echo "$DASH_BODY" | head -c 200)"
 fi
@@ -57,7 +61,6 @@ MONTH_BODY=$(echo "$MONTH_RESP" | sed '$d')
 echo "   HTTP: $MONTH_CODE"
 if [ "$MONTH_CODE" = "200" ]; then
   echo "   OK"
-  echo "$MONTH_BODY" | jq -r '.data | "   workingDays: \(.workingDays), presentDays: \(.presentDays)"' 2>/dev/null
 else
   echo "   FAIL - Response: $(echo "$MONTH_BODY" | head -c 200)"
 fi
@@ -71,7 +74,6 @@ STATS_BODY=$(echo "$STATS_RESP" | sed '$d')
 echo "   HTTP: $STATS_CODE"
 if [ "$STATS_CODE" = "200" ]; then
   echo "   OK"
-  echo "$STATS_BODY" | jq -r '"   totalEmployees: \(.totalEmployees), presentToday: \(.presentToday)"' 2>/dev/null
 else
   echo "   Response: $(echo "$STATS_BODY" | head -c 200)"
 fi
