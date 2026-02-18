@@ -9,7 +9,7 @@
   width: 250px;
   background: linear-gradient(160deg, #0f172a 0%, #1e293b 45%, #0f172a 100%);
   border-right: 1px solid rgba(71, 85, 105, 0.4);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   z-index: 1000;
   transform: translateX(0);
   color: #f1f5f9;
@@ -17,11 +17,56 @@
   flex-direction: column;
 }
 
+/* Light theme – Sidebar */
+[data-theme="light"] .sidebar {
+  background: linear-gradient(160deg, #e0e7ff 0%, #ede9fe 50%, #ddd6fe 100%);
+  border-right-color: rgba(99, 102, 241, 0.3);
+  color: #1e1b4b;
+}
+
+[data-theme="light"] .sidebar-link,
+[data-theme="light"] .sidebar .dropdown-toggle { color: #3730a3; }
+[data-theme="light"] .sidebar-link:hover,
+[data-theme="light"] .sidebar .dropdown-toggle:hover { background: rgba(99, 102, 241, 0.15); color: #4f46e5; }
+[data-theme="light"] .sidebar-link.active { background: rgba(99, 102, 241, 0.2); color: #4f46e5; }
+[data-theme="light"] .close-sidebar { color: #1e1b4b; }
+[data-theme="light"] .nav-icon { color: inherit; }
+[data-theme="light"] .sidebar-user-name { color: #1e1b4b; }
+[data-theme="light"] .sidebar-user-chevron { color: #4f46e5; }
+[data-theme="light"] .sidebar-footer-dropdown {
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.15);
+}
+[data-theme="light"] .sidebar-footer-dropdown .dropdown-item { color: #4f46e5; }
+[data-theme="light"] .sidebar-footer-dropdown .dropdown-item:hover { background: rgba(99, 102, 241, 0.12); color: #3730a3; }
+[data-theme="light"] .theme-toggle-label { color: #4f46e5; }
+[data-theme="light"] .theme-toggle-btn {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #4f46e5;
+}
+[data-theme="light"] .theme-toggle-btn:hover { background: rgba(99, 102, 241, 0.2); color: #3730a3; }
+[data-theme="light"] .theme-toggle-btn.active {
+  background: rgba(99, 102, 241, 0.25);
+  color: #3730a3;
+  border-color: rgba(99, 102, 241, 0.5);
+}
+[data-theme="light"] .theme-toggle-row { border-bottom-color: rgba(99, 102, 241, 0.25); }
+[data-theme="light"] .sidebar .dropdown-menu {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+[data-theme="light"] .sidebar .dropdown-menu .dropdown-item { color: #4f46e5; }
+[data-theme="light"] .sidebar .dropdown-menu .dropdown-item:hover { background: rgba(99, 102, 241, 0.15); color: #3730a3; }
+[data-theme="light"] .sidebar .dropdown-menu .dropdown-item.active { background: rgba(99, 102, 241, 0.2); color: #3730a3; }
+
 .sidebar-inner {
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  padding: 1.25rem 1rem 0;
 }
 
 .sidebar-inner .sidebar-links {
@@ -47,11 +92,22 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 30px;
+  padding: 0 0.25rem;
+}
+
+.sidebar-header > a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .sidebar-logo {
   width: 150px;
+  max-width: 100%;
   height: auto;
+  object-fit: contain;
 }
 
 .close-sidebar {
@@ -246,6 +302,54 @@
   border-radius: 10px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   z-index: 10;
+}
+
+.theme-toggle-row {
+  padding: 10px 16px 12px;
+  border-bottom: 1px solid rgba(71, 85, 105, 0.4);
+  margin-bottom: 4px;
+}
+
+.theme-toggle-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.theme-toggle-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid rgba(71, 85, 105, 0.5);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.5);
+  color: #94a3b8;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.theme-toggle-btn.active {
+  background: rgba(59, 130, 246, 0.25);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.5);
 }
 
 .sidebar-footer-dropdown .dropdown-item {

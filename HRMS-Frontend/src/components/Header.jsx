@@ -1,7 +1,7 @@
 import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { Users, Calendar, FileText, Briefcase, LayoutDashboard, Menu, X, LogOut, ChevronDown } from 'lucide-react';
+import { Users, Calendar, FileText, Briefcase, LayoutDashboard, PanelLeft, X, LogOut, ChevronDown } from 'lucide-react';
 import '../styles/Header.css';
 
 const Header = ({ toggleSidebar, isDesktop, isSidebarOpen }) => {
@@ -39,7 +39,7 @@ const Header = ({ toggleSidebar, isDesktop, isSidebarOpen }) => {
     <header className={`header ${isDesktop && isSidebarOpen ? 'header-shifted' : 'header-expanded'}`}>
       <div className="header-content">
         <button className="hamburger-menu" onClick={toggleSidebar}>
-          {isSidebarOpen ? <X /> : <Menu />}
+          {isSidebarOpen ? <X /> : <PanelLeft />}
         </button>
         <div className="header-logo">
           <h1>HRMS</h1>

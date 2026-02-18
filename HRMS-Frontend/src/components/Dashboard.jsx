@@ -15,12 +15,12 @@ const Dashboard = () => {
       const token = localStorage.getItem('token');
       if (!token) return;
       try {
-        const isSuperAdmin = user?.role === 'Super Admin';
+        const isAdminOrSuperAdmin = user?.role === 'Admin' || user?.role === 'Super Admin';
         const [empRes, statsRes, monthRes] = await Promise.all([
           fetch(`${import.meta.env.VITE_API_URL}/api/dashboard`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          isSuperAdmin
+          isAdminOrSuperAdmin
             ? fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/dashboard-stats`, {
                 headers: { Authorization: `Bearer ${token}` },
               })
@@ -33,7 +33,7 @@ const Dashboard = () => {
         const empData = await empRes.json();
         if (empData.success) setEmployeeData(empData.data);
 
-        if (isSuperAdmin && statsRes) {
+        if (isAdminOrSuperAdmin && statsRes) {
           const statsData = await statsRes.json();
           if (statsData) setStats(statsData);
         }
@@ -90,71 +90,76 @@ const Dashboard = () => {
         <p className="dashboard-date">{todayFormatted}</p>
       </header>
 
+      {/* Employee section: your attendance this month (when user has employee record) */}
       {monthSummary && (
-        <section className="dashboard-stats" aria-label="This month summary">
-          <h1>test1</h1>
-          <div className="stat-card stat-card--total">
-            <span className="stat-card__label">Working days this month</span>
-            <span className="stat-card__value">{monthSummary.workingDays}</span>
-            <span className="stat-card__sublabel">days</span>
+        <section className="dashboard-section" aria-label="Your attendance this month">
+          <h2 className="dashboard-section-title">Your attendance this month</h2>
+          <div className="dashboard-stats">
+            <div className="stat-card stat-card--total">
+              <span className="stat-card__label">Working days this month</span>
+              <span className="stat-card__value">{monthSummary.workingDays}</span>
+              <span className="stat-card__sublabel">days</span>
+            </div>
+            <div className="stat-card stat-card--present">
+              <span className="stat-card__label">Present this month</span>
+              <span className="stat-card__value">{monthSummary.presentDays}</span>
+              <span className="stat-card__sublabel">days</span>
+            </div>
+            <div className="stat-card stat-card--absent">
+              <span className="stat-card__label">Absent this month</span>
+              <span className="stat-card__value">{monthSummary.absentDays}</span>
+              <span className="stat-card__sublabel">days</span>
+            </div>
+            <div className="stat-card stat-card--remote">
+              <span className="stat-card__label">Remote this month</span>
+              <span className="stat-card__value">{monthSummary.remoteDays}</span>
+              <span className="stat-card__sublabel">days</span>
+            </div>
+            <div className="stat-card stat-card--leave">
+              <span className="stat-card__label">Leave this month</span>
+              <span className="stat-card__value">{monthSummary.leaveDays}</span>
+              <span className="stat-card__sublabel">days</span>
+            </div>
+            <div className="stat-card stat-card--late">
+              <span className="stat-card__label">Late by this month</span>
+              <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalLateByMinutes)}</span>
+              <span className="stat-card__sublabel">total</span>
+            </div>
+            <div className="stat-card stat-card--overtime">
+              <span className="stat-card__label">Overtime this month</span>
+              <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalOvertimeMinutes)}</span>
+              <span className="stat-card__sublabel">total</span>
+            </div>
           </div>
-          <div className="stat-card stat-card--present">
-            <span className="stat-card__label">Present this month</span>
-            <span className="stat-card__value">{monthSummary.presentDays}</span>
-            <span className="stat-card__sublabel">days</span>
-          </div>
-          <div className="stat-card stat-card--absent">
-            <span className="stat-card__label">Absent this month</span>
-            <span className="stat-card__value">{monthSummary.absentDays}</span>
-            <span className="stat-card__sublabel">days</span>
-          </div>
-          <div className="stat-card stat-card--remote">
-            <span className="stat-card__label">Remote this month</span>
-            <span className="stat-card__value">{monthSummary.remoteDays}</span>
-            <span className="stat-card__sublabel">days</span>
-          </div>
-          <div className="stat-card stat-card--leave">
-            <span className="stat-card__label">Leave this month</span>
-            <span className="stat-card__value">{monthSummary.leaveDays}</span>
-            <span className="stat-card__sublabel">days</span>
-          </div>
-          <div className="stat-card stat-card--late">
-            <span className="stat-card__label">Late by this month</span>
-            <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalLateByMinutes)}</span>
-            <span className="stat-card__sublabel">total</span>
-          </div>
-          <div className="stat-card stat-card--overtime">
-            <span className="stat-card__label">Overtime this month</span>
-            <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalOvertimeMinutes)}</span>
-            <span className="stat-card__sublabel">total</span>
-          </div>
-          <h1>test2</h1>
         </section>
       )}
-      <h1>test3</h1>
 
-      {stats && user.role === 'Super Admin' && (
-        <section className="dashboard-stats" aria-label="Overview statistics">
-          <Link to="/employees" className="stat-card stat-card--total stat-card--link">
-            <span className="stat-card__label">Total Employees</span>
-            <span className="stat-card__value">{stats.totalEmployees}</span>
-          </Link>
-          <Link to="/dashboard/present-today" className="stat-card stat-card--present stat-card--link">
-            <span className="stat-card__label">Present Today</span>
-            <span className="stat-card__value">{stats.presentToday ?? 0}</span>
-          </Link>
-          <Link to="/dashboard/absent-today" className="stat-card stat-card--absent stat-card--link">
-            <span className="stat-card__label">Absent Today</span>
-            <span className="stat-card__value">{absentToday}</span>
-          </Link>
-          <Link to="/dashboard/remote-today" className="stat-card stat-card--remote stat-card--link">
-            <span className="stat-card__label">Remote Today</span>
-            <span className="stat-card__value">{stats.remoteToday ?? 0}</span>
-          </Link>
-          <Link to="/dashboard/leave-today" className="stat-card stat-card--leave stat-card--link">
-            <span className="stat-card__label">On Leave Today</span>
-            <span className="stat-card__value">{stats.leaveToday ?? 0}</span>
-          </Link>
+      {/* Admin / Super Admin section: organization overview (today) */}
+      {stats && (user.role === 'Admin' || user.role === 'Super Admin') && (
+        <section className="dashboard-section" aria-label="Organization overview today">
+          <h2 className="dashboard-section-title">Organization overview — today</h2>
+          <div className="dashboard-stats">
+            <Link to="/employees" className="stat-card stat-card--total stat-card--link">
+              <span className="stat-card__label">Total Employees</span>
+              <span className="stat-card__value">{stats.totalEmployees}</span>
+            </Link>
+            <Link to="/dashboard/present-today" className="stat-card stat-card--present stat-card--link">
+              <span className="stat-card__label">Present Today</span>
+              <span className="stat-card__value">{stats.presentToday ?? 0}</span>
+            </Link>
+            <Link to="/dashboard/absent-today" className="stat-card stat-card--absent stat-card--link">
+              <span className="stat-card__label">Absent Today</span>
+              <span className="stat-card__value">{absentToday}</span>
+            </Link>
+            <Link to="/dashboard/remote-today" className="stat-card stat-card--remote stat-card--link">
+              <span className="stat-card__label">Remote Today</span>
+              <span className="stat-card__value">{stats.remoteToday ?? 0}</span>
+            </Link>
+            <Link to="/dashboard/leave-today" className="stat-card stat-card--leave stat-card--link">
+              <span className="stat-card__label">On Leave Today</span>
+              <span className="stat-card__value">{stats.leaveToday ?? 0}</span>
+            </Link>
+          </div>
         </section>
       )}
 

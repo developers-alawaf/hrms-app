@@ -100,9 +100,54 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
-  max-width: 1200px;
-  margin: 0 auto 2rem;
+  margin: 0;
 }
+
+/* Wrapper for each card group (employee section vs admin section) */
+.dashboard-section {
+  max-width: 1200px;
+  margin: 0 auto 2.5rem;
+}
+
+.dashboard-section:last-child {
+  margin-bottom: 0;
+}
+
+.dashboard-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--dash-text-muted);
+  margin: 0 0 0.75rem 0;
+  letter-spacing: -0.01em;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--dash-border);
+}
+
+/* ========== Light theme – Dashboard ========== */
+[data-theme="light"] .dashboard-container {
+  --dash-bg: linear-gradient(160deg, #e0e7ff 0%, #f5f3ff 40%, #dbeafe 70%, #e0e7ff 100%);
+  --dash-surface: rgba(255, 255, 255, 0.9);
+  --dash-border: rgba(99, 102, 241, 0.3);
+  --dash-text: #1e1b4b;
+  --dash-text-muted: #4f46e5;
+  --dash-accent: #4f46e5;
+  --dash-accent-soft: rgba(79, 70, 229, 0.15);
+}
+
+[data-theme="light"] .dashboard-title-accent {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+[data-theme="light"] .stat-card--total .stat-card__value { color: #4f46e5; }
+[data-theme="light"] .stat-card--present .stat-card__value { color: #059669; }
+[data-theme="light"] .stat-card--remote .stat-card__value { color: #7c3aed; }
+[data-theme="light"] .stat-card--leave .stat-card__value { color: #d97706; }
+[data-theme="light"] .stat-card--absent .stat-card__value { color: #dc2626; }
+[data-theme="light"] .stat-card--late .stat-card__value { color: #d97706; }
+[data-theme="light"] .stat-card--overtime .stat-card__value { color: #0891b2; }
 
 .stat-card {
   padding: 1.35rem 1.25rem;

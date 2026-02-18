@@ -1,10 +1,14 @@
 import React, { useContext, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
-import { Users, Calendar, FileText, Lock, LogOut, Menu, X, Briefcase, LayoutDashboard, ClipboardList, ChevronDown } from 'lucide-react';
+import { ThemeContext } from '../context/ThemeContext';
+import { Users, Calendar, FileText, Lock, LogOut, Menu, X, Briefcase, LayoutDashboard, ClipboardList, ChevronDown, Sun, Moon } from 'lucide-react';
 import '../styles/Sidebar.css';
+import logoImg from '../assets/kloud_tech.png';
 
 const defaultAvatar = '/default-avatar.png';
+
+const sidebarLogo = { src: logoImg, alt: 'Company Logo' };
 
 const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
   const authContext = useContext(AuthContext);
@@ -29,6 +33,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
   }
 
   const { user, logout, loading } = authContext;
+  const { theme, setTheme } = useContext(ThemeContext) || {};
 
   // Show loading state or return null if user is not available
   if (loading) {
@@ -57,7 +62,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
       <div className="sidebar-inner">
       <div className="sidebar-header">
         <Link to="/dashboard" onClick={handleLinkClick}>
-          <img src="/Kloud_Technologies_Logo.svg" alt="Kloud Technologies Logo" className="sidebar-logo" />
+          <img src={sidebarLogo.src} alt={sidebarLogo.alt} className="sidebar-logo" />
         </Link>
         {!isDesktop && (
           <button className="close-sidebar" onClick={toggleSidebar}>
@@ -308,6 +313,31 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
           </div>
           {openDropdown === 'user' && (
             <ul className="sidebar-footer-dropdown">
+              <li className="theme-toggle-row">
+                <span className="theme-toggle-label">Theme</span>
+                <div className="theme-toggle-buttons">
+                  <button
+                    type="button"
+                    className={`theme-toggle-btn ${theme === 'dark' ? 'active' : ''}`}
+                    onClick={() => setTheme?.('dark')}
+                    aria-label="Dark theme"
+                    title="Dark theme"
+                  >
+                    <Moon size={16} />
+                    <span>Dark</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`theme-toggle-btn ${theme === 'light' ? 'active' : ''}`}
+                    onClick={() => setTheme?.('light')}
+                    aria-label="Light theme"
+                    title="Light theme"
+                  >
+                    <Sun size={16} />
+                    <span>Light</span>
+                  </button>
+                </div>
+              </li>
               <li>
                 <Link to="/profile" className={`dropdown-item ${isActive('/profile') ? 'active' : ''}`} onClick={handleLinkClick}>
                   My Profile
