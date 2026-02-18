@@ -16,7 +16,7 @@ echo "=========================================="
 
 # 1. Login
 echo ""
-echo "1. LOGIN (superadmin@example.com)"
+echo "1. LOGIN (shamim.khaled@alawaf.com.bd / shamim)"
 LOGIN_RESP=$(curl -s -w "\n%{http_code}" -X POST "$BASE_URL/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"email":"shamim.khaled@alawaf.com.bd","password":"shamim"}')
