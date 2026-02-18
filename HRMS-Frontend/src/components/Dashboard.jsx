@@ -56,21 +56,53 @@ const Dashboard = () => {
 
         const empData = await safeJson(empRes);
         if (empData?.success) setEmployeeData(empData.data);
+        if (!empRes.ok) {
+          console.warn('[Dashboard] /api/dashboard response:', empRes.status, empRes.statusText);
+        }
 
         if (isSuperAdmin && statsRes) {
           const statsData = await safeJson(statsRes);
-          if (statsData) setStats(statsData);
+          if (statsData) {
+            setStats(statsData);
+            console.log('[Dashboard] Today counts (stats):', {
+              totalEmployees: statsData.totalEmployees,
+              presentToday: statsData.presentToday,
+              absentToday: statsData.absentToday,
+              remoteToday: statsData.remoteToday,
+              leaveToday: statsData.leaveToday,
+            });
+          }
         }
 
         let monthData = await safeJson(monthRes);
         if (monthData?.success && monthData.data) {
           setMonthSummary(monthData.data);
+          console.log('[Dashboard] Month summary counts:', {
+            workingDays: monthData.data.workingDays,
+            presentDays: monthData.data.presentDays,
+            absentDays: monthData.data.absentDays,
+            remoteDays: monthData.data.remoteDays,
+            leaveDays: monthData.data.leaveDays,
+            totalLateByMinutes: monthData.data.totalLateByMinutes,
+            totalOvertimeMinutes: monthData.data.totalOvertimeMinutes,
+            month: monthData.data.month,
+          });
         } else {
           setMonthSummary(defaultMonthSummary());
+          if (!monthRes?.ok) {
+            console.warn('[Dashboard] /api/dashboard/month-summary response:', monthRes?.status, monthRes?.statusText);
+          }
           if (!monthRes?.ok && base) {
             const sameOriginRes = await fetch('/api/dashboard/month-summary', authHeaders);
             const retryData = await safeJson(sameOriginRes);
-            if (retryData?.success && retryData.data) setMonthSummary(retryData.data);
+            if (retryData?.success && retryData.data) {
+              setMonthSummary(retryData.data);
+              console.log('[Dashboard] Month summary (retry same-origin):', retryData.data);
+            } else {
+              console.log('[Dashboard] Month summary using fallback (zeros):', defaultMonthSummary());
+            }
+          } else {
+            console.log('[Dashboard] Month summary using fallback (zeros):', defaultMonthSummary());
           }
         }
       } catch (err) {
