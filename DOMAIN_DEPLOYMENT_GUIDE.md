@@ -247,8 +247,20 @@ npm run build
 **Dashboard API (400/404) / Month summary not showing:** If the dashboard shows cards but counts are wrong or you see 400/404 for `/api/dashboard` or `/api/dashboard/month-summary`:
 - Use the **same origin** for API when Nginx proxies `/api` to the backend: set `VITE_API_URL=` (empty) in `.env.production` before building, so the frontend uses relative URLs (e.g. `/api/dashboard/month-summary`) and the browser sends them to the same host; Nginx then proxies to the backend.
 - Or set `VITE_API_URL=http://hrms.kloud.com.bd` (same as the site URL) so requests go to the same domain.
-- Ensure Nginx forwards **all** `/api` subpaths: `location /api { proxy_pass http://hrms_backend; ... }` must forward every path under `/api` (e.g. `/api/dashboard`, `/api/dashboard/month-summary`), not only an exact match.
-- Deploy the latest backend and restart it so `/api/dashboard` and `/api/dashboard/month-summary` both return 200 (backend now returns 200 with minimal data when user has no employee link or employee not found).
+- Ensure Nginx forwards **all** `/api` subpaths: use `location /api/` (with trailing slash) and `proxy_pass http://hrms_backend;` (no path after upstream name) so every path under `/api/` is proxied (e.g. `/api/dashboard`, `/api/dashboard/month-summary`).
+- **VM production:** Deploy the latest backend code and restart the Node process so `/api/dashboard` and `/api/dashboard/month-summary` both return 200. The backend now returns 200 with minimal data when the user has no employee link or employee not found, and returns 500 (not 400) for unexpected errors.
+
+**VM: Fix 400/404 on dashboard (exact steps):**
+1. On the VM, pull or copy the latest backend code (including `HRMS-Backend/controllers/dashboardController.js` and `HRMS-Backend/routes/dashboardRoutes.js`).
+2. Restart the backend (e.g. `pm2 restart hrms-backend` or `systemctl restart hrms-backend` or kill and start `node server.js`).
+3. Test without auth (should get 401, not 404):  
+   `curl -s -o /dev/null -w "%{http_code}" http://hrms.kloud.com.bd/api/dashboard` → expect **401**  
+   `curl -s -o /dev/null -w "%{http_code}" http://hrms.kloud.com.bd/api/dashboard/month-summary` → expect **401**
+4. With a valid token (from browser after login):  
+   `curl -s -H "Authorization: Bearer YOUR_TOKEN" http://hrms.kloud.com.bd/api/dashboard` → expect **200** and JSON.  
+   `curl -s -H "Authorization: Bearer YOUR_TOKEN" http://hrms.kloud.com.bd/api/dashboard/month-summary` → expect **200** and JSON.
+5. If you still get 404 on month-summary, confirm `dashboardRoutes.js` contains:  
+   `router.get('/month-summary', dashboardController.getMonthSummary);`
 
 ---
 
