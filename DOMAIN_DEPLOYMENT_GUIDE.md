@@ -244,10 +244,11 @@ cd /var/www/HRMS/Frontend
 npm run build
 ```
 
-**Dashboard API (400/404):** If the dashboard shows cards but counts are wrong or you see 400/404 for `/api/dashboard` or `/api/dashboard/month-summary`:
-- Use the **same origin** for API in production when Nginx proxies `/api` to the backend (e.g. `VITE_API_URL=http://hrms.kloud.com.bd` or leave empty so the app uses the current origin).
-- Ensure Nginx forwards **all** `/api` subpaths (e.g. `location /api { ... }` forwards `/api/dashboard`, `/api/dashboard/month-summary`, etc.).
-- Restart the backend after deploying so `/api/dashboard` and `/api/dashboard/month-summary` return 200 (not 400/404).
+**Dashboard API (400/404) / Month summary not showing:** If the dashboard shows cards but counts are wrong or you see 400/404 for `/api/dashboard` or `/api/dashboard/month-summary`:
+- Use the **same origin** for API when Nginx proxies `/api` to the backend: set `VITE_API_URL=` (empty) in `.env.production` before building, so the frontend uses relative URLs (e.g. `/api/dashboard/month-summary`) and the browser sends them to the same host; Nginx then proxies to the backend.
+- Or set `VITE_API_URL=http://hrms.kloud.com.bd` (same as the site URL) so requests go to the same domain.
+- Ensure Nginx forwards **all** `/api` subpaths: `location /api { proxy_pass http://hrms_backend; ... }` must forward every path under `/api` (e.g. `/api/dashboard`, `/api/dashboard/month-summary`), not only an exact match.
+- Deploy the latest backend and restart it so `/api/dashboard` and `/api/dashboard/month-summary` both return 200 (backend now returns 200 with minimal data when user has no employee link or employee not found).
 
 ---
 

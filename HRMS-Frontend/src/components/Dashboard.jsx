@@ -3,14 +3,25 @@ import { Link, Navigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import "../styles/Dashboard.css";
 
+const defaultMonthSummary = () => ({
+  workingDays: 0,
+  presentDays: 0,
+  absentDays: 0,
+  remoteDays: 0,
+  leaveDays: 0,
+  totalLateByMinutes: 0,
+  totalOvertimeMinutes: 0,
+  month: new Date().toISOString().slice(0, 7),
+});
+
 const Dashboard = () => {
   const { user, loading } = useContext(AuthContext);
   const [employeeData, setEmployeeData] = useState(null);
   const [stats, setStats] = useState(null);
-  const [monthSummary, setMonthSummary] = useState(null);
+  const [monthSummary, setMonthSummary] = useState(defaultMonthSummary);
   const [fetching, setFetching] = useState(true);
 
-  // API base: same-origin when empty so production proxy (e.g. /api -> backend) works
+  // API base: use VITE_API_URL when set; otherwise '' for same-origin (production proxy /api -> backend)
   const getApiBase = () => {
     const url = import.meta.env.VITE_API_URL ?? '';
     return typeof url === 'string' ? url.replace(/\/$/, '') : '';
@@ -32,20 +43,15 @@ const Dashboard = () => {
       if (!token) return;
       const base = getApiBase();
       const api = (path) => `${base}${path.startsWith('/') ? path : `/${path}`}`;
+      const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
       try {
         const isSuperAdmin = user?.role === 'Super Admin';
         const [empRes, statsRes, monthRes] = await Promise.all([
-          fetch(api('/api/dashboard'), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+          fetch(api('/api/dashboard'), authHeaders),
           isSuperAdmin
-            ? fetch(api('/api/dashboard/dashboard-stats'), {
-                headers: { Authorization: `Bearer ${token}` },
-              })
+            ? fetch(api('/api/dashboard/dashboard-stats'), authHeaders)
             : Promise.resolve(null),
-          fetch(api('/api/dashboard/month-summary'), {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
+          fetch(api('/api/dashboard/month-summary'), authHeaders),
         ]);
 
         const empData = await safeJson(empRes);
@@ -56,24 +62,20 @@ const Dashboard = () => {
           if (statsData) setStats(statsData);
         }
 
-        const monthData = await safeJson(monthRes);
+        let monthData = await safeJson(monthRes);
         if (monthData?.success && monthData.data) {
           setMonthSummary(monthData.data);
         } else {
-          // Show section with zeros when API fails (404/proxy) so cards display in production
-          setMonthSummary({
-            workingDays: 0,
-            presentDays: 0,
-            absentDays: 0,
-            remoteDays: 0,
-            leaveDays: 0,
-            totalLateByMinutes: 0,
-            totalOvertimeMinutes: 0,
-            month: new Date().toISOString().slice(0, 7),
-          });
+          setMonthSummary(defaultMonthSummary());
+          if (!monthRes?.ok && base) {
+            const sameOriginRes = await fetch('/api/dashboard/month-summary', authHeaders);
+            const retryData = await safeJson(sameOriginRes);
+            if (retryData?.success && retryData.data) setMonthSummary(retryData.data);
+          }
         }
       } catch (err) {
         console.error("Error fetching dashboard:", err);
+        setMonthSummary(defaultMonthSummary());
       } finally {
         setFetching(false);
       }
@@ -117,8 +119,8 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
-        <h1 className="dashboard-title">Welcome back, <span className="dashboard-title-accent">{employeeData?.personalInfo?.fullName || "User"}</span></h1>
-        <p className="dashboard-subtitle">{user.role} Dashboard</p>
+        <h1 className="dashboard-title">Welcome back, <span className="dashboard-title-accent">{employeeData?.personalInfo?.fullName || user?.fullName || user?.email || "User"}</span></h1>
+        <p className="dashboard-subtitle">{user?.role || "Employee"} Dashboard</p>
         <p className="dashboard-date">{todayFormatted}</p>
       </header>
 
