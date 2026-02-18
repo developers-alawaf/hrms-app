@@ -134,34 +134,35 @@ exports.getEmployeeDashboard = async (req, res) => {
   }
 };
 
-// 🔹 Admin/company-level dashboard stats
+// 🔹 Admin/company-level dashboard stats (always returns numeric fields for consistent UI)
 exports.getDashboardStats = async (req, res) => {
   try {
     const today = moment().tz('Asia/Dhaka').startOf('day');
+    const todayDate = today.toDate();
 
-    const totalEmployees = await Employee.countDocuments();
+    const totalEmployees = Number(await Employee.countDocuments()) || 0;
 
     // Count anyone who has checked in (in time) today as present — not only status 'Present'
-    const presentToday = await EmployeesAttendance.countDocuments({
-      date: today.toDate(),
+    const presentToday = Number(await EmployeesAttendance.countDocuments({
+      date: todayDate,
       check_in: { $exists: true, $ne: null }
-    });
+    })) || 0;
 
-    const remoteToday = await EmployeesAttendance.countDocuments({
-      date: today.toDate(),
+    const remoteToday = Number(await EmployeesAttendance.countDocuments({
+      date: todayDate,
       status: 'Remote'
-    });
+    })) || 0;
 
-    const leaveToday = await LeaveRequest.countDocuments({
+    const leaveToday = Number(await LeaveRequest.countDocuments({
       status: 'approved',
-      startDate: { $lte: today.toDate() },
-      endDate: { $gte: today.toDate() }
-    });
+      startDate: { $lte: todayDate },
+      endDate: { $gte: todayDate }
+    })) || 0;
 
     // Absent = total employees minus (present + remote + on leave) from attendance/leave data
     const absentToday = Math.max(0, totalEmployees - presentToday - remoteToday - leaveToday);
 
-    res.json({
+    res.status(200).json({
       totalEmployees,
       presentToday,
       absentToday,
@@ -169,7 +170,15 @@ exports.getDashboardStats = async (req, res) => {
       leaveToday
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('[dashboard] getDashboardStats error:', error);
+    res.status(500).json({
+      error: error.message,
+      totalEmployees: 0,
+      presentToday: 0,
+      absentToday: 0,
+      remoteToday: 0,
+      leaveToday: 0
+    });
   }
 };
 

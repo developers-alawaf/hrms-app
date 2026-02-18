@@ -37,6 +37,18 @@ const Dashboard = () => {
       }
     });
 
+  // Normalize stats so all counts are numbers (avoids undefined in UI when API fails or returns partial data)
+  const normalizeStats = (data) =>
+    data
+      ? {
+          totalEmployees: Number(data.totalEmployees) || 0,
+          presentToday: Number(data.presentToday) || 0,
+          absentToday: Number(data.absentToday) || 0,
+          remoteToday: Number(data.remoteToday) || 0,
+          leaveToday: Number(data.leaveToday) || 0,
+        }
+      : null;
+
   useEffect(() => {
     const fetchDashboard = async () => {
       const token = localStorage.getItem('token');
@@ -54,23 +66,32 @@ const Dashboard = () => {
           fetch(api('/api/dashboard/month-summary'), authHeaders),
         ]);
 
-        const empData = await safeJson(empRes);
-        if (empData?.success) setEmployeeData(empData.data);
-        if (!empRes.ok) {
+        let empData = await safeJson(empRes);
+        if (empData?.success) {
+          setEmployeeData(empData.data);
+        } else if (!empRes.ok && base) {
+          const retryRes = await fetch('/api/dashboard', authHeaders);
+          empData = await safeJson(retryRes);
+          if (empData?.success) setEmployeeData(empData.data);
+        }
+        if (!empRes.ok && !empData?.success) {
           console.warn('[Dashboard] /api/dashboard response:', empRes.status, empRes.statusText);
         }
 
         if (isSuperAdmin && statsRes) {
-          const statsData = await safeJson(statsRes);
+          let statsData = await safeJson(statsRes);
+          if (statsData && statsRes.ok) {
+            setStats(normalizeStats(statsData));
+          } else if (!statsRes?.ok && base) {
+            const retryRes = await fetch('/api/dashboard/dashboard-stats', authHeaders);
+            statsData = await safeJson(retryRes);
+            if (statsData) setStats(normalizeStats(statsData));
+          }
           if (statsData) {
-            setStats(statsData);
-            console.log('[Dashboard] Today counts (stats):', {
-              totalEmployees: statsData.totalEmployees,
-              presentToday: statsData.presentToday,
-              absentToday: statsData.absentToday,
-              remoteToday: statsData.remoteToday,
-              leaveToday: statsData.leaveToday,
-            });
+            const normalized = normalizeStats(statsData);
+            if (normalized) {
+              console.log('[Dashboard] Today counts (stats):', normalized);
+            }
           }
         }
 
