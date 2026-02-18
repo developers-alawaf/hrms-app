@@ -38,7 +38,24 @@ exports.getEmployeeDashboard = async (req, res) => {
       'fullName newEmployeeCode designation assignedDepartment joiningDate email personalPhoneNumber'
     );
     if (!employee) {
-      return res.status(404).json({ success: false, error: 'Employee not found' });
+      return res.status(200).json({
+        success: true,
+        data: {
+          personalInfo: {
+            fullName: req.user.email || 'User',
+            employeeCode: null,
+            designation: null,
+            department: null,
+            joiningDate: null,
+            email: req.user.email || null,
+            phone: null,
+          },
+          attendance: [],
+          payslips: [],
+          leaveRequests: [],
+          holidays: [],
+        },
+      });
     }
 
     const startDate = moment().tz('Asia/Dhaka').subtract(7, 'days').startOf('day');
