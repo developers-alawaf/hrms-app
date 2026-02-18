@@ -191,18 +191,18 @@ const AttendanceList = () => {
       <div className="attendance-filters">
         <div className="form-group">
           <label>Start Date</label>
-          <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+          <input type="date" className="employee-input" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
         </div>
         <div className="form-group">
           <label>End Date</label>
-          <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+          <input type="date" className="employee-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
         </div>
 
         {user && allowedRoles.includes(user.role) && (
           <>
             <div className="form-group">
               <label>Employee</label>
-              <select value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)}>
+              <select value={selectedEmployee} onChange={(e) => setSelectedEmployee(e.target.value)} className="employee-input">
                 <option value="">All Employees</option>
                 {employees.map((emp) => (
                   <option key={emp._id} value={emp._id}>
@@ -215,6 +215,7 @@ const AttendanceList = () => {
               <label>Search Name</label>
               <input
                 type="text"
+                className="employee-input"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name..."
