@@ -10,6 +10,12 @@ const Dashboard = () => {
   const [monthSummary, setMonthSummary] = useState(null);
   const [fetching, setFetching] = useState(true);
 
+  // API base: same-origin when empty so production proxy (e.g. /api -> backend) works
+  const getApiBase = () => {
+    const url = import.meta.env.VITE_API_URL ?? '';
+    return typeof url === 'string' ? url.replace(/\/$/, '') : '';
+  };
+
   // Safe parse: production may return HTML (404/502) instead of JSON
   const safeJson = (res) =>
     res.text().then((text) => {
@@ -24,23 +30,20 @@ const Dashboard = () => {
     const fetchDashboard = async () => {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const baseUrl = import.meta.env.VITE_API_URL || '';
-      if (!baseUrl) {
-        setFetching(false);
-        return;
-      }
+      const base = getApiBase();
+      const api = (path) => `${base}${path.startsWith('/') ? path : `/${path}`}`;
       try {
         const isSuperAdmin = user?.role === 'Super Admin';
         const [empRes, statsRes, monthRes] = await Promise.all([
-          fetch(`${baseUrl}/api/dashboard`, {
+          fetch(api('/api/dashboard'), {
             headers: { Authorization: `Bearer ${token}` },
           }),
           isSuperAdmin
-            ? fetch(`${baseUrl}/api/dashboard/dashboard-stats`, {
+            ? fetch(api('/api/dashboard/dashboard-stats'), {
                 headers: { Authorization: `Bearer ${token}` },
               })
             : Promise.resolve(null),
-          fetch(`${baseUrl}/api/dashboard/month-summary`, {
+          fetch(api('/api/dashboard/month-summary'), {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -57,7 +60,7 @@ const Dashboard = () => {
         if (monthData?.success && monthData.data) {
           setMonthSummary(monthData.data);
         } else {
-          // Show section with zeros when API fails (400/404/proxy) so it displays in production
+          // Show section with zeros when API fails (404/proxy) so cards display in production
           setMonthSummary({
             workingDays: 0,
             presentDays: 0,
