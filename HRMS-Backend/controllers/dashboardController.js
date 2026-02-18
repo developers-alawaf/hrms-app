@@ -125,7 +125,8 @@ exports.getEmployeeDashboard = async (req, res) => {
 
     res.status(200).json({ success: true, data: response });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    console.error('getEmployeeDashboard error:', error);
+    res.status(500).json({ success: false, error: 'Server error loading dashboard' });
   }
 };
 
