@@ -306,6 +306,42 @@ exports.createEmployee = async (req, res) => {
 };
 
 // ================================================
+// UPDATE MY AVATAR (any authenticated user, own profile only)
+// ================================================
+exports.updateMyAvatar = async (req, res) => {
+  try {
+    const employeeId = req.user.employeeId;
+    if (!employeeId) {
+      return res.status(400).json({ success: false, error: 'No employee linked to this account' });
+    }
+
+    const employee = await Employee.findById(employeeId);
+    if (!employee) {
+      return res.status(404).json({ success: false, error: 'Employee not found' });
+    }
+
+    const file = req.files?.passportSizePhoto?.[0];
+    if (!file) {
+      return res.status(400).json({ success: false, error: 'No passport size photo file provided' });
+    }
+
+    const filePath = file.path.replace(/\\/g, '/');
+    const photoPath = `/${filePath}`;
+
+    employee.passportSizePhoto = photoPath;
+    await employee.save();
+
+    res.status(200).json({ success: true, data: { passportSizePhoto: employee.passportSizePhoto } });
+  } catch (error) {
+    console.error('updateMyAvatar error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to update avatar'
+    });
+  }
+};
+
+// ================================================
 // UPDATE EMPLOYEE - FINAL FIXED VERSION
 // ================================================
 exports.updateEmployee = async (req, res) => {

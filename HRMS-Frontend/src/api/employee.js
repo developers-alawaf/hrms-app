@@ -38,6 +38,16 @@ export const updateEmployee = async (employeeId, formData, token) => {
   return response.data;
 };
 
+export const updateMyAvatar = async (formData, token) => {
+  const response = await axios.patch(`${API_URL}/api/employees/me/avatar`, formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
 export const deleteEmployee = async (employeeId, token) => {
   const response = await axios.delete(`${API_URL}/api/employees/${employeeId}`, {
     headers: { Authorization: `Bearer ${token}` },

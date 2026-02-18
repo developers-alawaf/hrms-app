@@ -208,8 +208,8 @@ const CommonDocuments = () => {
                           className="employee-button employee-action-btn download-button"
                           title="Download document"
                         >
-                          <Download className="employee-action-icon" size={16} />
-                          Download
+                          <Eye className="employee-action-icon" size={16} />
+                          View
                         </a>
                         {canDelete && (
                           <button
