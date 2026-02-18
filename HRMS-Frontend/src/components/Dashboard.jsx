@@ -10,36 +10,65 @@ const Dashboard = () => {
   const [monthSummary, setMonthSummary] = useState(null);
   const [fetching, setFetching] = useState(true);
 
+  // Safe parse: production may return HTML (404/502) instead of JSON
+  const safeJson = (res) =>
+    res.text().then((text) => {
+      try {
+        return text ? JSON.parse(text) : null;
+      } catch {
+        return null;
+      }
+    });
+
   useEffect(() => {
     const fetchDashboard = async () => {
       const token = localStorage.getItem('token');
       if (!token) return;
+      const baseUrl = import.meta.env.VITE_API_URL || '';
+      if (!baseUrl) {
+        setFetching(false);
+        return;
+      }
       try {
         const isSuperAdmin = user?.role === 'Super Admin';
         const [empRes, statsRes, monthRes] = await Promise.all([
-          fetch(`${import.meta.env.VITE_API_URL}/api/dashboard`, {
+          fetch(`${baseUrl}/api/dashboard`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
           isSuperAdmin
-            ? fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/dashboard-stats`, {
+            ? fetch(`${baseUrl}/api/dashboard/dashboard-stats`, {
                 headers: { Authorization: `Bearer ${token}` },
               })
             : Promise.resolve(null),
-          fetch(`${import.meta.env.VITE_API_URL}/api/dashboard/month-summary`, {
+          fetch(`${baseUrl}/api/dashboard/month-summary`, {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
 
-        const empData = await empRes.json();
-        if (empData.success) setEmployeeData(empData.data);
+        const empData = await safeJson(empRes);
+        if (empData?.success) setEmployeeData(empData.data);
 
         if (isSuperAdmin && statsRes) {
-          const statsData = await statsRes.json();
+          const statsData = await safeJson(statsRes);
           if (statsData) setStats(statsData);
         }
 
-        const monthData = await monthRes.json();
-        if (monthData.success && monthData.data) setMonthSummary(monthData.data);
+        const monthData = await safeJson(monthRes);
+        if (monthData?.success && monthData.data) {
+          setMonthSummary(monthData.data);
+        } else {
+          // Show section with zeros when API fails (400/404/proxy) so it displays in production
+          setMonthSummary({
+            workingDays: 0,
+            presentDays: 0,
+            absentDays: 0,
+            remoteDays: 0,
+            leaveDays: 0,
+            totalLateByMinutes: 0,
+            totalOvertimeMinutes: 0,
+            month: new Date().toISOString().slice(0, 7),
+          });
+        }
       } catch (err) {
         console.error("Error fetching dashboard:", err);
       } finally {
@@ -90,48 +119,45 @@ const Dashboard = () => {
         <p className="dashboard-date">{todayFormatted}</p>
       </header>
 
-      {monthSummary && (
+      {monthSummary != null && (
         <section className="dashboard-stats" aria-label="This month summary">
-          <h1>test1</h1>
           <div className="stat-card stat-card--total">
             <span className="stat-card__label">Working days this month</span>
-            <span className="stat-card__value">{monthSummary.workingDays}</span>
+            <span className="stat-card__value">{monthSummary.workingDays ?? 0}</span>
             <span className="stat-card__sublabel">days</span>
           </div>
           <div className="stat-card stat-card--present">
             <span className="stat-card__label">Present this month</span>
-            <span className="stat-card__value">{monthSummary.presentDays}</span>
+            <span className="stat-card__value">{monthSummary.presentDays ?? 0}</span>
             <span className="stat-card__sublabel">days</span>
           </div>
           <div className="stat-card stat-card--absent">
             <span className="stat-card__label">Absent this month</span>
-            <span className="stat-card__value">{monthSummary.absentDays}</span>
+            <span className="stat-card__value">{monthSummary.absentDays ?? 0}</span>
             <span className="stat-card__sublabel">days</span>
           </div>
           <div className="stat-card stat-card--remote">
             <span className="stat-card__label">Remote this month</span>
-            <span className="stat-card__value">{monthSummary.remoteDays}</span>
+            <span className="stat-card__value">{monthSummary.remoteDays ?? 0}</span>
             <span className="stat-card__sublabel">days</span>
           </div>
           <div className="stat-card stat-card--leave">
             <span className="stat-card__label">Leave this month</span>
-            <span className="stat-card__value">{monthSummary.leaveDays}</span>
+            <span className="stat-card__value">{monthSummary.leaveDays ?? 0}</span>
             <span className="stat-card__sublabel">days</span>
           </div>
           <div className="stat-card stat-card--late">
             <span className="stat-card__label">Late by this month</span>
-            <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalLateByMinutes)}</span>
+            <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalLateByMinutes ?? 0)}</span>
             <span className="stat-card__sublabel">total</span>
           </div>
           <div className="stat-card stat-card--overtime">
             <span className="stat-card__label">Overtime this month</span>
-            <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalOvertimeMinutes)}</span>
+            <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalOvertimeMinutes ?? 0)}</span>
             <span className="stat-card__sublabel">total</span>
           </div>
-          <h1>test2</h1>
         </section>
       )}
-      <h1>test3</h1>
 
       {stats && user.role === 'Super Admin' && (
         <section className="dashboard-stats" aria-label="Overview statistics">
