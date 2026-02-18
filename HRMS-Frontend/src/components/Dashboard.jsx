@@ -10,6 +10,12 @@ const Dashboard = () => {
   const [monthSummary, setMonthSummary] = useState(null);
   const [fetching, setFetching] = useState(true);
 
+  // API base: same-origin when empty so production proxy (e.g. /api -> backend) works
+  const getApiBase = () => {
+    const url = import.meta.env.VITE_API_URL ?? '';
+    return typeof url === 'string' ? url.replace(/\/$/, '') : '';
+  };
+
   // Safe parse: production may return HTML (404/502) instead of JSON
   const safeJson = (res) =>
     res.text().then((text) => {
@@ -24,23 +30,20 @@ const Dashboard = () => {
     const fetchDashboard = async () => {
       const token = localStorage.getItem('token');
       if (!token) return;
-      const baseUrl = import.meta.env.VITE_API_URL || '';
-      if (!baseUrl) {
-        setFetching(false);
-        return;
-      }
+      const base = getApiBase();
+      const api = (path) => `${base}${path.startsWith('/') ? path : `/${path}`}`;
       try {
         const isSuperAdmin = user?.role === 'Super Admin';
         const [empRes, statsRes, monthRes] = await Promise.all([
-          fetch(`${baseUrl}/api/dashboard`, {
+          fetch(api('/api/dashboard'), {
             headers: { Authorization: `Bearer ${token}` },
           }),
           isSuperAdmin
-            ? fetch(`${baseUrl}/api/dashboard/dashboard-stats`, {
+            ? fetch(api('/api/dashboard/dashboard-stats'), {
                 headers: { Authorization: `Bearer ${token}` },
               })
             : Promise.resolve(null),
-          fetch(`${baseUrl}/api/dashboard/month-summary`, {
+          fetch(api('/api/dashboard/month-summary'), {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -57,7 +60,7 @@ const Dashboard = () => {
         if (monthData?.success && monthData.data) {
           setMonthSummary(monthData.data);
         } else {
-          // Show section with zeros when API fails (400/404/proxy) so it displays in production
+          // Show section with zeros when API fails (404/proxy) so cards display in production
           setMonthSummary({
             workingDays: 0,
             presentDays: 0,
@@ -119,8 +122,38 @@ const Dashboard = () => {
         <p className="dashboard-date">{todayFormatted}</p>
       </header>
 
+      {stats && user.role === 'Super Admin' && (
+        <section className="dashboard-stats-section" aria-label="Overview statistics">
+          <h2 className="dashboard-section-title">Organization overview - Today&apos;s</h2>
+          <div className="dashboard-stats">
+          <Link to="/employees" className="stat-card stat-card--total stat-card--link">
+            <span className="stat-card__label">Total Employees</span>
+            <span className="stat-card__value">{stats.totalEmployees}</span>
+          </Link>
+          <Link to="/dashboard/present-today" className="stat-card stat-card--present stat-card--link">
+            <span className="stat-card__label">Present Today</span>
+            <span className="stat-card__value">{stats.presentToday ?? 0}</span>
+          </Link>
+          <Link to="/dashboard/absent-today" className="stat-card stat-card--absent stat-card--link">
+            <span className="stat-card__label">Absent Today</span>
+            <span className="stat-card__value">{absentToday}</span>
+          </Link>
+          <Link to="/dashboard/remote-today" className="stat-card stat-card--remote stat-card--link">
+            <span className="stat-card__label">Remote Today</span>
+            <span className="stat-card__value">{stats.remoteToday ?? 0}</span>
+          </Link>
+          <Link to="/dashboard/leave-today" className="stat-card stat-card--leave stat-card--link">
+            <span className="stat-card__label">On Leave Today</span>
+            <span className="stat-card__value">{stats.leaveToday ?? 0}</span>
+          </Link>
+          </div>
+        </section>
+      )}
+
       {monthSummary != null && (
-        <section className="dashboard-stats" aria-label="This month summary">
+        <section className="dashboard-stats-section" aria-label="This month summary">
+          <h2 className="dashboard-section-title">Your attendance this month</h2>
+          <div className="dashboard-stats">
           <div className="stat-card stat-card--total">
             <span className="stat-card__label">Working days this month</span>
             <span className="stat-card__value">{monthSummary.workingDays ?? 0}</span>
@@ -156,31 +189,7 @@ const Dashboard = () => {
             <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalOvertimeMinutes ?? 0)}</span>
             <span className="stat-card__sublabel">total</span>
           </div>
-        </section>
-      )}
-
-      {stats && user.role === 'Super Admin' && (
-        <section className="dashboard-stats" aria-label="Overview statistics">
-          <Link to="/employees" className="stat-card stat-card--total stat-card--link">
-            <span className="stat-card__label">Total Employees</span>
-            <span className="stat-card__value">{stats.totalEmployees}</span>
-          </Link>
-          <Link to="/dashboard/present-today" className="stat-card stat-card--present stat-card--link">
-            <span className="stat-card__label">Present Today</span>
-            <span className="stat-card__value">{stats.presentToday ?? 0}</span>
-          </Link>
-          <Link to="/dashboard/absent-today" className="stat-card stat-card--absent stat-card--link">
-            <span className="stat-card__label">Absent Today</span>
-            <span className="stat-card__value">{absentToday}</span>
-          </Link>
-          <Link to="/dashboard/remote-today" className="stat-card stat-card--remote stat-card--link">
-            <span className="stat-card__label">Remote Today</span>
-            <span className="stat-card__value">{stats.remoteToday ?? 0}</span>
-          </Link>
-          <Link to="/dashboard/leave-today" className="stat-card stat-card--leave stat-card--link">
-            <span className="stat-card__label">On Leave Today</span>
-            <span className="stat-card__value">{stats.leaveToday ?? 0}</span>
-          </Link>
+          </div>
         </section>
       )}
 

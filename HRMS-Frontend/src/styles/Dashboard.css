@@ -96,12 +96,23 @@
 }
 
 /* ========== Stats ========== */
+.dashboard-stats-section {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+}
+
+.dashboard-section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--dash-text);
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.02em;
+}
+
 .dashboard-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
-  max-width: 1200px;
-  margin: 0 auto 2rem;
 }
 
 .stat-card {

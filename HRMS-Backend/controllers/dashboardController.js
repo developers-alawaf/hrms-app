@@ -13,9 +13,24 @@ exports.getEmployeeDashboard = async (req, res) => {
     }
     const { employeeId, companyId } = req.user;
     if (!employeeId || !companyId) {
-      return res.status(400).json({
-        success: false,
-        error: 'User is not linked to an employee. Dashboard is available for users with an employee record.',
+      // Return 200 with minimal data so dashboard still shows in production (e.g. Super Admin)
+      return res.status(200).json({
+        success: true,
+        data: {
+          personalInfo: {
+            fullName: req.user.email || 'User',
+            employeeCode: null,
+            designation: null,
+            department: null,
+            joiningDate: null,
+            email: req.user.email || null,
+            phone: null,
+          },
+          attendance: [],
+          payslips: [],
+          leaveRequests: [],
+          holidays: [],
+        },
       });
     }
 
@@ -116,7 +131,7 @@ exports.getDashboardStats = async (req, res) => {
     });
 
     const leaveToday = await LeaveRequest.countDocuments({
-      status: 'Approved',
+      status: 'approved',
       startDate: { $lte: today.toDate() },
       endDate: { $gte: today.toDate() }
     });

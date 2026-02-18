@@ -112,8 +112,12 @@ import { Menu } from 'lucide-react';
 import './styles/global.css';
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth > 768);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth > 768 : true
+  );
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth > 768 : true
+  );
   const location = useLocation();
 
   const publicRoutes = ['/', '/login', '/accept-invitation'];
@@ -123,7 +127,11 @@ function App() {
     const handleResize = () => {
       const desktop = window.innerWidth > 768;
       setIsDesktop(desktop);
-      setIsSidebarOpen(desktop);
+      if (desktop) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
     };
 
     window.addEventListener('resize', handleResize);

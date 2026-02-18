@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { createCompany, getCompanies } from '../api/company';
 import '../styles/CompanyCreate.css';
 
 const CompanyCreate = () => {
-  const navigate = useNavigate();
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     abbreviation: '',
@@ -54,7 +53,7 @@ const CompanyCreate = () => {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : (name === 'employeeIdBase' ? parseInt(value, 10) : value),
+      [name]: type === 'checkbox' ? checked : (name === 'employeeIdBase' ? (value === '' ? '' : parseInt(value, 10)) : value),
     });
   };
 
@@ -69,9 +68,11 @@ const CompanyCreate = () => {
       const data = await createCompany(formData, token);
       if (data.success) {
         setSuccess('Company created successfully!');
-        setFormData({ name: '', isActive: true });
+        setFormData({ name: '', abbreviation: '', employeeIdBase: '', isActive: true });
+        setShowCreateModal(false);
+        setError('');
         await fetchCompanies();
-        setTimeout(() => navigate('/dashboard'), 2000);
+        setTimeout(() => setSuccess(''), 3000);
       } else {
         setError(data.error || 'Something went wrong');
       }
@@ -95,66 +96,31 @@ const CompanyCreate = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
+  const closeModal = () => {
+    setShowCreateModal(false);
+    setError('');
+    setFormData({ name: '', abbreviation: '', employeeIdBase: '', isActive: true });
+  };
+
   return (
     <div className="company-container">
-      <h2 className="company-title">Create Company</h2>
-      <form onSubmit={handleSubmit} className="company-form">
-        <div className="form-group">
-          <label htmlFor="name">Company Name</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className="company-input"
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="abbreviation">Abbreviation</label>
-          <input
-            type="text"
-            id="abbreviation"
-            name="abbreviation"
-            value={formData.abbreviation}
-            onChange={handleChange}
-            className="company-input"
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="employeeIdBase">Company ID Base</label>
-          <input
-            type="number"
-            id="employeeIdBase"
-            name="employeeIdBase"
-            value={formData.employeeIdBase}
-            onChange={handleChange}
-            className="company-input"
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="isActive">Active</label>
-          <input
-            type="checkbox"
-            id="isActive"
-            name="isActive"
-            checked={formData.isActive}
-            onChange={handleChange}
-            className="company-checkbox"
-          />
-        </div>
-        {error && <p className="company-message company-error">{error}</p>}
-        {success && <p className="company-message company-success">{success}</p>}
-        <button type="submit" className="company-button" disabled={loading}>
-          {loading ? 'Creating...' : 'Create Company'}
+      <div className="company-header company-header--main">
+        <h2 className="company-page-title">Companies</h2>
+        <button
+          type="button"
+          className="company-button company-button--create"
+          onClick={() => setShowCreateModal(true)}
+        >
+          Create Company
         </button>
-      </form>
+      </div>
+
+      {success && (
+        <p className="company-message company-success company-message--inline">{success}</p>
+      )}
 
       <div className="company-header">
-        <h3 className="company-title">Company List</h3>
+        <h3 className="company-section-title">Company List</h3>
         <div className="company-controls">
           <input
             type="text"
@@ -217,6 +183,82 @@ const CompanyCreate = () => {
             </div>
           )}
         </>
+      )}
+
+      {showCreateModal && (
+        <div className="company-modal-backdrop" onClick={closeModal} aria-hidden="true">
+          <div className="company-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="company-modal-header">
+              <h3 className="company-modal-title">Create Company</h3>
+              <button
+                type="button"
+                className="company-modal-close"
+                onClick={closeModal}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="company-form company-form--modal">
+              <div className="form-group">
+                <label htmlFor="name">Company Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="company-input"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="abbreviation">Abbreviation</label>
+                <input
+                  type="text"
+                  id="abbreviation"
+                  name="abbreviation"
+                  value={formData.abbreviation}
+                  onChange={handleChange}
+                  className="company-input"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="employeeIdBase">Company ID Base</label>
+                <input
+                  type="number"
+                  id="employeeIdBase"
+                  name="employeeIdBase"
+                  value={formData.employeeIdBase}
+                  onChange={handleChange}
+                  className="company-input"
+                  required
+                />
+              </div>
+              <div className="form-group form-group--row">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  name="isActive"
+                  checked={formData.isActive}
+                  onChange={handleChange}
+                  className="company-checkbox"
+                />
+                <label htmlFor="isActive" className="form-group--row-label">Active</label>
+              </div>
+              {error && <p className="company-message company-error">{error}</p>}
+              <div className="company-modal-actions">
+                <button type="button" className="company-button company-button--secondary" onClick={closeModal}>
+                  Cancel
+                </button>
+                <button type="submit" className="company-button" disabled={loading}>
+                  {loading ? 'Creating...' : 'Create Company'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

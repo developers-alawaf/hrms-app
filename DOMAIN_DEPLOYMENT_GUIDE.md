@@ -244,6 +244,11 @@ cd /var/www/HRMS/Frontend
 npm run build
 ```
 
+**Dashboard API (400/404):** If the dashboard shows cards but counts are wrong or you see 400/404 for `/api/dashboard` or `/api/dashboard/month-summary`:
+- Use the **same origin** for API in production when Nginx proxies `/api` to the backend (e.g. `VITE_API_URL=http://hrms.kloud.com.bd` or leave empty so the app uses the current origin).
+- Ensure Nginx forwards **all** `/api` subpaths (e.g. `location /api { ... }` forwards `/api/dashboard`, `/api/dashboard/month-summary`, etc.).
+- Restart the backend after deploying so `/api/dashboard` and `/api/dashboard/month-summary` return 200 (not 400/404).
+
 ---
 
 ## 🔍 Verification Steps
