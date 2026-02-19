@@ -167,7 +167,7 @@ const ProfilePage = () => {
 
   return (
     <div className="profile-wrap">
-      <h1 className="profile-page-title">My Profile</h1>
+      <h1 className="profile-page-title">My Profile -</h1>
 
       {/* Hero: Avatar + Name + ID */}
       <div className="profile-hero">
