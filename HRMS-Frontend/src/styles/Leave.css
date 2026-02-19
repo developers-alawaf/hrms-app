@@ -50,6 +50,14 @@
   color: var(--app-text-muted);
 }
 
+.leave-form .form-hint {
+  font-size: 0.8125rem;
+  color: var(--app-text-muted);
+  opacity: 0.9;
+  margin-top: 0.25rem;
+  display: block;
+}
+
 .leave-form .employee-input {
   background: rgba(15, 23, 42, 0.5);
   border: 1px solid var(--app-border);

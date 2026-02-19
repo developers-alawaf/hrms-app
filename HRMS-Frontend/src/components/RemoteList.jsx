@@ -200,6 +200,7 @@ const RemoteList = () => {
                   <th>End Date</th>
                   <th>Status</th>
                   <th>Half Day</th>
+                  <th>Approved By</th>
                   {(user?.role === 'Super Admin' || user?.role === 'C-Level Executive' || user?.role === 'Company Admin' || user?.role === 'HR Manager' || user?.role === 'Manager') && <th>Actions</th>}
                 </tr>
               </thead>
@@ -218,6 +219,11 @@ const RemoteList = () => {
                       <td>{new Date(request.endDate).toLocaleDateString()}</td>
                       <td>{request.status.charAt(0).toUpperCase() + request.status.slice(1)}</td>
                       <td>{request.isHalfDay ? 'Yes' : 'No'}</td>
+                      <td>
+                        {(request.status === 'approved' || request.status === 'denied') && request.approverId?.fullName
+                          ? request.approverId.fullName
+                          : '-'}
+                      </td>
                       {(user?.role === 'Super Admin' || user?.role === 'C-Level Executive' || user?.role === 'Company Admin' || user?.role === 'HR Manager' || user?.role === 'Manager') && (
                         <td>
                           {canApproveDeny && (
@@ -360,6 +366,7 @@ const RemoteList = () => {
           </div>
         </div>
       )}
+      
     </div>
   );
 };

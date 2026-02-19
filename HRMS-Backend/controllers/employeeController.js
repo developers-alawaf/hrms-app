@@ -11,7 +11,6 @@ const Salary = require('../models/salary');
 const EmployeesAttendance = require('../models/employeesAttendance');
 const ShiftManagement = require('../models/shiftManagement');
 const AttendanceAdjustmentRequest = require('../models/attendanceAdjustmentRequest');
-const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const moment = require('moment-timezone');
 const fs = require('fs').promises;
@@ -20,16 +19,7 @@ const path = require('path');
 const zkService = require('../services/zktecoService');
 const leaveController = require('./leaveController');
 const activityLogService = require('../services/activityLogService');
-
-const transporter = nodemailer.createTransport({
-  host: 'smtp.zoho.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.ZOHO_EMAIL,
-    pass: process.env.ZOHO_PASSWORD
-  }
-});
+const emailService = require('../services/emailService');
 
 // ================= CREATE EMPLOYEE =================
 
@@ -231,8 +221,10 @@ exports.createEmployee = async (req, res) => {
       await invitation.save();
 
       try {
-        await transporter.sendMail({
-          from: process.env.ZOHO_EMAIL,
+        const transport = emailService.getTransporter();
+        if (!transport) throw new Error('Email service not configured');
+        await transport.sendMail({
+          from: `"${process.env.MAIL_FROM_NAME || 'HRMS'}" <${process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL}>`,
           to: email,
           subject: 'HRMS Invitation',
           html: `Welcome to the HRMS! Your temporary password is: <b>${temporaryPassword}</b><br>
@@ -302,6 +294,42 @@ exports.createEmployee = async (req, res) => {
     }
 
     res.status(400).json({ success: false, error: error.message });
+  }
+};
+
+// ================================================
+// UPDATE MY AVATAR (any authenticated user, own profile only)
+// ================================================
+exports.updateMyAvatar = async (req, res) => {
+  try {
+    const employeeId = req.user.employeeId;
+    if (!employeeId) {
+      return res.status(400).json({ success: false, error: 'No employee linked to this account' });
+    }
+
+    const employee = await Employee.findById(employeeId);
+    if (!employee) {
+      return res.status(404).json({ success: false, error: 'Employee not found' });
+    }
+
+    const file = req.files?.passportSizePhoto?.[0];
+    if (!file) {
+      return res.status(400).json({ success: false, error: 'No passport size photo file provided' });
+    }
+
+    const filePath = file.path.replace(/\\/g, '/');
+    const photoPath = `/${filePath}`;
+
+    employee.passportSizePhoto = photoPath;
+    await employee.save();
+
+    res.status(200).json({ success: true, data: { passportSizePhoto: employee.passportSizePhoto } });
+  } catch (error) {
+    console.error('updateMyAvatar error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to update avatar'
+    });
   }
 };
 
@@ -437,8 +465,10 @@ exports.updateEmployee = async (req, res) => {
       await invitation.save();
 
       try {
-        await transporter.sendMail({
-          from: process.env.ZOHO_EMAIL,
+        const transport = emailService.getTransporter();
+        if (!transport) throw new Error('Email service not configured');
+        await transport.sendMail({
+          from: `"${process.env.MAIL_FROM_NAME || 'HRMS'}" <${process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL}>`,
           to: req.body.email,
           subject: 'HRMS Invitation',
           html: `Welcome to the HRMS! Your temporary password is: <b>${temporaryPassword}</b><br>
@@ -686,9 +716,20 @@ exports.getEmployeeById = async (req, res) => {
     const employee = await Employee.findById(req.params.id)
       .populate('department')
       .populate('designation')
+      .populate('managerId', 'fullName email')
       .select('-nidPassportNumber');
     if (!employee) {
       throw new Error('Employee not found');
+    }
+    const data = employee.toObject ? employee.toObject() : employee;
+    if (data.managerId && data.managerId._id) {
+      const managerUser = await User.findOne({ employeeId: data.managerId._id }).select('email').lean();
+      data.manager = {
+        fullName: data.managerId.fullName || '-',
+        email: (managerUser?.email || data.managerId.email || '').toLowerCase() || null
+      };
+    } else {
+      data.manager = null;
     }
     console.log('getEmployeeById - Retrieved employee:', {
       _id: employee._id,
@@ -697,7 +738,7 @@ exports.getEmployeeById = async (req, res) => {
       employeeStatus: employee.employeeStatus,
       companyId: employee.companyId
     });
-    res.status(200).json({ success: true, data: employee });
+    res.status(200).json({ success: true, data });
   } catch (error) {
     console.error('getEmployeeById - Error:', error);
     res.status(400).json({ success: false, error: error.message });

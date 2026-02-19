@@ -632,6 +632,7 @@ import { getEmployees } from '../api/employee';
 import { getCompanies } from '../api/company';
 import { getDocuments, getDocumentById, uploadDocument, deleteDocument } from '../api/document';
 import '../styles/Employee.css';
+import '../styles/DocumentList.css';
 import { Eye, Download, Trash2 } from 'lucide-react';
 
 const DocumentList = () => {
@@ -644,6 +645,7 @@ const DocumentList = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const authorized =
     user?.role === 'Super Admin' ||
@@ -763,6 +765,7 @@ const DocumentList = () => {
         setDocuments(prev => [...prev, ...(response.data || [])]);
         setFormData({ description: '', document: null });
         e.target.reset();
+        setShowUploadModal(false);
       } else {
         setError(response.error || 'Upload failed');
       }
@@ -771,6 +774,13 @@ const DocumentList = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const closeUploadModal = () => {
+    setShowUploadModal(false);
+    setError('');
+    setSuccess('');
+    setFormData({ description: '', document: null });
   };
 
   const handleDelete = async (id) => {
@@ -790,47 +800,24 @@ const DocumentList = () => {
 
   return (
     <div className="employee-container">
-      <div className="employee-header">
+      <div className="doc-header doc-header--main">
         <h2 className="employee-title">Documents</h2>
+        {authorized && (
+          <button
+            type="button"
+            className="doc-button doc-button--primary"
+            onClick={() => setShowUploadModal(true)}
+          >
+            Upload Document
+          </button>
+        )}
       </div>
 
-      {/* Upload Form */}
-      {authorized && (
-        <form onSubmit={handleSubmit} className="employee-form">
-          <div className="form-grid">
-            <div className="form-group">
-              <label htmlFor="description">Description (optional)</label>
-              <input
-                type="text"
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className="employee-input"
-                placeholder="e.g. Salary Slip - Jan 2025"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="document">Upload File *</label>
-              <input
-                type="file"
-                id="document"
-                name="document"
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                onChange={handleChange}
-                className="employee-input"
-                required
-              />
-            </div>
-          </div>
-
-          {success && <p className="employee-message employee-success">{success}</p>}
-          {error && <p className="employee-message employee-error">{error}</p>}
-
-          <button type="submit" className="employee-button" disabled={loading}>
-            {loading ? 'Uploading...' : 'Upload Document'}
-          </button>
-        </form>
+      {success && (
+        <p className="employee-message employee-success doc-message--inline">{success}</p>
+      )}
+      {error && (
+        <p className="employee-message employee-error doc-message--inline">{error}</p>
       )}
 
       {/* Documents List */}
@@ -856,23 +843,32 @@ const DocumentList = () => {
                     </td>
                     <td>{doc.description || <em>No description</em>}</td>
                     <td>
-                      <button onClick={() => handleView(doc._id)} className="employee-button view-button">
-                        <Eye className="button-icon" /> View
-                      </button>
-                      <a
-                        href={`${import.meta.env.VITE_API_URL}${doc.fileUrl}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="employee-button download-button"
-                        style={{ marginLeft: '8px' }}
-                      >
-                        <Download className="button-icon" /> Download
-                      </a>
-                      {canDelete && (
-                        <button onClick={() => handleDelete(doc._id)} className="employee-button delete-button" style={{ marginLeft: '8px' }}>
-                          <Trash2 className="button-icon" /> Delete
+                      <div className="doc-actions">
+                        <button
+                          type="button"
+                          onClick={() => handleView(doc._id)}
+                          className="doc-action-btn doc-action-btn--view"
+                        >
+                          <Eye size={16} /> <span>View</span>
                         </button>
-                      )}
+                        <a
+                          href={`${import.meta.env.VITE_API_URL}${doc.fileUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="doc-action-btn doc-action-btn--download"
+                        >
+                          <Download size={16} /> <span>Download</span>
+                        </a>
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(doc._id)}
+                            className="doc-action-btn doc-action-btn--delete"
+                          >
+                            <Trash2 size={16} /> <span>Delete</span>
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -882,35 +878,103 @@ const DocumentList = () => {
         </div>
       )}
 
-      {/* View Modal */}
-      {showModal && selectedDocument && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content employee-modal-content" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-title">Document Details</h3>
-            <div className="modal-details">
-              <div className="modal-detail-item">
-                <strong>Uploaded By:</strong> <span>{getUploaderName(selectedDocument.uploadedBy)}</span>
-              </div>
-              <div className="modal-detail-item">
-                <strong>Description:</strong> <span>{selectedDocument.description || 'No description'}</span>
+      {/* Upload Modal */}
+      {showUploadModal && authorized && (
+        <div className="doc-modal-backdrop" onClick={closeUploadModal} aria-hidden="true">
+          <div className="doc-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="doc-modal-header">
+              <h3 className="doc-modal-title">Upload Document</h3>
+              <button
+                type="button"
+                className="doc-modal-close"
+                onClick={closeUploadModal}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="doc-form doc-form--modal">
+              <div className="form-group">
+                <label htmlFor="description">Description (optional)</label>
+                <input
+                  type="text"
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="doc-input"
+                  placeholder="e.g. Salary Slip - Jan 2025"
+                />
               </div>
 
-              <div className="modal-detail-item">
-                <strong>Uploaded On:</strong> <span>{new Date(selectedDocument.createdAt).toLocaleDateString()}</span>
+              <div className="form-group">
+                <label htmlFor="document">Upload File *</label>
+                <input
+                  type="file"
+                  id="document"
+                  name="document"
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  onChange={handleChange}
+                  className="doc-input"
+                  required
+                />
               </div>
-              <div className="modal-documents">
-                <a
-                  href={`${import.meta.env.VITE_API_URL}${selectedDocument.fileUrl}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="modal-document-link"
-                >
-                  Download Document
-                </a>
+
+              <div className="doc-modal-actions">
+                <button type="button" className="doc-button doc-button--secondary" onClick={closeUploadModal}>
+                  Cancel
+                </button>
+                <button type="submit" className="doc-button doc-button--primary" disabled={loading}>
+                  {loading ? 'Uploading...' : 'Upload'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Modal */}
+      {showModal && selectedDocument && (
+        <div className="doc-modal-backdrop" onClick={() => setShowModal(false)} aria-hidden="true">
+          <div className="doc-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="doc-modal-header">
+              <h3 className="doc-modal-title">Document Details</h3>
+              <button
+                type="button"
+                className="doc-modal-close"
+                onClick={() => setShowModal(false)}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="doc-details">
+              <div className="doc-detail-row">
+                <span className="doc-detail-label">Uploaded By</span>
+                <span className="doc-detail-value">{getUploaderName(selectedDocument.uploadedBy)}</span>
+              </div>
+              <div className="doc-detail-row">
+                <span className="doc-detail-label">Description</span>
+                <span className="doc-detail-value">{selectedDocument.description || 'No description'}</span>
+              </div>
+              <div className="doc-detail-row">
+                <span className="doc-detail-label">Uploaded On</span>
+                <span className="doc-detail-value">{new Date(selectedDocument.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
-            <div className="modal-actions">
-              <button onClick={() => setShowModal(false)} className="employee-button modal-button">
+
+            <div className="doc-modal-actions doc-modal-actions--details">
+              <a
+                href={`${import.meta.env.VITE_API_URL}${selectedDocument.fileUrl}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="doc-button doc-button--secondary"
+              >
+                Download
+              </a>
+              <button type="button" onClick={() => setShowModal(false)} className="doc-button doc-button--primary">
                 Close
               </button>
             </div>

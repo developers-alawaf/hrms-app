@@ -185,6 +185,14 @@ const Dashboard = () => {
             <span className="stat-card__label">Total Employees</span>
             <span className="stat-card__value">{stats.totalEmployees}</span>
           </Link>
+          <div className="stat-card stat-card--active">
+            <span className="stat-card__label">Active Employees</span>
+            <span className="stat-card__value">{stats.activeEmployees ?? 0}</span>
+          </div>
+          <div className="stat-card stat-card--inactive">
+            <span className="stat-card__label">Inactive Employees</span>
+            <span className="stat-card__value">{stats.inactiveEmployees ?? 0}</span>
+          </div>
           <Link to="/dashboard/present-today" className="stat-card stat-card--present stat-card--link">
             <span className="stat-card__label">Present Today</span>
             <span className="stat-card__value">{stats.presentToday ?? 0}</span>

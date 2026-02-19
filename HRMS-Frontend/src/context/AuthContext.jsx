@@ -4,6 +4,15 @@ import { getEmployeeProfile } from '../api/employee';
 
 export const AuthContext = createContext();
 
+export const buildProfileImageUrl = (path) => {
+  if (!path) return null;
+  const base = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+  const normalized = String(path).replace(/\\/g, '/').replace(/^\//, '');
+  return base ? `${base}/${normalized}` : `/${normalized}`;
+};
+
+export const DEFAULT_AVATAR = '/default-avatar.png';
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,19 +35,15 @@ export const AuthProvider = ({ children }) => {
             role: decoded.role,
             employeeId: decoded.employeeId,
             companyId: decoded.companyId,
-            profileImage: decoded.passportSizePhoto
-              ? `${import.meta.env.VITE_API_URL}${decoded.passportSizePhoto}`
-              : null,
+            profileImage: buildProfileImageUrl(decoded.passportSizePhoto) || null,
           };
 
-          // Fetch fullName from API if missing in token
-          if (!userData.fullName && decoded.employeeId) {
+          // Always fetch profile when we have employeeId so profileImage matches API (same as Profile page)
+          if (decoded.employeeId) {
             const response = await getEmployeeProfile(decoded.employeeId, token);
             if (response.success) {
-              userData.fullName = response.data.fullName;
-              userData.profileImage = response.data.passportSizePhoto
-                ? `${import.meta.env.VITE_API_URL}${response.data.passportSizePhoto}`
-                : null;
+              userData.fullName = userData.fullName || response.data.fullName;
+              userData.profileImage = buildProfileImageUrl(response.data.passportSizePhoto) || null;
               userData.department = response.data.department;
             } else {
               localStorage.removeItem('token');
@@ -76,20 +81,16 @@ export const AuthProvider = ({ children }) => {
           role: decoded.role,
           employeeId: decoded.employeeId,
           companyId: decoded.companyId,
-          profileImage: decoded.passportSizePhoto
-            ? `${import.meta.env.VITE_API_URL}${decoded.passportSizePhoto}`
-            : null,
+            profileImage: buildProfileImageUrl(decoded.passportSizePhoto) || null,
         };
 
-        if (!userData.fullName && decoded.employeeId) {
+        if (decoded.employeeId) {
           const response = await getEmployeeProfile(decoded.employeeId, token);
           if (response.success) {
             setUser({
               ...userData,
-              fullName: response.data.fullName,
-              profileImage: response.data.passportSizePhoto
-                ? `${import.meta.env.VITE_API_URL}${response.data.passportSizePhoto}`
-                : null,
+              fullName: userData.fullName || response.data.fullName,
+              profileImage: buildProfileImageUrl(response.data.passportSizePhoto) || null,
               department: response.data.department,
             });
           } else {
@@ -119,8 +120,16 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateProfileImage = (passportSizePhotoPath) => {
+    setUser((prev) =>
+      prev
+        ? { ...prev, profileImage: buildProfileImageUrl(passportSizePhotoPath) || DEFAULT_AVATAR }
+        : prev
+    );
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, updateProfileImage }}>
       {children}
     </AuthContext.Provider>
   );

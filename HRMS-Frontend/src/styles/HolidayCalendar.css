@@ -1,0 +1,534 @@
+/* Holiday Calendar – premium layout with modal & data table */
+
+.holiday-container {
+  padding: 0;
+  color: var(--app-text);
+  font-family: var(--app-font);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Header */
+.holiday-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.holiday-header-left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.holiday-title {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-size: clamp(1.4rem, 3.5vw, 1.85rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 50%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0;
+}
+
+.holiday-title svg {
+  flex-shrink: 0;
+  color: #60a5fa;
+  opacity: 0.9;
+}
+
+.holiday-year-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.holiday-year-wrap label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--app-text-muted);
+}
+
+.holiday-select {
+  padding: 0.5rem 0.75rem;
+  min-width: 100px;
+  border-radius: 10px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--app-font);
+}
+
+.holiday-select:focus {
+  outline: none;
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+.holiday-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+/* Buttons */
+.holiday-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s;
+  font-family: var(--app-font);
+}
+
+.holiday-btn:hover {
+  transform: translateY(-1px);
+}
+
+.holiday-btn:active {
+  transform: translateY(0);
+}
+
+.holiday-btn--primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+}
+
+.holiday-btn--primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.45);
+}
+
+.holiday-btn--primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.holiday-btn--outline {
+  background: var(--app-surface);
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
+}
+
+.holiday-btn--outline:hover {
+  background: var(--app-accent-soft);
+  border-color: var(--app-accent);
+  color: var(--app-accent-light);
+}
+
+.holiday-btn--save {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+}
+
+.holiday-btn--save:hover:not(:disabled) {
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+}
+
+.holiday-btn--secondary {
+  background: transparent;
+  color: var(--app-text-muted);
+  border: 1px solid var(--app-border);
+}
+
+.holiday-btn--secondary:hover {
+  background: rgba(51, 65, 85, 0.3);
+  color: var(--app-text);
+}
+
+/* Excel card */
+.holiday-excel-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(12px);
+}
+
+.holiday-excel-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--app-text);
+  margin: 0 0 0.5rem;
+}
+
+.holiday-excel-desc {
+  font-size: 0.875rem;
+  color: var(--app-text-muted);
+  margin: 0 0 1rem;
+  line-height: 1.5;
+}
+
+.holiday-excel-desc strong {
+  color: var(--app-text);
+  font-weight: 600;
+}
+
+.holiday-excel-form .holiday-excel-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.holiday-file-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  border: 1px solid var(--app-border);
+  background: rgba(15, 23, 42, 0.5);
+  color: var(--app-text);
+  cursor: pointer;
+}
+
+.holiday-file-input::file-selector-button {
+  margin-right: 0.75rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 6px;
+  border: 1px solid var(--app-border);
+  background: var(--app-accent-soft);
+  color: var(--app-accent-light);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.holiday-error {
+  font-size: 0.8125rem;
+  color: #f87171;
+  margin: 0.5rem 0 0;
+}
+
+/* Table card */
+.holiday-table-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 14px;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.holiday-loading,
+.holiday-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  color: var(--app-text-muted);
+  gap: 1rem;
+}
+
+.holiday-empty svg {
+  opacity: 0.4;
+}
+
+.holiday-empty p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.holiday-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.holiday-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.holiday-table th,
+.holiday-table td {
+  padding: 0.875rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.holiday-table th {
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--app-text-muted);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.holiday-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.holiday-table tbody tr:hover {
+  background: rgba(51, 65, 85, 0.2);
+}
+
+.holiday-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.holiday-td-num {
+  color: var(--app-text-muted);
+  font-weight: 500;
+  width: 3rem;
+}
+
+.holiday-td-name {
+  font-weight: 500;
+  color: var(--app-text);
+}
+
+.holiday-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.holiday-badge--national {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.holiday-badge--religious {
+  background: rgba(139, 92, 246, 0.2);
+  color: #c4b5fd;
+}
+
+.holiday-th-actions,
+.holiday-td-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.holiday-td-actions {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+.holiday-action-btn {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  font-family: var(--app-font);
+}
+
+.holiday-action-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
+.holiday-action-btn--edit {
+  background: var(--app-accent-soft);
+  color: var(--app-accent-light);
+}
+
+.holiday-action-btn--edit:hover {
+  background: var(--app-accent);
+  color: #fff;
+}
+
+.holiday-action-btn--delete {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.holiday-action-btn--delete:hover {
+  background: #ef4444;
+  color: #fff;
+}
+
+/* Modal */
+.holiday-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: holiday-modal-fade 0.2s ease-out;
+}
+
+@keyframes holiday-modal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.holiday-modal {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  max-width: 500px;
+  width: 100%;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: holiday-modal-slide 0.25s ease-out;
+}
+
+@keyframes holiday-modal-slide {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.holiday-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.holiday-modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.holiday-modal-close {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--app-text-muted);
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.holiday-modal-close:hover {
+  background: rgba(51, 65, 85, 0.4);
+  color: var(--app-text);
+}
+
+.holiday-modal-form {
+  padding: 1.5rem;
+}
+
+.holiday-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.holiday-form-grid .holiday-form-group:first-child {
+  grid-column: 1 / -1;
+}
+
+.holiday-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.holiday-form-group label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--app-text-muted);
+}
+
+.holiday-input {
+  width: 100%;
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--app-border);
+  background: rgba(15, 23, 42, 0.5);
+  color: var(--app-text);
+  font-size: 0.9375rem;
+  font-family: var(--app-font);
+}
+
+.holiday-input:focus {
+  outline: none;
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+.holiday-input::placeholder {
+  color: var(--app-text-muted);
+}
+
+.holiday-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid var(--app-border);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .holiday-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .holiday-header-left {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .holiday-actions {
+    flex-wrap: wrap;
+  }
+
+  .holiday-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .holiday-modal-actions {
+    flex-direction: column;
+  }
+
+  .holiday-modal-actions .holiday-btn {
+    width: 100%;
+  }
+}

@@ -161,11 +161,13 @@ exports.getDashboardStats = async (req, res) => {
       endDate: { $gte: todayDate }
     })) || 0;
 
-    // Absent = total employees minus (present + remote + on leave) from attendance/leave data
-    const absentToday = Math.max(0, totalEmployees - presentToday - remoteToday - leaveToday);
+    // Absent = active employees minus (present + remote + on leave)
+    const absentToday = Math.max(0, activeEmployees - presentToday - remoteToday - leaveToday);
 
     res.status(200).json({
       totalEmployees,
+      activeEmployees,
+      inactiveEmployees,
       presentToday,
       absentToday,
       remoteToday,

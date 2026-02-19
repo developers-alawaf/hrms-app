@@ -64,8 +64,10 @@ const swaggerDocs = require('./swagger/swaggerConfig');
 
 const app = express();
 
-// Serve uploaded files
-app.use('/uploads', express.static('uploads'));
+// Serve uploaded files (multer uses folder "Uploads" and DB stores /Uploads/... - must match for production)
+app.use('/Uploads', express.static(path.join(__dirname, 'Uploads')));
+// Backward compatibility: lowercase route
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // CORS Configuration - Allow frontend domain and all necessary headers
 const corsOptions = {
