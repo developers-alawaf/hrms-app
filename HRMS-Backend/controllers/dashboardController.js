@@ -272,6 +272,7 @@ exports.getPresentToday = async (req, res) => {
 };
 
 // List of employees working remote today (approved LeaveRequest type 'remote')
+// For dashboard, we consider anyone with approved remote leave covering today as remote — even if they forgot to check in
 exports.getRemoteToday = async (req, res) => {
   try {
     const today = moment().tz('Asia/Dhaka').startOf('day').toDate();
