@@ -1,11 +1,12 @@
-
 const LeaveRequest = require('../models/leaveRequest');
 const LeaveEntitlement = require('../models/leaveEntitlement');
 const LeavePolicy = require('../models/leavePolicy');
 const EmployeesAttendance = require('../models/employeesAttendance');
 const Employee = require('../models/employee');
+const User = require('../models/user');
 const moment = require('moment-timezone');
 const activityLogService = require('../services/activityLogService');
+const emailService = require('../services/emailService');
 
 exports.createLeaveRequest = async (req, res) => {
   try {
@@ -148,6 +149,33 @@ exports.createLeaveRequest = async (req, res) => {
     await leaveRequest.save();
     console.log(`✅ Created leave request: employeeId: ${req.user.employeeId}, startDate: ${start.toISOString()}, endDate: ${end.toISOString()}`);
     res.status(201).json({ success: true, data: leaveRequest });
+
+    // Notify manager by email (non-blocking - do not delay response)
+    const managerId = employee.managerId;
+    if (managerId) {
+      (async () => {
+        try {
+          const managerUser = await User.findOne({ employeeId: managerId }).select('email').lean();
+          const managerEmployee = await Employee.findById(managerId).select('email').lean();
+          const managerEmail = managerUser?.email || managerEmployee?.email;
+          if (managerEmail) {
+            await emailService.sendLeaveRequestNotificationToManager({
+              managerEmail,
+              employeeName: employee.fullName || 'Employee',
+              type: leaveRequest.type,
+              startDate: leaveRequest.startDate,
+              endDate: leaveRequest.endDate,
+              isHalfDay: leaveRequest.isHalfDay,
+              remarks: leaveRequest.remarks || null
+            });
+          } else {
+            console.warn(`[LeaveRequest] Manager ${managerId} has no email; notification skipped.`);
+          }
+        } catch (err) {
+          console.error('[LeaveRequest] Failed to send manager notification:', err.message);
+        }
+      })();
+    }
 
     // Log leave request creation (non-blocking)
     const userInfo = activityLogService.extractUserInfo(req);

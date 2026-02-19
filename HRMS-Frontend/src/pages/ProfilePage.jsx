@@ -221,6 +221,8 @@ const ProfilePage = () => {
           <Field label="Company" value={companyName} />
           <Field label="Department" value={profile.department?.name} />
           <Field label="Designation" value={profile.designation?.name} />
+          <Field label="Manager" value={profile.manager?.fullName} />
+          <Field label="Manager Email" value={profile.manager?.email} noCapitalize />
           <Field label="Joining Date" value={formatDate(profile.joiningDate)} />
           <Field label="Last Working Day" value={formatDate(profile.lastWorkingDay)} />
           <Field label="Age of Service" value={profile.ageOfService} />

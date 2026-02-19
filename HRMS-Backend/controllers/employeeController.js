@@ -722,9 +722,20 @@ exports.getEmployeeById = async (req, res) => {
     const employee = await Employee.findById(req.params.id)
       .populate('department')
       .populate('designation')
+      .populate('managerId', 'fullName email')
       .select('-nidPassportNumber');
     if (!employee) {
       throw new Error('Employee not found');
+    }
+    const data = employee.toObject ? employee.toObject() : employee;
+    if (data.managerId && data.managerId._id) {
+      const managerUser = await User.findOne({ employeeId: data.managerId._id }).select('email').lean();
+      data.manager = {
+        fullName: data.managerId.fullName || '-',
+        email: (managerUser?.email || data.managerId.email || '').toLowerCase() || null
+      };
+    } else {
+      data.manager = null;
     }
     console.log('getEmployeeById - Retrieved employee:', {
       _id: employee._id,
@@ -733,7 +744,7 @@ exports.getEmployeeById = async (req, res) => {
       employeeStatus: employee.employeeStatus,
       companyId: employee.companyId
     });
-    res.status(200).json({ success: true, data: employee });
+    res.status(200).json({ success: true, data });
   } catch (error) {
     console.error('getEmployeeById - Error:', error);
     res.status(400).json({ success: false, error: error.message });

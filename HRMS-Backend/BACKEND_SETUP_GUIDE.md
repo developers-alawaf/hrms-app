@@ -110,12 +110,15 @@ ZKTECO_INPORT=5200
 # Application Timezone
 APP_TIMEZONE=Asia/Dhaka
 
-# Email Configuration (optional, for password reset/invitations)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-app-password
-EMAIL_FROM=noreply@hrms.com
+# Email Configuration (for leave/remote notifications, password reset, invitations)
+# Zoho Mail Pro example (smtppro.zoho.com); use smtp.zoho.com for standard Zoho Mail
+MAIL_HOST=smtppro.zoho.com
+MAIL_PORT=465
+MAIL_USERNAME=your-email@domain.com
+MAIL_PASSWORD=your-app-password
+MAIL_ENCRYPTION=ssl
+MAIL_FROM_ADDRESS=your-email@domain.com
+MAIL_FROM_NAME=HRMS
 ```
 
 **For `.env.production`:**
