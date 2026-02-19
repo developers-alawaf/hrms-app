@@ -68,7 +68,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
     setOpenDropdown(openDropdown === dropdownName ? null : dropdownName);
   };
 
-  const profileImage = user?.profileImage || DEFAULT_AVATAR;
+  const profileImage = user?.profileImage || defaultAvatar;
 
   return (
     <div ref={sidebarRef} className={`sidebar ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
