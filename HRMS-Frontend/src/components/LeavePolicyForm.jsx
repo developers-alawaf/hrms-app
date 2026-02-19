@@ -1,8 +1,17 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { getLeavePolicy, updateLeavePolicy } from '../api/leave';
 import { getCompanies } from '../api/company';
 import { AuthContext } from '../context/AuthContext';
+import { Settings2, Building2, Calendar, Save } from 'lucide-react';
 import '../styles/Leave.css';
+import '../styles/LeavePolicyForm.css';
+
+const LEAVE_TYPES = [
+  { key: 'casual', label: 'Casual Leave', desc: 'Short-term personal leave' },
+  { key: 'sick', label: 'Sick Leave', desc: 'Medical or health-related absence' },
+  { key: 'annual', label: 'Annual Leave', desc: 'Vacation / yearly entitlement' },
+  { key: 'maternity', label: 'Maternity Leave', desc: 'Parental leave entitlement' },
+];
 
 const LeavePolicyForm = () => {
   const { user } = useContext(AuthContext);
@@ -15,67 +24,23 @@ const LeavePolicyForm = () => {
   });
   const [companies, setCompanies] = useState([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState(user?.companyId || '');
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // New state for year
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   const isAuthorized = ['HR Manager', 'Super Admin', 'Company Admin', 'C-Level Executive'].includes(user?.role);
   const isSuperAdmin = user?.role === 'Super Admin';
 
-  useEffect(() => {
-    if (!isAuthorized) return;
-
-    const initializePolicyData = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        if (isSuperAdmin) {
-          const token = localStorage.getItem('token');
-          const companiesData = await getCompanies(token);
-          if (companiesData.success) {
-            setCompanies(companiesData.data);
-            if (companiesData.data.length > 0 && !selectedCompanyId) {
-              setSelectedCompanyId(companiesData.data[0]._id);
-              fetchPolicy(companiesData.data[0]._id, selectedYear);
-            } else if (selectedCompanyId) {
-              fetchPolicy(selectedCompanyId, selectedYear);
-            }
-          }
-        } else {
-          // For non-super admins, fetch policy for their company directly
-          if (user?.companyId) {
-            setSelectedCompanyId(user.companyId);
-            fetchPolicy(user.companyId, selectedYear);
-          } else {
-            setError('User is not associated with a company.');
-          }
-        }
-      } catch (err) {
-        setError(err.error || 'An unexpected error occurred during initialization.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    initializePolicyData();
-  }, [isAuthorized, isSuperAdmin, user?.companyId, selectedYear]); // Added selectedYear to dependencies
-
-  useEffect(() => {
-    // Refetch policy when selectedCompanyId or selectedYear changes for Super Admin
-    if (isSuperAdmin && selectedCompanyId && selectedYear) {
-      fetchPolicy(selectedCompanyId, selectedYear);
-    }
-  }, [selectedCompanyId, selectedYear, isSuperAdmin]);
-
-
-  const fetchPolicy = async (companyIdToFetch, yearToFetch) => {
+  const fetchPolicy = useCallback(async (companyIdToFetch, yearToFetch) => {
     setLoading(true);
     setError('');
     try {
       const token = localStorage.getItem('token');
-      const data = await getLeavePolicy(token, companyIdToFetch, yearToFetch); // Pass companyId and year
-      if (data.success) {
+      const data = await getLeavePolicy(token, companyIdToFetch, yearToFetch);
+      if (data?.success) {
         const p = data.data || {};
         setPolicy({
           casual: p.casual ?? 0,
@@ -85,140 +50,236 @@ const LeavePolicyForm = () => {
           maternity: p.maternity ?? 0,
         });
       } else {
-        setError(data.error || 'Failed to fetch leave policy.');
+        setError(data?.error || 'Failed to fetch leave policy.');
       }
     } catch (err) {
-      setError(err.error || 'An unexpected error occurred.');
+      const errMsg = err?.error || err?.message || 'An unexpected error occurred.';
+      setError(typeof errMsg === 'string' ? errMsg : 'An unexpected error occurred.');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthorized) return;
+
+    const init = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        if (isSuperAdmin) {
+          const token = localStorage.getItem('token');
+          const companiesData = await getCompanies(token);
+          const list = companiesData?.data || [];
+          if (companiesData?.success) {
+            setCompanies(Array.isArray(list) ? list : []);
+            if (Array.isArray(list) && list.length > 0 && !selectedCompanyId) {
+              setSelectedCompanyId(list[0]._id);
+            }
+          }
+        } else {
+          if (user?.companyId) {
+            setSelectedCompanyId(user.companyId);
+          } else {
+            setError('User is not associated with a company.');
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (err) {
+        const errMsg = err?.error || err?.message || 'An unexpected error occurred during initialization.';
+        setError(typeof errMsg === 'string' ? errMsg : 'An unexpected error occurred.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    init();
+  }, [isAuthorized, isSuperAdmin, user?.companyId]);
+
+  useEffect(() => {
+    if (!isAuthorized || !selectedCompanyId || !selectedYear) return;
+    fetchPolicy(selectedCompanyId, selectedYear);
+  }, [isAuthorized, selectedCompanyId, selectedYear, fetchPolicy]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     let num = parseInt(value, 10);
     if (name === 'annualAccrualDays') {
-      num = Math.max(1, num || 18); // Min 1, default 18
+      num = Math.max(1, num || 18);
     } else {
       num = num || 0;
     }
-    setPolicy(prev => ({ ...prev, [name]: num }));
+    setPolicy((prev) => ({ ...prev, [name]: num }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-    setLoading(true);
+    setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const data = await updateLeavePolicy(selectedCompanyId, { ...policy, year: selectedYear }, token); // Pass companyId and year
+      const data = await updateLeavePolicy(
+        selectedCompanyId,
+        { ...policy, year: selectedYear },
+        token
+      );
       if (data.success) {
         setSuccess(data.message || 'Leave policy updated successfully!');
       } else {
         setError(data.error || 'Failed to update leave policy.');
       }
     } catch (err) {
-      setError(err.error || 'An unexpected error occurred.');
+      const errMsg = err?.error || err?.message || 'An unexpected error occurred.';
+      setError(typeof errMsg === 'string' ? errMsg : 'Failed to update leave policy.');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  if (!isAuthorized) return <div className="employee-message employee-error">Access Denied</div>;
-  if (loading) return <div className="employee-message">Loading leave policy...</div>;
-  if (error) return <div className="employee-message employee-error">Error: {error}</div>;
+  if (!isAuthorized) {
+    return (
+      <div className="leave-policy-container">
+        <div className="leave-policy-access-denied">Access Denied</div>
+      </div>
+    );
+  }
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i); // 2 years back, current, 2 years forward
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
   return (
-    <div className="leave-container">
-      <h3 className="employee-title">Manage Leave Policy</h3>
+    <div className="leave-policy-container">
+      <div className="leave-policy-header">
+        <h2 className="leave-policy-title">
+          <Settings2 size={26} strokeWidth={2} />
+          Manage Leave Policy
+        </h2>
+      </div>
+
       {isSuperAdmin && (
-        <div className="filter-controls">
-          <div className="form-group">
-            <label htmlFor="companySelect">Select Company:</label>
+        <div className="leave-policy-filters">
+          <div className="leave-policy-filter-group">
+            <label htmlFor="companySelect">
+              <Building2 size={16} />
+              Company
+            </label>
             <select
               id="companySelect"
               value={selectedCompanyId}
               onChange={(e) => setSelectedCompanyId(e.target.value)}
-              className="employee-input"
+              className="leave-policy-select"
               disabled={loading}
             >
-              <option value="">-- Select Company --</option>
-              {companies.map(company => (
-                <option key={company._id} value={company._id}>{company.name}</option>
+              <option value="">Select Company</option>
+              {companies.map((company) => (
+                <option key={company._id} value={company._id}>
+                  {company.name}
+                </option>
               ))}
             </select>
           </div>
-          <div className="form-group">
-            <label htmlFor="yearSelect">Select Year:</label>
+          <div className="leave-policy-filter-group">
+            <label htmlFor="yearSelect">
+              <Calendar size={16} />
+              Year
+            </label>
             <select
               id="yearSelect"
               value={selectedYear}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="employee-input"
+              className="leave-policy-select"
               disabled={loading || !selectedCompanyId}
             >
-              {years.map(year => (
-                <option key={year} value={year}>{year}</option>
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
               ))}
             </select>
           </div>
         </div>
       )}
+
       {!selectedCompanyId && isSuperAdmin && !loading && (
-        <p className="employee-message employee-error">Please select a company to manage its leave policy.</p>
+        <div className="leave-policy-message leave-policy-message--error">
+          Please select a company to manage its leave policy.
+        </div>
       )}
+
+      {error && (
+        <div className="leave-policy-message leave-policy-message--error">{error}</div>
+      )}
+      {success && (
+        <div className="leave-policy-message leave-policy-message--success">{success}</div>
+      )}
+
       {(selectedCompanyId || !isSuperAdmin) && (
-        <form onSubmit={handleSubmit} className="leave-form">
-          {Object.keys(policy).map(key => {
-            if (['_id', 'companyId', 'createdAt', 'updatedAt', '__v', 'year', 'festive'].includes(key)) return null;
-            if (key === 'annualAccrualDays') {
-              return (
-                <div className="form-group" key={key}>
-                  <label htmlFor={key}>Days of service per 1 annual leave:</label>
+        <div className="leave-policy-card">
+          {loading ? (
+            <div className="leave-policy-loading">Loading leave policy...</div>
+          ) : (
+            <form onSubmit={handleSubmit} className="leave-policy-form">
+              <section className="leave-policy-section">
+                <h3 className="leave-policy-section-title">Leave Entitlements (days per year)</h3>
+                <div className="leave-policy-grid">
+                  {LEAVE_TYPES.map(({ key, label, desc }) => (
+                    <div key={key} className="leave-policy-field">
+                      <label htmlFor={key}>{label}</label>
+                      <span className="leave-policy-field-desc">{desc}</span>
+                      <input
+                        type="number"
+                        id={key}
+                        name={key}
+                        value={policy[key]}
+                        onChange={handleChange}
+                        min="0"
+                        required
+                        className="leave-policy-input"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="leave-policy-section leave-policy-section--accent">
+                <h3 className="leave-policy-section-title">Annual Leave Accrual</h3>
+                <div className="leave-policy-field leave-policy-field--full">
+                  <label htmlFor="annualAccrualDays">Days of service per 1 annual leave</label>
+                  <span className="leave-policy-field-desc">
+                    After the first year, employees earn 1 annual leave day per this many days of
+                    service. Cap = Annual Leave.
+                  </span>
                   <input
                     type="number"
-                    id={key}
-                    name={key}
-                    value={policy[key] ?? 18}
+                    id="annualAccrualDays"
+                    name="annualAccrualDays"
+                    value={policy.annualAccrualDays ?? 18}
                     onChange={handleChange}
                     min="1"
                     required
-                    className="employee-input"
-                    title="After the first year, employees earn 1 annual leave day per this many days of service (default 18)"
+                    className="leave-policy-input leave-policy-input--accent"
+                    title="1 leave day earned per every X days after 1st year"
                   />
-                  <small className="form-hint">1 leave day earned per every {policy.annualAccrualDays ?? 18} days after 1st year. Cap = Annual Leave.</small>
+                  <small className="leave-policy-hint">
+                    1 leave day per every {policy.annualAccrualDays ?? 18} days (after 365 days)
+                  </small>
                 </div>
-              );
-            }
-            return (
-              <div className="form-group" key={key}>
-                <label htmlFor={key}>{key.charAt(0).toUpperCase() + key.slice(1)} Leave (days):</label>
-                <input
-                  type="number"
-                  id={key}
-                  name={key}
-                  value={policy[key]}
-                  onChange={handleChange}
-                  min="0"
-                  required
-                  className="employee-input"
-                />
-                {key === 'annual' && (
-                  <small className="form-hint">Max annual leave per employee. First year = 0. After 365 days: 1 leave per {policy.annualAccrualDays ?? 18} days (auto-calculated).</small>
-                )}
+              </section>
+
+              <div className="leave-policy-actions">
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="leave-policy-btn leave-policy-btn--primary"
+                >
+                  <Save size={18} strokeWidth={2.5} />
+                  {isSubmitting ? 'Updating...' : 'Update Policy'}
+                </button>
               </div>
-            );
-          })}
-          {success && <p className="employee-message employee-success">{success}</p>}
-          {error && <p className="employee-message employee-error">{error}</p>}
-          <button type="submit" disabled={loading} className="employee-button">
-            {loading ? 'Updating...' : 'Update Policy'}
-          </button>
-        </form>
+            </form>
+          )}
+        </div>
       )}
     </div>
   );

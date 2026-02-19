@@ -1,0 +1,320 @@
+/* Leave Entitlement Management – premium design */
+
+.entitlement-container {
+  padding: 0;
+  color: var(--app-text);
+  font-family: var(--app-font);
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+/* Header */
+.entitlement-header {
+  margin-bottom: 1.5rem;
+}
+
+.entitlement-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: clamp(1.35rem, 3.5vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 50%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0;
+}
+
+.entitlement-title svg {
+  flex-shrink: 0;
+  color: #60a5fa;
+  opacity: 0.95;
+}
+
+/* Filters */
+.entitlement-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1.25rem;
+}
+
+.entitlement-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 180px;
+}
+
+.entitlement-filter-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.entitlement-filter-group label svg {
+  opacity: 0.8;
+}
+
+.entitlement-select {
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--app-font);
+}
+
+.entitlement-select:focus {
+  outline: none;
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+.entitlement-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.entitlement-filter-actions {
+  display: flex;
+  align-items: flex-end;
+}
+
+.entitlement-viewing-as {
+  font-size: 0.9375rem;
+  color: var(--app-text-muted);
+  padding: 0.5rem 0;
+  align-self: center;
+}
+
+/* Messages */
+.entitlement-message {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.entitlement-message--error {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+.entitlement-message--success {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #4ade80;
+}
+
+.entitlement-access-denied {
+  padding: 2rem;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* Card */
+.entitlement-card {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.entitlement-loading,
+.entitlement-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  color: var(--app-text-muted);
+  gap: 0.75rem;
+}
+
+.entitlement-empty svg {
+  opacity: 0.4;
+}
+
+.entitlement-empty p {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+.entitlement-empty-hint {
+  font-size: 0.8125rem !important;
+  color: var(--app-accent-light) !important;
+}
+
+/* Form */
+.entitlement-form {
+  padding: 1.75rem;
+}
+
+.entitlement-section {
+  margin-bottom: 1.5rem;
+}
+
+.entitlement-section-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Grid */
+.entitlement-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.entitlement-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.entitlement-field label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--app-text);
+}
+
+.entitlement-field-desc {
+  font-size: 0.75rem;
+  color: var(--app-text-muted);
+  line-height: 1.35;
+}
+
+.entitlement-input {
+  width: 100%;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid var(--app-border);
+  background: rgba(15, 23, 42, 0.5);
+  color: var(--app-text);
+  font-size: 1rem;
+  font-weight: 500;
+  font-family: var(--app-font);
+}
+
+.entitlement-input:focus {
+  outline: none;
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+}
+
+.entitlement-input--disabled {
+  background: rgba(51, 65, 85, 0.3);
+  color: var(--app-text-muted);
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+/* Actions */
+.entitlement-actions {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--app-border);
+}
+
+.entitlement-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  font-family: var(--app-font);
+}
+
+.entitlement-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.entitlement-btn:active {
+  transform: translateY(0);
+}
+
+.entitlement-btn--primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+}
+
+.entitlement-btn--primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.45);
+}
+
+.entitlement-btn--primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.entitlement-btn--outline {
+  background: var(--app-surface);
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
+}
+
+.entitlement-btn--outline:hover:not(:disabled) {
+  background: var(--app-accent-soft);
+  border-color: var(--app-accent);
+  color: var(--app-accent-light);
+}
+
+.entitlement-btn--outline:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .entitlement-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .entitlement-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .entitlement-filter-group {
+    min-width: 100%;
+  }
+
+  .entitlement-filter-actions .entitlement-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
