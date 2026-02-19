@@ -2,14 +2,13 @@ import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { getCommonDocuments, uploadCommonDocument, deleteDocument } from '../api/document';
 import '../styles/Employee.css';
-// import { Trash2 } from 'lucide-react';
-import { Eye, Download, Trash2 } from 'lucide-react';
-import '../styles/Employee.css';
+import { Eye, Trash2, LayoutGrid, List, FileText, FileSpreadsheet, File } from 'lucide-react';
 const CommonDocuments = () => {
   const { user } = useContext(AuthContext);
   const [documents, setDocuments] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
 
   // Form state
   const [file, setFile] = useState(null);
@@ -90,6 +89,13 @@ const CommonDocuments = () => {
     } finally {
       setUploading(false);
     }
+  };
+
+  const getDocumentIcon = (doc) => {
+    const url = doc?.fileUrl || '';
+    const ext = url.split('.').pop()?.toLowerCase() || '';
+    const Icon = ext.match(/xls|xlsx|csv/) ? FileSpreadsheet : ext.match(/pdf|doc|docx|txt/) ? FileText : File;
+    return <Icon size={32} strokeWidth={1.5} />;
   };
 
   const getUploaderName = (uploadedBy) => {
@@ -183,54 +189,123 @@ const CommonDocuments = () => {
       {documents.length === 0 ? (
         <div className="employee-message">No company policies found.</div>
       ) : (
-        <div className="employee-table-container">
-          <table className="employee-table">
-            <thead>
-              <tr>
-                <th>Description</th>
-                <th>Uploaded By</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
+        <div className="common-docs-list-section">
+          <div className="common-docs-view-toggle">
+            <span className="common-docs-view-label">View:</span>
+            <div className="common-docs-toggle-btns">
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={`common-docs-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                title="Grid view"
+                aria-label="Grid view"
+              >
+                <LayoutGrid size={18} />
+                Grid
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={`common-docs-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                title="List view"
+                aria-label="List view"
+              >
+                <List size={18} />
+                List
+              </button>
+            </div>
+          </div>
+
+          {viewMode === 'grid' ? (
+            <div className="common-docs-grid">
               {documents.map((doc) => {
                 const canDelete = user.role === 'Super Admin';
                 return (
-                  <tr key={doc._id}>
-                    <td>{doc.description || '-'}</td>
-                    <td>{getUploaderName(doc.uploadedBy)}</td>
-                    <td>
-                      <div className="employee-actions">
-                        <a
-                          href={`${import.meta.env.VITE_API_URL}${doc.fileUrl}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="employee-button employee-action-btn download-button"
-                          title="Download document"
+                  <div key={doc._id} className="common-docs-card">
+                    <div className="common-docs-card-icon">
+                      {getDocumentIcon(doc)}
+                    </div>
+                    <h4 className="common-docs-card-title">{doc.description || 'Untitled'}</h4>
+                    <p className="common-docs-card-meta">{getUploaderName(doc.uploadedBy)}</p>
+                    <div className="common-docs-card-actions">
+                      <a
+                        href={`${import.meta.env.VITE_API_URL}${doc.fileUrl}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="common-docs-card-btn view-btn"
+                        title="View document"
+                      >
+                        <Eye size={16} />
+                        View
+                      </a>
+                      {canDelete && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(doc._id)}
+                          className="common-docs-card-btn delete-btn"
+                          title="Delete document"
+                          aria-label="Delete document"
                         >
-                          <Eye className="employee-action-icon" size={16} />
-                          View
-                        </a>
-                        {canDelete && (
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(doc._id)}
-                            className="employee-button employee-action-btn delete-button"
-                            title="Delete document"
-                            aria-label="Delete document"
-                          >
-                            <Trash2 className="employee-action-icon" size={16} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+          ) : (
+            <div className="employee-table-container">
+              <table className="employee-table">
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th>Uploaded By</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {documents.map((doc) => {
+                    const canDelete = user.role === 'Super Admin';
+                    return (
+                      <tr key={doc._id}>
+                        <td>{doc.description || '-'}</td>
+                        <td>{getUploaderName(doc.uploadedBy)}</td>
+                        <td>
+                          <div className="employee-actions">
+                            <a
+                              href={`${import.meta.env.VITE_API_URL}${doc.fileUrl}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="employee-button employee-action-btn download-button"
+                              title="View document"
+                            >
+                              <Eye className="employee-action-icon" size={16} />
+                              View
+                            </a>
+                            {canDelete && (
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(doc._id)}
+                                className="employee-button employee-action-btn delete-button"
+                                title="Delete document"
+                                aria-label="Delete document"
+                              >
+                                <Trash2 className="employee-action-icon" size={16} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
+      
     </div>
   );
 };
