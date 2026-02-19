@@ -48,7 +48,7 @@ const Dashboard = () => {
         const isAdminOrSuperAdmin = user?.role === 'Admin' || user?.role === 'Super Admin';
         const [empRes, statsRes, monthRes] = await Promise.all([
           fetch(api('/api/dashboard'), authHeaders),
-          isSuperAdmin
+          isAdminOrSuperAdmin
             ? fetch(api('/api/dashboard/dashboard-stats'), authHeaders)
             : Promise.resolve(null),
           fetch(api('/api/dashboard/month-summary'), authHeaders),
@@ -60,7 +60,7 @@ const Dashboard = () => {
           console.warn('[Dashboard] /api/dashboard response:', empRes.status, empRes.statusText);
         }
 
-        if (isSuperAdmin && statsRes) {
+        if (isAdminOrSuperAdmin && statsRes) {
           const statsData = await safeJson(statsRes);
           if (statsData) {
             setStats(statsData);
@@ -156,7 +156,7 @@ const Dashboard = () => {
         <p className="dashboard-date">{todayFormatted}</p>
       </header>
 
-      {stats && user.role === 'Super Admin' && (
+      {stats && (user.role === 'Admin' || user.role === 'Super Admin') && (
         <section className="dashboard-stats-section" aria-label="Overview statistics">
           <h2 className="dashboard-section-title">Organization overview - Today&apos;s</h2>
           <div className="dashboard-stats">
