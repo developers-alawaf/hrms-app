@@ -136,30 +136,36 @@ exports.getEmployeeDashboard = async (req, res) => {
   }
 };
 
-// 🔹 Admin/company-level dashboard stats (always returns numeric fields for consistent UI)
+// 🔹 Admin/company-level dashboard stats (scoped by companyId for Super Admin)
 exports.getDashboardStats = async (req, res) => {
   try {
     const today = moment().tz('Asia/Dhaka').startOf('day');
     const todayDate = today.toDate();
 
-    const totalEmployees = Number(await Employee.countDocuments()) || 0;
+    // Scope by company when user has companyId (Super Admin with linked company)
+    const companyId = req.user?.companyId;
+    const empFilter = companyId ? { companyId } : {};
+    const attFilter = companyId ? { companyId, date: todayDate } : { date: todayDate };
+    const leaveFilter = companyId
+      ? { companyId, status: 'approved', startDate: { $lte: todayDate }, endDate: { $gte: todayDate } }
+      : { status: 'approved', startDate: { $lte: todayDate }, endDate: { $gte: todayDate } };
 
-    // Count anyone who has checked in (in time) today as present — not only status 'Present'
+    const totalEmployees = Number(await Employee.countDocuments(empFilter)) || 0;
+    const activeEmployees = Number(await Employee.countDocuments({ ...empFilter, employeeStatus: 'active' })) || 0;
+    const inactiveEmployees = Math.max(0, totalEmployees - activeEmployees);
+
+    // Count anyone who has checked in today as present
     const presentToday = Number(await EmployeesAttendance.countDocuments({
-      date: todayDate,
+      ...attFilter,
       check_in: { $exists: true, $ne: null }
     })) || 0;
 
     const remoteToday = Number(await EmployeesAttendance.countDocuments({
-      date: todayDate,
+      ...attFilter,
       status: 'Remote'
     })) || 0;
 
-    const leaveToday = Number(await LeaveRequest.countDocuments({
-      status: 'approved',
-      startDate: { $lte: todayDate },
-      endDate: { $gte: todayDate }
-    })) || 0;
+    const leaveToday = Number(await LeaveRequest.countDocuments(leaveFilter)) || 0;
 
     // Absent = active employees minus (present + remote + on leave)
     const absentToday = Math.max(0, activeEmployees - presentToday - remoteToday - leaveToday);
@@ -178,6 +184,8 @@ exports.getDashboardStats = async (req, res) => {
     res.status(500).json({
       error: error.message,
       totalEmployees: 0,
+      activeEmployees: 0,
+      inactiveEmployees: 0,
       presentToday: 0,
       absentToday: 0,
       remoteToday: 0,
