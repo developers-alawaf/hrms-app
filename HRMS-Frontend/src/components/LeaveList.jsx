@@ -5,6 +5,7 @@ import '../styles/Leave.css';
 
 const LeaveList = () => {
   const { user } = useContext(AuthContext);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,10 +16,11 @@ const LeaveList = () => {
     isHalfDay: false,
     remarks: '',
   });
-  const [leaveSummary, setLeaveSummary] = useState(null); // New state for leave summary
+  const [leaveSummary, setLeaveSummary] = useState(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingList, setLoadingList] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -59,7 +61,7 @@ const LeaveList = () => {
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Something went wrong');
     } finally {
-      setLoading(false);
+      setLoadingList(false);
     }
   };
 
@@ -100,8 +102,11 @@ const LeaveList = () => {
       const data = await createLeaveRequest(formData, token);
       if (data.success) {
         setSuccess('Leave request created successfully!');
-        setFormData({ startDate: '', endDate: '', type: 'sick' });
+        setFormData({ startDate: '', endDate: '', type: 'sick', isHalfDay: false, remarks: '' });
+        setShowCreateModal(false);
+        setError('');
         await fetchLeaveRequests();
+        setTimeout(() => setSuccess(''), 3000);
       } else {
         setError(data.error || 'Something went wrong');
       }
@@ -165,86 +170,34 @@ const LeaveList = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
-  if (loading) return <div className="employee-message">Loading leave requests...</div>;
+  const closeModal = () => {
+    setShowCreateModal(false);
+    setError('');
+    setFormData({ startDate: '', endDate: '', type: 'sick', isHalfDay: false, remarks: '' });
+  };
 
   return (
     <div className="leave-container">
-      <h2 className="employee-title">Leave Requests</h2>
-      <form onSubmit={handleSubmit} className="leave-form">
-        <div className="form-grid">
-          <div className="form-group">
-            <label htmlFor="startDate">Start Date</label>
-            <input
-              type="date"
-              id="startDate"
-              name="startDate"
-              value={formData.startDate}
-              onChange={handleChange}
-              className="employee-input"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="endDate">End Date</label>
-            <input
-              type="date"
-              id="endDate"
-              name="endDate"
-              value={formData.endDate}
-              onChange={handleChange}
-              className="employee-input"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="type">Leave Type</label>
-            <select
-              id="type"
-              name="type"
-              value={formData.type}
-              onChange={handleChange}
-              className="employee-input"
-              required
-            >
-              <option value="casual">Casual ({leaveSummary?.balance?.casual || 0} days)</option>
-              <option value="sick">Sick ({leaveSummary?.balance?.sick || 0} days)</option>
-              <option value="annual">Annual ({leaveSummary?.balance?.annual || 0} days)</option>
-              <option value="maternity">Maternity ({leaveSummary?.balance?.maternity || 0} days)</option>
-              {/* <option value="festive">Festive ({leaveSummary?.balance?.festive || 0} days)</option> */}
-            </select>
-          </div>
-          <div className="form-group">
-            <label htmlFor="isHalfDay">Half Day Leave</label>
-            <input
-              type="checkbox"
-              id="isHalfDay"
-              name="isHalfDay"
-              checked={formData.isHalfDay}
-              onChange={handleChange}
-              className="employee-checkbox"
-            />
-          </div>
-          <div className="form-group full-span">
-            <label htmlFor="remarks">Remarks</label>
-            <textarea
-              id="remarks"
-              name="remarks"
-              value={formData.remarks}
-              onChange={handleChange}
-              className="employee-input"
-              rows="3"
-            ></textarea>
-          </div>
-        </div>
-        {error && <p className="employee-message employee-error">{error}</p>}
-        {success && <p className="employee-message employee-success">{success}</p>}
-        <button type="submit" className="employee-button" disabled={loading}>
-          {loading ? 'Submitting...' : 'Submit Leave Request'}
+      <div className="leave-header leave-header--main">
+        <h2 className="leave-page-title">Leave Requests</h2>
+        <button
+          type="button"
+          className="employee-button leave-button--create"
+          onClick={() => setShowCreateModal(true)}
+        >
+          New Leave Request
         </button>
-      </form>
+      </div>
+
+      {success && (
+        <p className="employee-message employee-success" style={{ marginBottom: '1rem' }}>{success}</p>
+      )}
+      {error && !showCreateModal && (
+        <p className="employee-message employee-error" style={{ marginBottom: '1rem' }}>{error}</p>
+      )}
 
       <div className="leave-header">
-        <h3 className="employee-title">Leave History</h3>
+        <h3 className="leave-section-title">Leave History</h3>
         <div className="leave-controls">
           {(user?.role === 'HR Manager' || user?.role === 'Manager') && (
             <input
@@ -258,7 +211,9 @@ const LeaveList = () => {
         </div>
       </div>
 
-      {filteredRequests.length === 0 ? (
+      {loadingList ? (
+        <div className="employee-message">Loading leave requests...</div>
+      ) : filteredRequests.length === 0 ? (
         <div className="employee-message">No leave requests found.</div>
       ) : (
         <>
@@ -327,6 +282,99 @@ const LeaveList = () => {
             <button onClick={handleNext} disabled={currentPage === totalPages} className="pagination-button">Next</button>
           </div>
         </>
+      )}
+
+      {showCreateModal && (
+        <div className="leave-modal-backdrop" onClick={closeModal} aria-hidden="true">
+          <div className="leave-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="leave-modal-header">
+              <h3 className="leave-modal-title">New Leave Request</h3>
+              <button
+                type="button"
+                className="leave-modal-close"
+                onClick={closeModal}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="leave-form leave-form--modal">
+              <div className="form-grid">
+                <div className="form-group">
+                  <label htmlFor="modal-startDate">Start Date</label>
+                  <input
+                    type="date"
+                    id="modal-startDate"
+                    name="startDate"
+                    value={formData.startDate}
+                    onChange={handleChange}
+                    className="employee-input"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="modal-endDate">End Date</label>
+                  <input
+                    type="date"
+                    id="modal-endDate"
+                    name="endDate"
+                    value={formData.endDate}
+                    onChange={handleChange}
+                    className="employee-input"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="modal-type">Leave Type</label>
+                  <select
+                    id="modal-type"
+                    name="type"
+                    value={formData.type}
+                    onChange={handleChange}
+                    className="employee-input"
+                    required
+                  >
+                    <option value="casual">Casual ({leaveSummary?.balance?.casual || 0} days)</option>
+                    <option value="sick">Sick ({leaveSummary?.balance?.sick || 0} days)</option>
+                    <option value="annual">Annual ({leaveSummary?.balance?.annual || 0} days)</option>
+                    <option value="maternity">Maternity ({leaveSummary?.balance?.maternity || 0} days)</option>
+                  </select>
+                </div>
+                <div className="form-group form-group--row">
+                  <input
+                    type="checkbox"
+                    id="modal-isHalfDay"
+                    name="isHalfDay"
+                    checked={formData.isHalfDay}
+                    onChange={handleChange}
+                    className="employee-checkbox"
+                  />
+                  <label htmlFor="modal-isHalfDay" className="form-group--row-label">Half Day Leave</label>
+                </div>
+                <div className="form-group full-span">
+                  <label htmlFor="modal-remarks">Remarks</label>
+                  <textarea
+                    id="modal-remarks"
+                    name="remarks"
+                    value={formData.remarks}
+                    onChange={handleChange}
+                    className="employee-input"
+                    rows="3"
+                  ></textarea>
+                </div>
+              </div>
+              {error && <p className="employee-message employee-error">{error}</p>}
+              <div className="leave-modal-actions">
+                <button type="button" className="employee-button leave-button--secondary" onClick={closeModal}>
+                  Cancel
+                </button>
+                <button type="submit" className="employee-button" disabled={loading}>
+                  {loading ? 'Submitting...' : 'Submit Leave Request'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

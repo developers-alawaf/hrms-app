@@ -28,10 +28,34 @@
   margin: 0 auto 20px;
 }
 
+.leave-form .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.leave-form .form-grid .full-span {
+  grid-column: 1 / -1;
+}
+
+.leave-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .leave-form .form-group label {
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--app-text-muted);
+}
+
+.leave-form .form-hint {
+  font-size: 0.8125rem;
+  color: var(--app-text-muted);
+  opacity: 0.9;
+  margin-top: 0.25rem;
+  display: block;
 }
 
 .leave-form .employee-input {
@@ -51,6 +75,38 @@
 
 .leave-form .employee-checkbox {
   accent-color: var(--app-accent);
+}
+
+.leave-form .form-group--row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0;
+  min-height: 2.5rem;
+}
+
+.leave-form .form-group--row .employee-checkbox {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  flex-shrink: 0;
+  order: 1;
+  cursor: pointer;
+}
+
+.leave-form .form-group--row .form-group--row-label {
+  margin: 0;
+  order: 2;
+  flex-shrink: 0;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--app-text-muted);
+  user-select: none;
+  line-height: 1.25;
+  display: inline;
 }
 
 .leave-form .employee-button {
@@ -171,4 +227,140 @@
 
 .leave-container .employee-success {
   color: #34d399;
+}
+
+/* Leave/Remote modal (same pattern as CompanyCreate) */
+.leave-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: leave-modal-fade 0.2s ease-out;
+}
+
+@keyframes leave-modal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.leave-modal {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  max-width: 520px;
+  width: 100%;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  animation: leave-modal-slide 0.25s ease-out;
+}
+
+@keyframes leave-modal-slide {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.leave-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.leave-modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.leave-modal-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--app-text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.leave-modal-close:hover {
+  background: rgba(51, 65, 85, 0.4);
+  color: var(--app-text);
+}
+
+.leave-form--modal {
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  padding: 1.5rem;
+  max-width: none;
+}
+
+.leave-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--app-border);
+}
+
+.leave-container .leave-header--main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.leave-container .leave-button--create {
+  margin-top: 0;
+  margin-left: auto;
+}
+
+.leave-container .leave-page-title {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.leave-container .leave-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  margin: 0;
+}
+
+.leave-button--secondary {
+  background: transparent !important;
+  color: var(--app-text-muted);
+  border: 1px solid var(--app-border);
+}
+
+.leave-button--secondary:hover {
+  background: rgba(51, 65, 85, 0.3) !important;
+  color: var(--app-text);
 }

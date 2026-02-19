@@ -399,11 +399,12 @@
 }
 
 
-/* Mobile: floating button to open sidebar when closed */
+/* Mobile: floating button to open sidebar when closed – top right */
 .sidebar-mobile-toggle {
   position: fixed;
   top: 16px;
-  left: 16px;
+  right: 16px;
+  left: auto;
   z-index: 999;
   width: 44px;
   height: 44px;
@@ -440,14 +441,21 @@
     margin-left: 0 !important;
   }
 
-  /* Toggle button stays in place on mobile */
+  /* Mobile menu toggle: top right, with safe area for notched devices */
+  .sidebar-mobile-toggle {
+    top: max(16px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
+    left: auto;
+  }
+
+  /* Legacy toggle (if used) */
   .sidebar-toggle {
     left: 10px;
     top: 10px;
   }
 
   .sidebar-open .sidebar-toggle {
-    left: 10px;  /* Don't move on mobile */
+    left: 10px;
   }
 
   /* Overlay backdrop when sidebar is open */

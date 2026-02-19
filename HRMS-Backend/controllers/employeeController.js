@@ -306,6 +306,42 @@ exports.createEmployee = async (req, res) => {
 };
 
 // ================================================
+// UPDATE MY AVATAR (any authenticated user, own profile only)
+// ================================================
+exports.updateMyAvatar = async (req, res) => {
+  try {
+    const employeeId = req.user.employeeId;
+    if (!employeeId) {
+      return res.status(400).json({ success: false, error: 'No employee linked to this account' });
+    }
+
+    const employee = await Employee.findById(employeeId);
+    if (!employee) {
+      return res.status(404).json({ success: false, error: 'Employee not found' });
+    }
+
+    const file = req.files?.passportSizePhoto?.[0];
+    if (!file) {
+      return res.status(400).json({ success: false, error: 'No passport size photo file provided' });
+    }
+
+    const filePath = file.path.replace(/\\/g, '/');
+    const photoPath = `/${filePath}`;
+
+    employee.passportSizePhoto = photoPath;
+    await employee.save();
+
+    res.status(200).json({ success: true, data: { passportSizePhoto: employee.passportSizePhoto } });
+  } catch (error) {
+    console.error('updateMyAvatar error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to update avatar'
+    });
+  }
+};
+
+// ================================================
 // UPDATE EMPLOYEE - FINAL FIXED VERSION
 // ================================================
 exports.updateEmployee = async (req, res) => {
@@ -686,9 +722,20 @@ exports.getEmployeeById = async (req, res) => {
     const employee = await Employee.findById(req.params.id)
       .populate('department')
       .populate('designation')
+      .populate('managerId', 'fullName email')
       .select('-nidPassportNumber');
     if (!employee) {
       throw new Error('Employee not found');
+    }
+    const data = employee.toObject ? employee.toObject() : employee;
+    if (data.managerId && data.managerId._id) {
+      const managerUser = await User.findOne({ employeeId: data.managerId._id }).select('email').lean();
+      data.manager = {
+        fullName: data.managerId.fullName || '-',
+        email: (managerUser?.email || data.managerId.email || '').toLowerCase() || null
+      };
+    } else {
+      data.manager = null;
     }
     console.log('getEmployeeById - Retrieved employee:', {
       _id: employee._id,
@@ -697,7 +744,7 @@ exports.getEmployeeById = async (req, res) => {
       employeeStatus: employee.employeeStatus,
       companyId: employee.companyId
     });
-    res.status(200).json({ success: true, data: employee });
+    res.status(200).json({ success: true, data });
   } catch (error) {
     console.error('getEmployeeById - Error:', error);
     res.status(400).json({ success: false, error: error.message });

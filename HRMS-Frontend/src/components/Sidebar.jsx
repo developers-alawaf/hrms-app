@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { ThemeContext } from '../context/ThemeContext';
@@ -15,6 +15,19 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [openDropdown, setOpenDropdown] = useState(null);
+  const sidebarRef = useRef(null);
+
+  // Close dropdown when clicking outside the sidebar
+  useEffect(() => {
+    if (openDropdown === null) return;
+    const handleClickOutside = (e) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openDropdown]);
 
   const isActive = (path) => {
     if (!path) return false;
@@ -55,10 +68,10 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
     setOpenDropdown(openDropdown === dropdownName ? null : dropdownName);
   };
 
-  const profileImage = user?.profileImage || defaultAvatar;
+  const profileImage = user?.profileImage || DEFAULT_AVATAR;
 
   return (
-    <div className={`sidebar ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+    <div ref={sidebarRef} className={`sidebar ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
       <div className="sidebar-inner">
       <div className="sidebar-header">
         <Link to="/dashboard" onClick={handleLinkClick}>
@@ -295,16 +308,18 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
           </li>
         )}
       </ul>
+
       <div className="sidebar-footer">
         <div className="sidebar-user-dropdown">
           <div className="sidebar-user-toggle" onClick={() => toggleDropdown('user')}>
             <img
+              key={profileImage}
               src={profileImage}
               alt="User"
               className="sidebar-user-image"
               onError={(e) => {
-                if (e.target.src !== defaultAvatar) {
-                  e.target.src = defaultAvatar;
+                if (e.target.src !== DEFAULT_AVATAR) {
+                  e.target.src = DEFAULT_AVATAR;
                 }
               }}
             />
@@ -339,17 +354,28 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
                 </div>
               </li>
               <li>
-                <Link to="/profile" className={`dropdown-item ${isActive('/profile') ? 'active' : ''}`} onClick={handleLinkClick}>
+                <Link
+                  to="/profile"
+                  className={`dropdown-item ${isActive('/profile') ? 'active' : ''}`}
+                  onClick={() => { setOpenDropdown(null); handleLinkClick(); }}
+                >
                   My Profile
                 </Link>
               </li>
               <li>
-                <Link to="/change-password" className={`dropdown-item ${isActive('/change-password') ? 'active' : ''}`} onClick={handleLinkClick}>
+                <Link
+                  to="/change-password"
+                  className={`dropdown-item ${isActive('/change-password') ? 'active' : ''}`}
+                  onClick={() => { setOpenDropdown(null); handleLinkClick(); }}
+                >
                   Change Password
                 </Link>
               </li>
               <li>
-                <button className="dropdown-item" onClick={() => { handleLogout(); handleLinkClick(); }}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => { setOpenDropdown(null); handleLogout(); handleLinkClick(); }}
+                >
                   Logout
                 </button>
               </li>
@@ -357,6 +383,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
           )}
         </div>
       </div>
+      
       </div>
     </div>
   );

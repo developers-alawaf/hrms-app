@@ -58,8 +58,9 @@ exports.login = async (req, res) => {
       activityLogService.logLogin(user._id, ipAddress, userAgent, 'FAILED', 'Employee account not active').catch(() => {});
       return res.status(403).json({ success: false, error: 'Employee account not active' });
     }
+    const fullName = employee?.fullName || user.email;
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role, employeeId: user.employeeId, companyId: user.companyId , passportSizePhoto: user.passportSizePhoto },
+      { id: user._id, email: user.email, role: user.role, employeeId: user.employeeId, companyId: user.companyId, fullName, passportSizePhoto: employee?.passportSizePhoto || user.passportSizePhoto },
       process.env.JWT_SECRET || 'your_jwt_secret',
       { expiresIn: '24h' }
     );
@@ -68,7 +69,7 @@ exports.login = async (req, res) => {
     // Log successful login (non-blocking - don't await)
     activityLogService.logLogin(user._id, ipAddress, userAgent, 'SUCCESS').catch(() => {});
     
-    res.status(200).json({ success: true, token, user: { id: user._id, email: user.email, role: user.role, employeeId: user.employeeId, companyId: user.companyId } });
+    res.status(200).json({ success: true, token, user: { id: user._id, email: user.email, fullName, role: user.role, employeeId: user.employeeId, companyId: user.companyId } });
   } catch (error) {
     console.error('login - Error:', error);
     // Log error (non-blocking)
@@ -173,8 +174,10 @@ exports.acceptInvitation = async (req, res) => {
 
     console.log('acceptInvitation - Success: User account activated for email:', user.email);
 
+    const emp = await Employee.findById(user.employeeId).select('fullName passportSizePhoto').lean();
+    const fullName = emp?.fullName || user.email;
     const tokenJwt = jwt.sign(
-      { id: user._id, email: user.email, role: user.role, employeeId: user.employeeId, companyId: user.companyId },
+      { id: user._id, email: user.email, role: user.role, employeeId: user.employeeId, companyId: user.companyId, fullName, passportSizePhoto: emp?.passportSizePhoto },
       process.env.JWT_SECRET || 'your_jwt_secret',
       { expiresIn: '1h' }
     );
@@ -468,7 +471,7 @@ exports.initialSetup = async (req, res) => {
 
     // 6. Generate token for the new Super Admin
     const token = jwt.sign(
-      { id: user._id, email: user.email, role: user.role, employeeId: user.employeeId /*, companyId: user.companyId*/ },
+      { id: user._id, email: user.email, role: user.role, employeeId: user.employeeId, fullName: employee.fullName },
       process.env.JWT_SECRET || 'your_jwt_secret',
       { expiresIn: '24h' }
     );

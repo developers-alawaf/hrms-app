@@ -5,6 +5,7 @@ import '../styles/Leave.css';
 
 const RemoteList = () => {
   const { user } = useContext(AuthContext);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [remoteRequests, setRemoteRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,7 +18,8 @@ const RemoteList = () => {
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loadingList, setLoadingList] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -41,7 +43,7 @@ const RemoteList = () => {
     } catch (err) {
       setError(err.error || 'Something went wrong');
     } finally {
-      setLoading(false);
+      setLoadingList(false);
     }
   };
 
@@ -63,8 +65,11 @@ const RemoteList = () => {
   }, [searchQuery, remoteRequests]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value,
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -78,8 +83,11 @@ const RemoteList = () => {
       const data = await createLeaveRequest(formData, token);
       if (data.success) {
         setSuccess('Remote request created successfully!');
-        setFormData({ startDate: '', endDate: '', type: 'remote', isHalfDay: false });
+        setFormData({ startDate: '', endDate: '', type: 'remote', isHalfDay: false, remarks: '' });
+        setShowCreateModal(false);
+        setError('');
         await fetchRemoteRequests();
+        setTimeout(() => setSuccess(''), 3000);
       }
     } catch (err) {
       setError(err.response?.data?.error || err.message || 'Something went wrong');
@@ -138,71 +146,34 @@ const RemoteList = () => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
-  if (loading) return <div className="employee-message">Loading remote requests...</div>;
-  if (error) return <div className="employee-message employee-error">{error}</div>;
+  const closeModal = () => {
+    setShowCreateModal(false);
+    setError('');
+    setFormData({ startDate: '', endDate: '', type: 'remote', isHalfDay: false, remarks: '' });
+  };
 
   return (
     <div className="leave-container">
-      <h2 className="employee-title">Remote Work Requests</h2>
-      <form onSubmit={handleSubmit} className="leave-form">
-        <div className="form-grid">
-          <div className="form-group">
-            <label htmlFor="startDate">Start Date</label>
-            <input
-              type="date"
-              id="startDate"
-              name="startDate"
-              value={formData.startDate}
-              onChange={handleChange}
-              className="employee-input"
-              placeholder="Select start date"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="endDate">End Date</label>
-            <input
-              type="date"
-              id="endDate"
-              name="endDate"
-              value={formData.endDate}
-              onChange={handleChange}
-              className="employee-input"
-              placeholder="Select end date"
-              required
-            />
-          </div>
-          <div className="form-group form-group-checkbox">
-            <label htmlFor="isHalfDay">Half Day</label>
-            <input
-              type="checkbox"
-              id="isHalfDay"
-              name="isHalfDay"
-              checked={formData.isHalfDay}
-              onChange={handleChange}
-              className="employee-checkbox"
-            />
-          </div>
-          <div className="form-group full-span">
-            <label htmlFor="remarks">Remarks</label>
-            <textarea
-              id="remarks"
-              name="remarks"
-              value={formData.remarks}
-              onChange={handleChange}
-              className="employee-input"
-              rows="3"
-            ></textarea>
-          </div>
-        </div>
-        {error && <p className="employee-message employee-error">{error}</p>}
-        {success && <p className="employee-message employee-success">{success}</p>}
-        <button type="submit" className="employee-button" disabled={loading}>
-          {loading ? 'Submitting...' : 'Submit Remote Request'}
+      <div className="leave-header leave-header--main">
+        <h2 className="leave-page-title">Remote Work Requests</h2>
+        <button
+          type="button"
+          className="employee-button leave-button--create"
+          onClick={() => setShowCreateModal(true)}
+        >
+          New Remote Request
         </button>
-      </form>
+      </div>
+
+      {success && (
+        <p className="employee-message employee-success" style={{ marginBottom: '1rem' }}>{success}</p>
+      )}
+      {error && !showCreateModal && (
+        <p className="employee-message employee-error" style={{ marginBottom: '1rem' }}>{error}</p>
+      )}
+
       <div className="leave-header">
-        <h3 className="employee-title">Remote Work History</h3>
+        <h3 className="leave-section-title">Remote Work History</h3>
         <div className="leave-controls">
           <input
             type="text"
@@ -213,7 +184,9 @@ const RemoteList = () => {
           />
         </div>
       </div>
-      {filteredRequests.length === 0 ? (
+      {loadingList ? (
+        <div className="employee-message">Loading remote requests...</div>
+      ) : filteredRequests.length === 0 ? (
         <div className="employee-message">No remote requests found.</div>
       ) : (
         <>
@@ -227,6 +200,7 @@ const RemoteList = () => {
                   <th>End Date</th>
                   <th>Status</th>
                   <th>Half Day</th>
+                  <th>Approved By</th>
                   {(user?.role === 'Super Admin' || user?.role === 'C-Level Executive' || user?.role === 'Company Admin' || user?.role === 'HR Manager' || user?.role === 'Manager') && <th>Actions</th>}
                 </tr>
               </thead>
@@ -245,6 +219,11 @@ const RemoteList = () => {
                       <td>{new Date(request.endDate).toLocaleDateString()}</td>
                       <td>{request.status.charAt(0).toUpperCase() + request.status.slice(1)}</td>
                       <td>{request.isHalfDay ? 'Yes' : 'No'}</td>
+                      <td>
+                        {(request.status === 'approved' || request.status === 'denied') && request.approverId?.fullName
+                          ? request.approverId.fullName
+                          : '-'}
+                      </td>
                       {(user?.role === 'Super Admin' || user?.role === 'C-Level Executive' || user?.role === 'Company Admin' || user?.role === 'HR Manager' || user?.role === 'Manager') && (
                         <td>
                           {canApproveDeny && (
@@ -308,6 +287,86 @@ const RemoteList = () => {
           </div>
         </>
       )}
+
+      {showCreateModal && (
+        <div className="leave-modal-backdrop" onClick={closeModal} aria-hidden="true">
+          <div className="leave-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="leave-modal-header">
+              <h3 className="leave-modal-title">New Remote Request</h3>
+              <button
+                type="button"
+                className="leave-modal-close"
+                onClick={closeModal}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="leave-form leave-form--modal">
+              <div className="form-grid">
+                <div className="form-group">
+                  <label htmlFor="modal-startDate">Start Date</label>
+                  <input
+                    type="date"
+                    id="modal-startDate"
+                    name="startDate"
+                    value={formData.startDate}
+                    onChange={handleChange}
+                    className="employee-input"
+                    placeholder="Select start date"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="modal-endDate">End Date</label>
+                  <input
+                    type="date"
+                    id="modal-endDate"
+                    name="endDate"
+                    value={formData.endDate}
+                    onChange={handleChange}
+                    className="employee-input"
+                    placeholder="Select end date"
+                    required
+                  />
+                </div>
+                <div className="form-group form-group--row">
+                  <input
+                    type="checkbox"
+                    id="modal-isHalfDay"
+                    name="isHalfDay"
+                    checked={formData.isHalfDay}
+                    onChange={handleChange}
+                    className="employee-checkbox"
+                  />
+                  <label htmlFor="modal-isHalfDay" className="form-group--row-label">Half Day</label>
+                </div>
+                <div className="form-group full-span">
+                  <label htmlFor="modal-remarks">Remarks</label>
+                  <textarea
+                    id="modal-remarks"
+                    name="remarks"
+                    value={formData.remarks}
+                    onChange={handleChange}
+                    className="employee-input"
+                    rows="3"
+                  ></textarea>
+                </div>
+              </div>
+              {error && <p className="employee-message employee-error">{error}</p>}
+              <div className="leave-modal-actions">
+                <button type="button" className="employee-button leave-button--secondary" onClick={closeModal}>
+                  Cancel
+                </button>
+                <button type="submit" className="employee-button" disabled={loading}>
+                  {loading ? 'Submitting...' : 'Submit Remote Request'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      
     </div>
   );
 };

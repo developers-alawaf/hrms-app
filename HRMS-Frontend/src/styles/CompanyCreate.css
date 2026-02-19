@@ -7,6 +7,21 @@
   font-family: var(--app-font);
 }
 
+.company-page-title {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.company-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  margin: 0;
+}
+
 .company-title {
   font-size: clamp(1.5rem, 3.5vw, 2rem);
   font-weight: 700;
@@ -17,6 +32,25 @@
   background-clip: text;
   color: transparent;
   margin-bottom: 30px;
+}
+
+.company-header--main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+}
+
+.company-button--create {
+  margin-top: 0;
+  margin-left: auto;
+}
+
+.company-message--inline {
+  margin-bottom: 1rem;
 }
 
 .company-form {
@@ -102,14 +136,23 @@
   border-radius: 12px;
   border: 1px solid var(--app-border);
   padding: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.company-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
 }
 
 .company-table th,
 .company-table td {
-  padding: 0.75rem;
+  padding: 0.75rem 1rem;
   text-align: left;
   border-bottom: 1px solid var(--app-border);
   color: var(--app-text);
+  word-break: break-word;
 }
 
 .company-table th {
@@ -121,6 +164,17 @@
   letter-spacing: 0.04em;
 }
 
+.company-table th:nth-child(1),
+.company-table td:nth-child(1) { width: 25%; }
+.company-table th:nth-child(2),
+.company-table td:nth-child(2) { width: 18%; }
+.company-table th:nth-child(3),
+.company-table td:nth-child(3) { width: 18%; }
+.company-table th:nth-child(4),
+.company-table td:nth-child(4) { width: 14%; }
+.company-table th:nth-child(5),
+.company-table td:nth-child(5) { width: 25%; }
+
 .company-table tbody tr:hover td {
   background: rgba(51, 65, 85, 0.25);
 }
@@ -129,7 +183,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   margin-bottom: 1rem;
 }
 
@@ -165,6 +219,150 @@
   color: var(--app-text-muted);
 }
 
+/* Modal */
+.company-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: company-modal-fade 0.2s ease-out;
+}
+
+@keyframes company-modal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.company-modal {
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  border-radius: 16px;
+  max-width: 480px;
+  width: 100%;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  animation: company-modal-slide 0.25s ease-out;
+}
+
+@keyframes company-modal-slide {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.company-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--app-border);
+}
+
+.company-modal-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--app-text);
+  margin: 0;
+}
+
+.company-modal-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--app-text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.company-modal-close:hover {
+  background: rgba(51, 65, 85, 0.4);
+  color: var(--app-text);
+}
+
+.company-form--modal {
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  padding: 1.5rem;
+  max-width: none;
+}
+
+.company-form--modal:hover {
+  border-color: transparent;
+}
+
+.form-group--row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0;
+  min-height: 2.5rem;
+}
+
+.form-group--row .company-checkbox {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  flex-shrink: 0;
+  order: 1;
+  accent-color: var(--app-accent);
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.form-group--row .form-group--row-label {
+  margin: 0;
+  order: 2;
+  flex-shrink: 0;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--app-text-muted);
+  user-select: none;
+  line-height: 1.25;
+  display: inline;
+}
+
+.company-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--app-border);
+}
+
+.company-button--secondary {
+  background: transparent;
+  color: var(--app-text-muted);
+  border: 1px solid var(--app-border);
+}
+
+.company-button--secondary:hover {
+  background: rgba(51, 65, 85, 0.3);
+  color: var(--app-text);
+}
+
 @media (max-width: 768px) {
   .company-form {
     padding: 15px;
@@ -192,5 +390,26 @@
   .company-search {
     font-size: 0.9rem;
     padding: 0.4rem;
+  }
+
+  .company-header--main {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .company-button--create {
+    margin-left: 0;
+  }
+
+  .company-modal {
+    max-height: calc(100vh - 1rem);
+  }
+
+  .company-modal-actions {
+    flex-direction: column;
+  }
+
+  .company-modal-actions .company-button {
+    width: 100%;
   }
 }

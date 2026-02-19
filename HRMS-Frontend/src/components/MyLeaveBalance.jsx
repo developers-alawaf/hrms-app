@@ -312,10 +312,12 @@ const MyLeaveBalance = () => {
         {leaveSummary.employeeName && (
           <p className="text-sm text-gray-600">Employee: {leaveSummary.employeeName}</p>
         )}
-        <div className="mt-2">
+        <div className="leave-balance-refresh-wrap">
           <button
+            type="button"
             onClick={() => setRefreshKey(prev => prev + 1)}
-            className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+            className="employee-button leave-balance-refresh-btn"
+            aria-label="Refresh leave balance"
           >
             Refresh Balance
           </button>

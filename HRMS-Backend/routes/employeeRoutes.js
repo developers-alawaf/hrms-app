@@ -10,10 +10,15 @@ router.post('/',
   uploadFiles, 
   employeeController.createEmployee
 );
-router.patch('/:id', 
-  authenticate('jwt', { session: false }), 
-  restrictTo('HR Manager', 'Super Admin', 'Company Admin'), 
-  uploadFiles, 
+router.patch('/me/avatar',
+  authenticate('jwt', { session: false }),
+  uploadFiles,
+  employeeController.updateMyAvatar
+);
+router.patch('/:id',
+  authenticate('jwt', { session: false }),
+  restrictTo('HR Manager', 'Super Admin', 'Company Admin'),
+  uploadFiles,
   employeeController.updateEmployee
 );
 router.delete('/:id',

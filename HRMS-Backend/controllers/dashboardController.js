@@ -8,14 +8,31 @@ const moment = require('moment-timezone');
 
 exports.getEmployeeDashboard = async (req, res) => {
   try {
+    console.log('[dashboard] getEmployeeDashboard hit');
     if (!req.user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
     const { employeeId, companyId } = req.user;
-    if (!employeeId) {
-      return res.status(400).json({
-        success: false,
-        error: 'User is not linked to an employee. Dashboard is available for users with an employee record.',
+    if (!employeeId || !companyId) {
+      // Return 200 with minimal data so dashboard still shows in production (e.g. Super Admin)
+      console.log('[dashboard] no employeeId/companyId, returning 200 minimal');
+      return res.status(200).json({
+        success: true,
+        data: {
+          personalInfo: {
+            fullName: req.user.email || 'User',
+            employeeCode: null,
+            designation: null,
+            department: null,
+            joiningDate: null,
+            email: req.user.email || null,
+            phone: null,
+          },
+          attendance: [],
+          payslips: [],
+          leaveRequests: [],
+          holidays: [],
+        },
       });
     }
 
@@ -24,7 +41,25 @@ exports.getEmployeeDashboard = async (req, res) => {
       'fullName newEmployeeCode designation assignedDepartment joiningDate email personalPhoneNumber'
     );
     if (!employee) {
-      return res.status(404).json({ success: false, error: 'Employee not found' });
+      console.log('[dashboard] employee not found, returning 200 minimal');
+      return res.status(200).json({
+        success: true,
+        data: {
+          personalInfo: {
+            fullName: req.user.email || 'User',
+            employeeCode: null,
+            designation: null,
+            department: null,
+            joiningDate: null,
+            email: req.user.email || null,
+            phone: null,
+          },
+          attendance: [],
+          payslips: [],
+          leaveRequests: [],
+          holidays: [],
+        },
+      });
     }
 
     const startDate = moment().tz('Asia/Dhaka').subtract(7, 'days').startOf('day');
@@ -86,9 +121,11 @@ exports.getEmployeeDashboard = async (req, res) => {
       }))
     };
 
+    console.log('[dashboard] getEmployeeDashboard 200 with data');
     res.status(200).json({ success: true, data: response });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    console.error('[dashboard] getEmployeeDashboard error:', error);
+    res.status(500).json({ success: false, error: 'Server error loading dashboard' });
   }
 };
 
@@ -111,7 +148,7 @@ exports.getDashboardStats = async (req, res) => {
     });
 
     const leaveToday = await LeaveRequest.countDocuments({
-      status: 'Approved',
+      status: 'approved',
       startDate: { $lte: today.toDate() },
       endDate: { $gte: today.toDate() }
     });
@@ -257,14 +294,27 @@ exports.getRemoteToday = async (req, res) => {
 // Current month attendance day counts for the logged-in employee (for all users with employeeId)
 exports.getMonthSummary = async (req, res) => {
   try {
+    console.log('[dashboard] getMonthSummary hit');
     if (!req.user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
     const { employeeId, companyId } = req.user;
-    if (!employeeId) {
-      return res.status(400).json({
-        success: false,
-        error: 'User is not linked to an employee. Month summary is available for users with an employee record.',
+    if (!employeeId || !companyId) {
+      // Return 200 with zeroed data so dashboard section still shows (e.g. Super Admin without employee link)
+      console.log('[dashboard] getMonthSummary no employeeId/companyId, returning 200 zeroed');
+      const tz = 'Asia/Dhaka';
+      return res.status(200).json({
+        success: true,
+        data: {
+          workingDays: 0,
+          presentDays: 0,
+          absentDays: 0,
+          remoteDays: 0,
+          leaveDays: 0,
+          totalLateByMinutes: 0,
+          totalOvertimeMinutes: 0,
+          month: moment().tz(tz).format('YYYY-MM'),
+        },
       });
     }
 
@@ -318,6 +368,7 @@ exports.getMonthSummary = async (req, res) => {
       return sum + (Number.isNaN(hours) ? 0 : Math.round(hours * 60));
     }, 0);
 
+    console.log('[dashboard] getMonthSummary 200', { workingDays, presentDays, absentDays, remoteDays, leaveDays });
     res.status(200).json({
       success: true,
       data: {
@@ -332,6 +383,7 @@ exports.getMonthSummary = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error('[dashboard] getMonthSummary error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
