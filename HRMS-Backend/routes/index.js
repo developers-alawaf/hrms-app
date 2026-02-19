@@ -16,6 +16,7 @@ const departmentRoutes = require('./departmentRoutes');
 const designationRoutes = require('./designationRoutes');
 const shiftManagementRoutes = require('./shiftManagementRoutes');
 const activityLogRoutes = require('./activityLogRoutes');
+const emailRoutes = require('./emailRoutes');
 
 router.use('/employees', employeeRoutes);
 router.use('/auth', authRoutes);
@@ -32,6 +33,7 @@ router.use('/departments', authenticate('jwt', { session: false }), departmentRo
 router.use('/designations', authenticate('jwt', { session: false }), designationRoutes);
 router.use('/shift-management', authenticate('jwt', { session: false }), shiftManagementRoutes);
 router.use('/activity-logs', authenticate('jwt', { session: false }), activityLogRoutes);
+router.use('/email', emailRoutes);
 
 // router.use('/leave-entitlement', passport.authenticate('jwt', { session: false }), leaveEntitlementRoutes);
 // router.use('/leave-policy', passport.authenticate('jwt', { session: false }), leavePolicyRoutes);

@@ -11,7 +11,6 @@ const Salary = require('../models/salary');
 const EmployeesAttendance = require('../models/employeesAttendance');
 const ShiftManagement = require('../models/shiftManagement');
 const AttendanceAdjustmentRequest = require('../models/attendanceAdjustmentRequest');
-const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const moment = require('moment-timezone');
 const fs = require('fs').promises;
@@ -20,16 +19,7 @@ const path = require('path');
 const zkService = require('../services/zktecoService');
 const leaveController = require('./leaveController');
 const activityLogService = require('../services/activityLogService');
-
-const transporter = nodemailer.createTransport({
-  host: 'smtp.zoho.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.ZOHO_EMAIL,
-    pass: process.env.ZOHO_PASSWORD
-  }
-});
+const emailService = require('../services/emailService');
 
 // ================= CREATE EMPLOYEE =================
 
@@ -231,8 +221,10 @@ exports.createEmployee = async (req, res) => {
       await invitation.save();
 
       try {
-        await transporter.sendMail({
-          from: process.env.ZOHO_EMAIL,
+        const transport = emailService.getTransporter();
+        if (!transport) throw new Error('Email service not configured');
+        await transport.sendMail({
+          from: `"${process.env.MAIL_FROM_NAME || 'HRMS'}" <${process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL}>`,
           to: email,
           subject: 'HRMS Invitation',
           html: `Welcome to the HRMS! Your temporary password is: <b>${temporaryPassword}</b><br>
@@ -473,8 +465,10 @@ exports.updateEmployee = async (req, res) => {
       await invitation.save();
 
       try {
-        await transporter.sendMail({
-          from: process.env.ZOHO_EMAIL,
+        const transport = emailService.getTransporter();
+        if (!transport) throw new Error('Email service not configured');
+        await transport.sendMail({
+          from: `"${process.env.MAIL_FROM_NAME || 'HRMS'}" <${process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL}>`,
           to: req.body.email,
           subject: 'HRMS Invitation',
           html: `Welcome to the HRMS! Your temporary password is: <b>${temporaryPassword}</b><br>
