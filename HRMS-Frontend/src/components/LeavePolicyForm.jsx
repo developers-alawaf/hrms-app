@@ -10,8 +10,8 @@ const LeavePolicyForm = () => {
     casual: 0,
     sick: 0,
     annual: 0,
+    annualAccrualDays: 18,
     maternity: 0,
-    //Festive: 0,
   });
   const [companies, setCompanies] = useState([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState(user?.companyId || '');
@@ -76,7 +76,14 @@ const LeavePolicyForm = () => {
       const token = localStorage.getItem('token');
       const data = await getLeavePolicy(token, companyIdToFetch, yearToFetch); // Pass companyId and year
       if (data.success) {
-        setPolicy(data.data);
+        const p = data.data || {};
+        setPolicy({
+          casual: p.casual ?? 0,
+          sick: p.sick ?? 0,
+          annual: p.annual ?? 0,
+          annualAccrualDays: p.annualAccrualDays ?? 18,
+          maternity: p.maternity ?? 0,
+        });
       } else {
         setError(data.error || 'Failed to fetch leave policy.');
       }
@@ -89,10 +96,13 @@ const LeavePolicyForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setPolicy(prev => ({
-      ...prev,
-      [name]: parseInt(value, 10) || 0,
-    }));
+    let num = parseInt(value, 10);
+    if (name === 'annualAccrualDays') {
+      num = Math.max(1, num || 18); // Min 1, default 18
+    } else {
+      num = num || 0;
+    }
+    setPolicy(prev => ({ ...prev, [name]: num }));
   };
 
   const handleSubmit = async (e) => {
@@ -104,7 +114,7 @@ const LeavePolicyForm = () => {
       const token = localStorage.getItem('token');
       const data = await updateLeavePolicy(selectedCompanyId, { ...policy, year: selectedYear }, token); // Pass companyId and year
       if (data.success) {
-        setSuccess('Leave policy updated successfully!');
+        setSuccess(data.message || 'Leave policy updated successfully!');
       } else {
         setError(data.error || 'Failed to update leave policy.');
       }
@@ -165,6 +175,25 @@ const LeavePolicyForm = () => {
         <form onSubmit={handleSubmit} className="leave-form">
           {Object.keys(policy).map(key => {
             if (['_id', 'companyId', 'createdAt', 'updatedAt', '__v', 'year', 'festive'].includes(key)) return null;
+            if (key === 'annualAccrualDays') {
+              return (
+                <div className="form-group" key={key}>
+                  <label htmlFor={key}>Days of service per 1 annual leave:</label>
+                  <input
+                    type="number"
+                    id={key}
+                    name={key}
+                    value={policy[key] ?? 18}
+                    onChange={handleChange}
+                    min="1"
+                    required
+                    className="employee-input"
+                    title="After the first year, employees earn 1 annual leave day per this many days of service (default 18)"
+                  />
+                  <small className="form-hint">1 leave day earned per every {policy.annualAccrualDays ?? 18} days after 1st year. Cap = Annual Leave.</small>
+                </div>
+              );
+            }
             return (
               <div className="form-group" key={key}>
                 <label htmlFor={key}>{key.charAt(0).toUpperCase() + key.slice(1)} Leave (days):</label>
@@ -178,6 +207,9 @@ const LeavePolicyForm = () => {
                   required
                   className="employee-input"
                 />
+                {key === 'annual' && (
+                  <small className="form-hint">Max annual leave per employee. First year = 0. After 365 days: 1 leave per {policy.annualAccrualDays ?? 18} days (auto-calculated).</small>
+                )}
               </div>
             );
           })}

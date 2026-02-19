@@ -439,14 +439,18 @@ exports.getLeaveSummary = async (req, res) => {
     const employee = await Employee.findById(userId).lean();
     if (!employee) return res.status(404).json({ success: false, error: 'Employee not found' });
 
-    // Always ensure entitlement exists — create if missing
-    let entitlement = await LeaveEntitlement.findOne({ employeeId: userId, year: targetYear });
-    if (!entitlement) {
-      await exports.createLeaveEntitlement(userId, employee.joiningDate, targetYear);
-      entitlement = await LeaveEntitlement.findOne({ employeeId: userId, year: targetYear });
+    // Always recalculate entitlement so Annual Leave reflects current policy & joining date
+    if (employee.joiningDate) {
+      try {
+        await exports.createLeaveEntitlement(userId, employee.joiningDate, targetYear);
+      } catch (err) {
+        console.warn(`getLeaveSummary: createLeaveEntitlement failed for ${userId}:`, err.message);
+      }
     }
 
-    // Double safety — if still null, return zeros
+    let entitlement = await LeaveEntitlement.findOne({ employeeId: userId, year: targetYear });
+
+    // Fallback if no entitlement (e.g. no joining date)
     if (!entitlement) {
       entitlement = {
         casual: 0,
@@ -663,6 +667,7 @@ exports.createLeaveEntitlement = async (employeeId, joiningDate, specificYear = 
         casual: 12,
         sick: 14,
         annual: 15,
+        annualAccrualDays: 18,
         maternity: 182,
         festive: 11
       }).save();
@@ -702,16 +707,18 @@ exports.createLeaveEntitlement = async (employeeId, joiningDate, specificYear = 
     const proratedSick = Math.floor((policy.sick * daysWorkedInYear) / totalDaysInYear);
     const proratedFestive = Math.floor((policy.festive * daysWorkedInYear) / totalDaysInYear);
 
-    // === Annual Leave: Only after 1 full year ===
+    // === Annual Leave: First year = 0. After 365 days: 1 leave per annualAccrualDays, capped at policy.annual ===
+    // Cumulative from first anniversary to today — only count days actually worked (not future)
     let annual = 0;
-    const oneYearAnniversary = joining.clone().add(1, 'year');
+    const oneYearAnniversary = joining.clone().add(365, 'days');
+    const accrualDays = policy.annualAccrualDays || 18; // Days of service per 1 annual leave earned
 
     if (now.isSameOrAfter(oneYearAnniversary, 'day')) {
-      const annualStartDate = oneYearAnniversary.isBefore(yearStart)
-        ? yearStart.clone()
-        : oneYearAnniversary.clone();
+      const annualStartDate = oneYearAnniversary.clone();
 
-      let annualEndDate = yearEnd.clone();
+      // End = earlier of today, year end, or last working day (don't count future days)
+      let annualEndDate = now.clone();
+      if (yearEnd.isBefore(annualEndDate)) annualEndDate = yearEnd.clone();
       if (employee.lastWorkingDay) {
         const lwd = moment(employee.lastWorkingDay).startOf('day');
         if (lwd.isBefore(annualEndDate)) annualEndDate = lwd;
@@ -720,7 +727,8 @@ exports.createLeaveEntitlement = async (employeeId, joiningDate, specificYear = 
       const eligibleDays = annualEndDate.diff(annualStartDate, 'days') + 1;
 
       if (eligibleDays > 0) {
-        annual = Math.floor((policy.annual * eligibleDays) / totalDaysInYear);
+        const earnedByAccrual = Math.floor(eligibleDays / accrualDays);
+        annual = Math.min(earnedByAccrual, policy.annual || 20); // Cap at policy max
       }
     }
 
@@ -1010,7 +1018,32 @@ exports.updateLeavePolicy = async (req, res) => {
       { $set: req.body },
       { new: true, runValidators: true, upsert: true }
     );
-    res.status(200).json({ success: true, data: policy });
+
+    // Recalculate annual leave entitlements for all employees when policy changes
+    const employees = await Employee.find({
+      companyId: targetCompanyId,
+      employeeStatus: 'active',
+      joiningDate: { $exists: true, $ne: null }
+    });
+
+    let recalcCount = 0;
+    for (const emp of employees) {
+      try {
+        await exports.createLeaveEntitlement(emp._id, emp.joiningDate, targetYear);
+        recalcCount++;
+      } catch (err) {
+        console.error(`Failed to recalc entitlement for employee ${emp._id}:`, err.message);
+      }
+    }
+    console.log(`✅ Recalculated ${recalcCount} leave entitlements after policy update (company: ${targetCompanyId}, year: ${targetYear})`);
+
+    res.status(200).json({
+      success: true,
+      data: policy,
+      message: recalcCount > 0
+        ? `Policy updated. Recalculated leave entitlements for ${recalcCount} employees.`
+        : 'Policy updated successfully.'
+    });
   } catch (error) {
     console.error(`❌ Error updating leave policy: ${error.message}`);
     res.status(400).json({ success: false, error: error.message });
