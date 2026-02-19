@@ -2,7 +2,7 @@ import React, { useContext, useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext, DEFAULT_AVATAR } from '../context/AuthContext';
 import { ThemeContext } from '../context/ThemeContext';
-import { Users, Calendar, FileText, Lock, LogOut, Menu, X, Briefcase, LayoutDashboard, ClipboardList, ChevronDown, Mail } from 'lucide-react';
+import { Users, Calendar, FileText, Lock, LogOut, Menu, X, Briefcase, LayoutDashboard, ClipboardList, ChevronDown, Mail, Moon, Sun } from 'lucide-react';
 import '../styles/Sidebar.css';
 import logoImg from '../assets/kloud_tech.png';
 
