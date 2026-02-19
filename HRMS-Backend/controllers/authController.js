@@ -5,20 +5,10 @@ const Employee = require('../models/employee');
 const Company = require('../models/company');
 const LeavePolicy = require('../models/leavePolicy');
 const jwt = require('jsonwebtoken');
-const nodemailer = require('nodemailer');
 const moment = require('moment-timezone');
 const crypto = require('crypto');
 const activityLogService = require('../services/activityLogService');
-
-const transporter = nodemailer.createTransport({
-  host: 'smtp.zoho.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.ZOHO_EMAIL,
-    pass: process.env.ZOHO_PASSWORD
-  }
-});
+const emailService = require('../services/emailService');
 
 exports.login = async (req, res) => {
   let user = null;
@@ -247,8 +237,10 @@ exports.requestPasswordReset = async (req, res) => {
     console.log('requestPasswordReset - Password reset token created for user:', user._id);
 
     try {
-      await transporter.sendMail({
-        from: process.env.ZOHO_EMAIL,
+      const transport = emailService.getTransporter();
+      if (!transport) throw new Error('Email service not configured');
+      await transport.sendMail({
+        from: `"${process.env.MAIL_FROM_NAME || 'HRMS'}" <${process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL}>`,
         to: user.email,
         subject: 'HRMS Password Reset',
         html: `You have requested a password reset. Please reset your password: <a href="${process.env.FRONTEND_URL}/reset-password?token=${token}">Reset Password</a><br>This link expires in 7 days.`
@@ -328,9 +320,10 @@ exports.resendInvitation = async (req, res) => {
     await user.save();
 
     const invitationLink = `${process.env.FRONTEND_URL}/accept-invitation?token=${invitationToken}`;
-    
-    await transporter.sendMail({
-      from: process.env.ZOHO_EMAIL,
+    const transport = emailService.getTransporter();
+    if (!transport) throw new Error('Email service not configured');
+    await transport.sendMail({
+      from: `"${process.env.MAIL_FROM_NAME || 'HRMS'}" <${process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL}>`,
       to: user.email,
       subject: 'HRMS Invitation',
       html: `Welcome to the HRMS! Your temporary password is: <b>${temporaryPassword}</b><br>
@@ -390,9 +383,10 @@ exports.forceResendInvitation = async (req, res) => {
     await user.save();
 
     const invitationLink = `${process.env.FRONTEND_URL}/accept-invitation?token=${invitationToken}`;
-    
-    await transporter.sendMail({
-      from: process.env.ZOHO_EMAIL,
+    const transport = emailService.getTransporter();
+    if (!transport) throw new Error('Email service not configured');
+    await transport.sendMail({
+      from: `"${process.env.MAIL_FROM_NAME || 'HRMS'}" <${process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL}>`,
       to: user.email,
       subject: 'HRMS Invitation (New)',
       html: `A new invitation has been generated for you. Your new temporary password is: <b>${temporaryPassword}</b><br>

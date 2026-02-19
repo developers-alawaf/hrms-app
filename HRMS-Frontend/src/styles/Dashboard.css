@@ -211,6 +211,12 @@
 .stat-card--total:hover { border-color: rgba(59, 130, 246, 0.5); }
 .stat-card--total .stat-card__value { color: #93c5fd; }
 
+.stat-card--active:hover { border-color: rgba(16, 185, 129, 0.5); }
+.stat-card--active .stat-card__value { color: #34d399; }
+
+.stat-card--inactive:hover { border-color: rgba(100, 116, 139, 0.5); }
+.stat-card--inactive .stat-card__value { color: #94a3b8; }
+
 .stat-card--present:hover { border-color: rgba(16, 185, 129, 0.5); }
 .stat-card--present .stat-card__value { color: #34d399; }
 

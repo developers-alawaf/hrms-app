@@ -132,32 +132,41 @@ exports.getEmployeeDashboard = async (req, res) => {
 // 🔹 Admin/company-level dashboard stats
 exports.getDashboardStats = async (req, res) => {
   try {
-    const today = moment().tz('Asia/Dhaka').startOf('day');
+    const today = moment().tz('Asia/Dhaka').startOf('day').toDate();
 
     const totalEmployees = await Employee.countDocuments();
+    const activeEmployees = await Employee.countDocuments({ employeeStatus: 'active' });
+    const inactiveEmployees = await Employee.countDocuments({ employeeStatus: { $ne: 'active' } });
 
-    // Count anyone who has checked in (in time) today as present — not only status 'Present'
+    const activeEmployeeIds = await Employee.find({ employeeStatus: 'active' }).distinct('_id');
+
+    // Count only ACTIVE employees — present, remote, leave, absent
     const presentToday = await EmployeesAttendance.countDocuments({
-      date: today.toDate(),
-      check_in: { $exists: true, $ne: null }
+      date: today,
+      check_in: { $exists: true, $ne: null },
+      employeeId: { $in: activeEmployeeIds }
     });
 
     const remoteToday = await EmployeesAttendance.countDocuments({
-      date: today.toDate(),
-      status: 'Remote'
+      date: today,
+      status: 'Remote',
+      employeeId: { $in: activeEmployeeIds }
     });
 
     const leaveToday = await LeaveRequest.countDocuments({
       status: 'approved',
-      startDate: { $lte: today.toDate() },
-      endDate: { $gte: today.toDate() }
+      startDate: { $lte: today },
+      endDate: { $gte: today },
+      employeeId: { $in: activeEmployeeIds }
     });
 
-    // Absent = total employees minus (present + remote + on leave) from attendance/leave data
-    const absentToday = Math.max(0, totalEmployees - presentToday - remoteToday - leaveToday);
+    // Absent = active employees minus (present + remote + on leave)
+    const absentToday = Math.max(0, activeEmployees - presentToday - remoteToday - leaveToday);
 
     res.json({
       totalEmployees,
+      activeEmployees,
+      inactiveEmployees,
       presentToday,
       absentToday,
       remoteToday,

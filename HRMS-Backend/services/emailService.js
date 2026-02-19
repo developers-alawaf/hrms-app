@@ -20,14 +20,20 @@ function getTransporter() {
       console.warn('[EmailService] Mail not configured: MAIL_USERNAME/MAIL_PASSWORD or ZOHO_EMAIL/ZOHO_PASSWORD required.');
       return null;
     }
-    const useSSL = (process.env.MAIL_ENCRYPTION || 'ssl').toLowerCase() === 'ssl';
+    // Port 465 = implicit SSL (secure: true)
+    // Port 587 = STARTTLS (secure: false, requireTLS: true) - use this if 465 gives "wrong version number"
+    const useImplicitSSL = mailPort === 465;
     transporter = nodemailer.createTransport({
       host: mailHost,
       port: mailPort,
-      secure: useSSL || mailPort === 465,
+      secure: useImplicitSSL,
+      requireTLS: !useImplicitSSL && mailPort === 587,
       auth: {
         user: mailUser,
         pass: mailPass
+      },
+      tls: {
+        rejectUnauthorized: process.env.NODE_ENV === 'production'
       }
     });
   }
@@ -133,7 +139,48 @@ async function sendLeaveRequestNotificationToManager(options) {
   }
 }
 
+/**
+ * Send custom email (e.g. admin-to-employee message)
+ * @param {Object} options
+ * @param {string|string[]} options.to - Recipient email(s)
+ * @param {string} options.subject - Email subject
+ * @param {string} options.text - Plain text body
+ * @param {string} [options.html] - Optional HTML body
+ */
+async function sendCustomEmail(options) {
+  const { to, subject, text, html } = options;
+  if (!to || (!subject && subject !== '')) {
+    return { sent: false, reason: 'Missing to or subject' };
+  }
+
+  const transport = getTransporter();
+  if (!transport) {
+    return { sent: false, reason: 'mail_not_configured' };
+  }
+
+  const recipients = Array.isArray(to) ? to : [to].filter(Boolean);
+  if (recipients.length === 0) {
+    return { sent: false, reason: 'no_recipients' };
+  }
+
+  try {
+    await transport.sendMail({
+      from: `"${mailFromName}" <${mailFrom}>`,
+      to: recipients.join(', '),
+      subject: subject || '(No subject)',
+      text: text || '',
+      html: html || (text ? text.replace(/\n/g, '<br>') : '')
+    });
+    console.log(`[EmailService] Custom email sent to ${recipients.length} recipient(s), subject: ${subject}`);
+    return { sent: true };
+  } catch (err) {
+    console.error('[EmailService] Failed to send custom email:', err.message);
+    return { sent: false, reason: err.message };
+  }
+}
+
 module.exports = {
   getTransporter,
-  sendLeaveRequestNotificationToManager
+  sendLeaveRequestNotificationToManager,
+  sendCustomEmail
 };

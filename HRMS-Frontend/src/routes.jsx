@@ -42,6 +42,7 @@ import OutsideWorkRequests from './pages/ShiftManagement/OutsideWorkRequests';
 import EmployeeRoster from './pages/ShiftManagement/EmployeeRoster';
 import HolidayPage from './pages/HolidayPage';
 import ShiftTemplatePage from './pages/ShiftTemplatePage';
+import SendEmailPage from './pages/SendEmailPage';
 import { AuthContext } from './context/AuthContext';
 import { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
@@ -422,6 +423,14 @@ const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={['Super Admin', 'HR Manager']}>
             <HolidayPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/send-email',
+        element: (
+          <ProtectedRoute allowedRoles={['Super Admin']}>
+            <SendEmailPage />
           </ProtectedRoute>
         ),
       },

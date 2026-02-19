@@ -1,8 +1,7 @@
 import React, { useContext, useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { AuthContext } from '../context/AuthContext';
-import { ThemeContext } from '../context/ThemeContext';
-import { Users, Calendar, FileText, Lock, LogOut, Menu, X, Briefcase, LayoutDashboard, ClipboardList, ChevronDown, Sun, Moon } from 'lucide-react';
+import { AuthContext, DEFAULT_AVATAR } from '../context/AuthContext';
+import { Users, Calendar, FileText, Lock, LogOut, Menu, X, Briefcase, LayoutDashboard, ClipboardList, ChevronDown, Mail } from 'lucide-react';
 import '../styles/Sidebar.css';
 import logoImg from '../assets/kloud_tech.png';
 
@@ -307,6 +306,16 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
             </Link>
           </li>
         )}
+        
+        {user?.role === 'Super Admin' && (
+          <li>
+            <Link to="/send-email" className={`sidebar-link ${isActive('/send-email') ? 'active' : ''}`} onClick={handleLinkClick}>
+              <Mail className="nav-icon" />
+              Send Email
+            </Link>
+          </li>
+        )}
+        
       </ul>
 
       <div className="sidebar-footer">
