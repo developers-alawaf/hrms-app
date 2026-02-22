@@ -21,3 +21,11 @@
   text-align: center;
   margin: 0;
 }
+
+[data-theme="light"] .footer {
+  background: linear-gradient(160deg, #e0e7ff 0%, #ede9fe 50%, #ddd6fe 100%);
+}
+
+[data-theme="light"] .footer-text {
+  color: #4f46e5;
+}

@@ -108,7 +108,7 @@ import { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Footer from './components/Footer';
-import { Menu } from 'lucide-react';
+import { PanelLeft } from 'lucide-react';
 import './styles/global.css';
 
 function App() {
@@ -158,7 +158,7 @@ function App() {
               onClick={toggleSidebar}
               aria-label="Open menu"
             >
-              <Menu size={24} />
+              <PanelLeft size={24} />
             </button>
           )}
         </>

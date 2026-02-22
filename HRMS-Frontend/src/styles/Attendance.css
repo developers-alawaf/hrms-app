@@ -285,3 +285,56 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ========== Light theme – Attendance ========== */
+[data-theme="light"] .attendance-filters {
+  background: var(--app-surface);
+  border-color: var(--app-border);
+}
+
+[data-theme="light"] .attendance-filters .form-group label {
+  color: var(--app-text);
+}
+
+[data-theme="light"] .attendance-filters .employee-input {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: var(--app-border);
+  color: var(--app-text);
+}
+
+[data-theme="light"] .attendance-filters .employee-input::placeholder {
+  color: var(--app-text-muted);
+}
+
+[data-theme="light"] .attendance-filters .employee-input:focus,
+[data-theme="light"] .attendance-filters .employee-input:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--app-accent);
+}
+
+[data-theme="light"] .attendance-filters .employee-input[type="date"] {
+  color: var(--app-text);
+}
+
+[data-theme="light"] .attendance-filters .employee-input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: 0.7;
+}
+
+[data-theme="light"] .attendance-filters .employee-input option {
+  background: #fff;
+  color: var(--app-text);
+}
+
+[data-theme="light"] .attendance-table th {
+  background: var(--app-accent-soft);
+  color: var(--app-accent-light);
+}
+
+[data-theme="light"] .attendance-table-container {
+  border-color: var(--app-border);
+}
+
+[data-theme="light"] .attendance-table tbody tr:hover td {
+  background: rgba(79, 70, 229, 0.08);
+}
