@@ -57,10 +57,10 @@ const Dashboard = () => {
       const api = (path) => `${base}${path.startsWith('/') ? path : `/${path}`}`;
       const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
       try {
-        const isAdminOrSuperAdmin = user?.role === 'Admin' || user?.role === 'Super Admin';
+        const isSuperAdmin = user?.role === 'Super Admin';
         const [empRes, statsRes, monthRes] = await Promise.all([
           fetch(api('/api/dashboard'), authHeaders),
-          isAdminOrSuperAdmin
+          isSuperAdmin
             ? fetch(api('/api/dashboard/dashboard-stats'), authHeaders)
             : Promise.resolve(null),
           fetch(api('/api/dashboard/month-summary'), authHeaders),
@@ -177,7 +177,7 @@ const Dashboard = () => {
         <p className="dashboard-date">{todayFormatted}</p>
       </header>
 
-      {stats && (user.role === 'Admin' || user.role === 'Super Admin') && (
+      {stats && user.role === 'Super Admin' && (
         <section className="dashboard-stats-section" aria-label="Overview statistics">
           <h2 className="dashboard-section-title">Organization overview - Today&apos;s</h2>
           <div className="dashboard-stats">

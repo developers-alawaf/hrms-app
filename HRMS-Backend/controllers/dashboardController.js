@@ -38,8 +38,7 @@ exports.getEmployeeDashboard = async (req, res) => {
       });
     }
 
-    const employeeQuery = companyId ? { _id: employeeId, companyId } : { _id: employeeId };
-    const employee = await Employee.findOne(employeeQuery).select(
+    const employee = await Employee.findOne({ _id: employeeId, companyId }).select(
       'fullName newEmployeeCode designation assignedDepartment joiningDate email personalPhoneNumber'
     );
     if (!employee) {
@@ -65,20 +64,26 @@ exports.getEmployeeDashboard = async (req, res) => {
     }
 
     const startDate = moment().tz('Asia/Dhaka').subtract(7, 'days').startOf('day');
-    const attendanceQuery = { employeeId, date: { $gte: startDate.toDate() } };
-    if (companyId) attendanceQuery.companyId = companyId;
-    const attendance = await EmployeesAttendance.find(attendanceQuery).select('date check_in check_out work_hours status leave_type');
+    const attendance = await EmployeesAttendance.find({
+      employeeId,
+      companyId,
+      date: { $gte: startDate.toDate() }
+    }).select('date check_in check_out work_hours status leave_type');
 
-    const payslipQuery = { employeeId, month: { $gte: moment().subtract(3, 'months').format('YYYY-MM') } };
-    if (companyId) payslipQuery.companyId = companyId;
-    const payslips = await Payslip.find(payslipQuery).select('month netPay status generatedDate');
+    const payslips = await Payslip.find({
+      employeeId,
+      companyId,
+      month: { $gte: moment().subtract(3, 'months').format('YYYY-MM') }
+    }).select('month netPay status generatedDate');
 
-    const leaveQuery = { employeeId, startDate: { $gte: moment().startOf('day').toDate() } };
-    if (companyId) leaveQuery.companyId = companyId;
-    const leaveRequests = await LeaveRequest.find(leaveQuery).select('startDate endDate type status isHalfDay');
+    const leaveRequests = await LeaveRequest.find({
+      employeeId,
+      companyId,
+      startDate: { $gte: moment().startOf('day').toDate() }
+    }).select('startDate endDate type status isHalfDay');
 
     const currentYear = moment().year();
-    const holidayCalendar = companyId ? await HolidayCalendar.findOne({ companyId, year: currentYear }) : null;
+    const holidayCalendar = await HolidayCalendar.findOne({ companyId, year: currentYear });
 
     const upcomingHolidays = holidayCalendar ? holidayCalendar.holidays.filter(h => {
       const holidayDate = moment(h.date);
@@ -131,36 +136,41 @@ exports.getEmployeeDashboard = async (req, res) => {
   }
 };
 
-// 🔹 Admin/company-level dashboard stats (scoped by companyId for Super Admin)
+// 🔹 Admin/company-level dashboard stats (always returns numeric fields for consistent UI)
 exports.getDashboardStats = async (req, res) => {
   try {
-    const today = moment().tz('Asia/Dhaka').startOf('day');
-    const todayDate = today.toDate();
+    const today = moment().tz('Asia/Dhaka');
+    const dayStart = today.clone().startOf('day').toDate();
+    const dayEnd = today.clone().endOf('day').toDate();
 
-    // Scope by company when user has companyId (Super Admin with linked company)
     const companyId = req.user?.companyId;
-    const empFilter = companyId ? { companyId } : {};
-    const attFilter = companyId ? { companyId, date: todayDate } : { date: todayDate };
-    const leaveFilter = companyId
-      ? { companyId, status: 'approved', startDate: { $lte: todayDate }, endDate: { $gte: todayDate } }
-      : { status: 'approved', startDate: { $lte: todayDate }, endDate: { $gte: todayDate } };
+    const companyFilter = companyId ? { companyId } : {};
 
-    const totalEmployees = Number(await Employee.countDocuments(empFilter)) || 0;
-    const activeEmployees = Number(await Employee.countDocuments({ ...empFilter, employeeStatus: 'active' })) || 0;
+    const totalEmployees = Number(await Employee.countDocuments(companyFilter)) || 0;
+    const activeEmployees = Number(
+      await Employee.countDocuments({ ...companyFilter, employeeStatus: 'active' })
+    ) || 0;
     const inactiveEmployees = Math.max(0, totalEmployees - activeEmployees);
 
-    // Count anyone who has checked in today as present
+    // Count anyone who has checked in (in time) today as present — not only status 'Present'
     const presentToday = Number(await EmployeesAttendance.countDocuments({
-      ...attFilter,
-      check_in: { $exists: true, $ne: null }
+      ...companyFilter,
+      date: { $gte: dayStart, $lte: dayEnd },
+      check_in: { $exists: true, $ne: null },
     })) || 0;
 
     const remoteToday = Number(await EmployeesAttendance.countDocuments({
-      ...attFilter,
-      status: 'Remote'
+      ...companyFilter,
+      date: { $gte: dayStart, $lte: dayEnd },
+      status: 'Remote',
     })) || 0;
 
-    const leaveToday = Number(await LeaveRequest.countDocuments(leaveFilter)) || 0;
+    const leaveToday = Number(await LeaveRequest.countDocuments({
+      ...companyFilter,
+      status: 'approved',
+      startDate: { $lte: dayEnd },
+      endDate: { $gte: dayStart },
+    })) || 0;
 
     // Absent = active employees minus (present + remote + on leave)
     const absentToday = Math.max(0, activeEmployees - presentToday - remoteToday - leaveToday);
@@ -179,8 +189,6 @@ exports.getDashboardStats = async (req, res) => {
     res.status(500).json({
       error: error.message,
       totalEmployees: 0,
-      activeEmployees: 0,
-      inactiveEmployees: 0,
       presentToday: 0,
       absentToday: 0,
       remoteToday: 0,
@@ -346,7 +354,7 @@ exports.getMonthSummary = async (req, res) => {
     const today = moment().tz(tz).startOf('day');
 
     // Working days = weekdays (Mon–Fri) from 1st of month to today inclusive, minus company holidays in that range
-    const holidayCalendar = companyId ? await HolidayCalendar.findOne({ companyId, year: monthStart.year() }) : null;
+    const holidayCalendar = await HolidayCalendar.findOne({ companyId, year: monthStart.year() });
     const holidayDates = new Set();
     if (holidayCalendar && holidayCalendar.holidays && holidayCalendar.holidays.length) {
       holidayCalendar.holidays.forEach((h) => {
@@ -371,14 +379,15 @@ exports.getMonthSummary = async (req, res) => {
     const monthStartDate = monthStart.toDate();
     const todayDate = today.toDate();
 
-    const recordsQuery = { employeeId, date: { $gte: monthStartDate, $lte: todayDate } };
-    if (companyId) recordsQuery.companyId = companyId;
-    const records = await EmployeesAttendance.find(recordsQuery)
+    const records = await EmployeesAttendance.find({
+      employeeId,
+      companyId,
+      date: { $gte: monthStartDate, $lte: todayDate },
+    })
       .select('status lateBy overtimeHours')
       .lean();
 
-    // Present = days with check-in (Present or Incomplete), aligned with "Present today" logic
-    const presentDays = records.filter((r) => r.status === 'Present' || r.status === 'Incomplete').length;
+    const presentDays = records.filter((r) => r.status === 'Present').length;
     const remoteDays = records.filter((r) => r.status === 'Remote').length;
     const leaveDays = records.filter((r) => r.status === 'Leave').length;
     // Absent = working days minus (present + remote + leave); cap at 0
