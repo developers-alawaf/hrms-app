@@ -113,18 +113,18 @@ log_info "Nginx reload/restart step completed (if available)."
 echo ""
 
 # -----------------------------------------------------------------------------
-log_info "Step 5/5: PM2 restart all services..."
-if command -v pm2 &> /dev/null; then
-  pm2 restart all 2>/dev/null || pm2 restart "$PM2_PROCESS" 2>/dev/null || {
-    log_warn "PM2 process not found. Attempting pm2 start..."
-    cd "$BACKEND_DIR"
-    pm2 start server.js --name "$PM2_PROCESS" --env production 2>/dev/null || true
-  }
-  pm2 save 2>/dev/null || true
-  log_info "PM2 services restarted."
-  pm2 status
+log_info "Step 5/5: Fix and restart HRMS backend..."
+if command -v pm2 &> /dev/null && [[ -x "$APP_ROOT/fix-backend-pm2.sh" || -f "$APP_ROOT/fix-backend-pm2.sh" ]]; then
+  bash "$APP_ROOT/fix-backend-pm2.sh"
 else
-  log_warn "PM2 not installed. Skipping PM2 restart."
+  log_warn "Running basic PM2 restart..."
+  cd "$BACKEND_DIR"
+  pm2 delete hrms-app-backend 2>/dev/null || true
+  pm2 delete hrms-backend 2>/dev/null || true
+  pm2 start server.js --name "hrms-app-backend" --cwd "$BACKEND_DIR"
+  pm2 save 2>/dev/null || true
+  pm2 restart all 2>/dev/null || true
+  pm2 status
 fi
 echo ""
 
