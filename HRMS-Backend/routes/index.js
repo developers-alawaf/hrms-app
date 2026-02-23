@@ -23,8 +23,9 @@ router.use('/employees', employeeRoutes);
 router.use('/auth', authRoutes);
 router.use('/deviceLogs', deviceLogsRoutes);
 router.use('/dashboard', authenticateJwt, dashboardRoutes);
-// Fallback route for month-summary (in case /api/dashboard/month-summary fails due to proxy/routing)
+// Top-level routes (no nesting - avoid proxy/routing issues)
 router.get('/month-summary', authenticateJwt, dashboardController.getMonthSummary);
+router.get('/dashboard-all', authenticateJwt, dashboardController.getDashboardAll);
 router.use('/attendance', authenticate('jwt', { session: false }), attendanceRoutes);
 router.use('/leave', authenticate('jwt', { session: false }), leaveRoutes);
 router.use('/payslips', payslipRoutes);

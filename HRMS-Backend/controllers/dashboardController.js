@@ -6,18 +6,36 @@ const LeaveRequest = require('../models/leaveRequest');
 const HolidayCalendar = require('../models/holidayCalendar');
 const moment = require('moment-timezone');
 
+/** Safe access to req.user - never throws, handles undefined or malformed req.user */
+function getUser(req) {
+  try {
+    const u = req && req.user;
+    if (!u || typeof u !== 'object') return null;
+    return {
+      employeeId: u.employeeId,
+      companyId: u.companyId,
+      email: u.email,
+      fullName: u.fullName,
+      role: u.role
+    };
+  } catch {
+    return null;
+  }
+}
+
 exports.getEmployeeDashboard = async (req, res) => {
   try {
     console.log('[dashboard] getEmployeeDashboard hit');
-    if (!req.user) {
+    const user = getUser(req);
+    if (!user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
-    const employeeId = req.user?.employeeId;
-    const companyId = req.user?.companyId;
+    const employeeId = user.employeeId;
+    const companyId = user.companyId;
     if (!employeeId || !companyId) {
       // Return 200 with minimal data so dashboard still shows in production (e.g. Super Admin)
       console.log('[dashboard] no employeeId/companyId, returning 200 minimal');
-      const fallbackName = req.user?.email || req.user?.fullName || 'User';
+      const fallbackName = user.email || user.fullName || 'User';
       return res.status(200).json({
         success: true,
         data: {
@@ -27,7 +45,7 @@ exports.getEmployeeDashboard = async (req, res) => {
             designation: null,
             department: null,
             joiningDate: null,
-            email: req.user?.email || null,
+            email: user.email || null,
             phone: null,
           },
           attendance: [],
@@ -47,12 +65,12 @@ exports.getEmployeeDashboard = async (req, res) => {
         success: true,
         data: {
           personalInfo: {
-            fullName: req.user?.email || 'User',
+            fullName: user.email || user.fullName || 'User',
             employeeCode: null,
             designation: null,
             department: null,
             joiningDate: null,
-            email: req.user?.email || null,
+            email: user.email || null,
             phone: null,
           },
           attendance: [],
@@ -132,7 +150,7 @@ exports.getEmployeeDashboard = async (req, res) => {
     res.status(200).json({ success: true, data: response });
   } catch (error) {
     console.error('[dashboard] getEmployeeDashboard error:', error);
-    res.status(500).json({ success: false, error: 'Server error loading dashboard' });
+    return res.status(500).json({ success: false, error: 'Server error loading dashboard' });
   }
 };
 
@@ -143,7 +161,8 @@ exports.getDashboardStats = async (req, res) => {
     const dayStart = today.clone().startOf('day').toDate();
     const dayEnd = today.clone().endOf('day').toDate();
 
-    const companyId = req.user?.companyId;
+    const user = getUser(req);
+    const companyId = user?.companyId;
     const companyFilter = companyId ? { companyId } : {};
 
     const totalEmployees = Number(await Employee.countDocuments(companyFilter)) || 0;
@@ -327,11 +346,12 @@ exports.getRemoteToday = async (req, res) => {
 exports.getMonthSummary = async (req, res) => {
   try {
     console.log('[dashboard] getMonthSummary hit');
-    if (!req.user) {
+    const user = getUser(req);
+    if (!user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
-    const employeeId = req.user?.employeeId;
-    const companyId = req.user?.companyId;
+    const employeeId = user.employeeId;
+    const companyId = user.companyId;
     if (!employeeId || !companyId) {
       // Return 200 with zeroed data so dashboard section still shows (e.g. Super Admin without employee link)
       console.log('[dashboard] getMonthSummary no employeeId/companyId, returning 200 zeroed');
@@ -419,6 +439,104 @@ exports.getMonthSummary = async (req, res) => {
   } catch (error) {
     console.error('[dashboard] getMonthSummary error:', error);
     res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+/**
+ * Combined dashboard: employee data + stats + month summary in one response.
+ * Primary endpoint - single route, avoids nested path issues.
+ */
+exports.getDashboardAll = async (req, res) => {
+  try {
+    const user = getUser(req);
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+    const isSuperAdmin = user.role === 'Super Admin';
+    const employeeId = user.employeeId;
+    const companyId = user.companyId;
+    const fallbackName = user.email || user.fullName || 'User';
+    const tz = 'Asia/Dhaka';
+    const today = moment().tz(tz);
+    const dayStart = today.clone().startOf('day').toDate();
+    const dayEnd = today.clone().endOf('day').toDate();
+    const companyFilter = companyId ? { companyId } : {};
+
+    const minimalEmployee = {
+      personalInfo: { fullName: fallbackName, employeeCode: null, designation: null, department: null, joiningDate: null, email: user.email || null, phone: null },
+      attendance: [], payslips: [], leaveRequests: [], holidays: []
+    };
+    const zeroMonth = { workingDays: 0, presentDays: 0, absentDays: 0, remoteDays: 0, leaveDays: 0, totalLateByMinutes: 0, totalOvertimeMinutes: 0, month: moment().tz(tz).format('YYYY-MM') };
+    const zeroStats = { totalEmployees: 0, activeEmployees: 0, inactiveEmployees: 0, presentToday: 0, absentToday: 0, remoteToday: 0, leaveToday: 0 };
+
+    let employeeData = minimalEmployee;
+    if (employeeId && companyId) {
+      const employee = await Employee.findOne({ _id: employeeId, companyId }).select('fullName newEmployeeCode designation assignedDepartment joiningDate email personalPhoneNumber');
+      if (employee) {
+        const startDate = moment().tz(tz).subtract(7, 'days').startOf('day');
+        const [attendance, payslips, leaveRequests, holidayCalendar] = await Promise.all([
+          EmployeesAttendance.find({ employeeId, companyId, date: { $gte: startDate.toDate() } }).select('date check_in check_out work_hours status leave_type').lean(),
+          Payslip.find({ employeeId, companyId, month: { $gte: moment().subtract(3, 'months').format('YYYY-MM') } }).select('month netPay status generatedDate').lean(),
+          LeaveRequest.find({ employeeId, companyId, startDate: { $gte: moment().startOf('day').toDate() } }).select('startDate endDate type status isHalfDay').lean(),
+          HolidayCalendar.findOne({ companyId, year: moment().year() })
+        ]);
+        const upcomingHolidays = holidayCalendar?.holidays?.filter(h => moment(h.date).isBetween(moment().startOf('day'), moment().add(30, 'days').endOf('day'))) || [];
+        employeeData = {
+          personalInfo: { fullName: employee.fullName, employeeCode: employee.newEmployeeCode, designation: employee.designation, department: employee.assignedDepartment, joiningDate: moment(employee.joiningDate).format('YYYY-MM-DD'), email: employee.email, phone: employee.personalPhoneNumber },
+          attendance: attendance.map(a => ({ date: moment(a.date).tz(tz).format('YYYY-MM-DD'), check_in: a.check_in ? moment(a.check_in).tz(tz).format('HH:mm:ss') : null, check_out: a.check_out ? moment(a.check_out).tz(tz).format('HH:mm:ss') : null, work_hours: a.work_hours != null ? a.work_hours.toFixed(2) : null, status: a.status, leave_type: a.leave_type })),
+          payslips: payslips.map(p => ({ month: p.month, netPay: p.netPay, status: p.status, generatedDate: moment(p.generatedDate).format('YYYY-MM-DD') })),
+          leaveRequests: leaveRequests.map(l => ({ startDate: moment(l.startDate).format('YYYY-MM-DD'), endDate: moment(l.endDate).format('YYYY-MM-DD'), type: l.type, status: l.status, isHalfDay: l.isHalfDay })),
+          holidays: upcomingHolidays.map(h => ({ date: moment(h.date).format('YYYY-MM-DD'), name: h.name, type: h.type }))
+        };
+      }
+    }
+
+    let stats = isSuperAdmin ? zeroStats : null;
+    if (isSuperAdmin) {
+      const totalEmployees = Number(await Employee.countDocuments(companyFilter)) || 0;
+      const activeEmployees = Number(await Employee.countDocuments({ ...companyFilter, employeeStatus: 'active' })) || 0;
+      const presentToday = Number(await EmployeesAttendance.countDocuments({ ...companyFilter, date: { $gte: dayStart, $lte: dayEnd }, check_in: { $exists: true, $ne: null } })) || 0;
+      const remoteToday = Number(await EmployeesAttendance.countDocuments({ ...companyFilter, date: { $gte: dayStart, $lte: dayEnd }, status: 'Remote' })) || 0;
+      const leaveToday = Number(await LeaveRequest.countDocuments({ ...companyFilter, status: 'approved', startDate: { $lte: dayEnd }, endDate: { $gte: dayStart } })) || 0;
+      stats = { totalEmployees, activeEmployees, inactiveEmployees: Math.max(0, totalEmployees - activeEmployees), presentToday, absentToday: Math.max(0, activeEmployees - presentToday - remoteToday - leaveToday), remoteToday, leaveToday };
+    }
+
+    let monthSummary = zeroMonth;
+    if (employeeId && companyId) {
+      const monthStart = moment().tz(tz).startOf('month');
+      const todayM = moment().tz(tz).startOf('day');
+      const holidayCal = await HolidayCalendar.findOne({ companyId, year: monthStart.year() });
+      const holidayDates = new Set();
+      if (holidayCal?.holidays?.length) {
+        holidayCal.holidays.forEach(h => {
+          const start = moment(h.startDate).tz(tz).startOf('day');
+          const end = h.endDate ? moment(h.endDate).tz(tz).startOf('day') : start;
+          for (let d = moment(start); d.isSameOrBefore(end, 'day'); d.add(1, 'day')) {
+            if (d.isSameOrAfter(monthStart, 'day') && d.isSameOrBefore(todayM, 'day')) holidayDates.add(d.format('YYYY-MM-DD'));
+          }
+        });
+      }
+      let workingDays = 0;
+      for (let d = moment(monthStart); d.isSameOrBefore(todayM, 'day'); d.add(1, 'day')) {
+        if (d.isoWeekday() >= 1 && d.isoWeekday() <= 5 && !holidayDates.has(d.format('YYYY-MM-DD'))) workingDays++;
+      }
+      const records = await EmployeesAttendance.find({ employeeId, companyId, date: { $gte: monthStart.toDate(), $lte: todayM.toDate() } }).select('status lateBy overtimeHours').lean();
+      const presentDays = records.filter(r => r.status === 'Present').length;
+      const remoteDays = records.filter(r => r.status === 'Remote').length;
+      const leaveDays = records.filter(r => r.status === 'Leave').length;
+      monthSummary = {
+        workingDays, presentDays, remoteDays, leaveDays,
+        absentDays: Math.max(0, workingDays - presentDays - remoteDays - leaveDays),
+        totalLateByMinutes: records.reduce((s, r) => s + (Number(r.lateBy) || 0), 0),
+        totalOvertimeMinutes: records.reduce((s, r) => s + (Number.isNaN(Number(r.overtimeHours)) ? 0 : Math.round(Number(r.overtimeHours) * 60)), 0),
+        month: moment().tz(tz).format('YYYY-MM')
+      };
+    }
+
+    res.status(200).json({ success: true, data: { employeeData, stats, monthSummary } });
+  } catch (error) {
+    console.error('[dashboard] getDashboardAll error:', error);
+    res.status(500).json({ success: false, error: 'Server error loading dashboard' });
   }
 };
 

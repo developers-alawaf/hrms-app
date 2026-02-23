@@ -42,6 +42,8 @@ const Dashboard = () => {
     data
       ? {
           totalEmployees: Number(data.totalEmployees) || 0,
+          activeEmployees: Number(data.activeEmployees) ?? 0,
+          inactiveEmployees: Number(data.inactiveEmployees) ?? 0,
           presentToday: Number(data.presentToday) || 0,
           absentToday: Number(data.absentToday) || 0,
           remoteToday: Number(data.remoteToday) || 0,
@@ -58,78 +60,62 @@ const Dashboard = () => {
       const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
       try {
         const isSuperAdmin = user?.role === 'Super Admin';
+
+        // 1. Try combined endpoint first (single request, no nested routes)
+        let allData = null;
+        const combinedRes = await fetch(api('/api/dashboard-all'), authHeaders);
+        const combinedJson = await safeJson(combinedRes);
+        if (combinedJson?.success && combinedJson.data) allData = combinedJson.data;
+        if (!allData && base) {
+          const sameOriginRes = await fetch('/api/dashboard-all', authHeaders);
+          const sameOriginJson = await safeJson(sameOriginRes);
+          if (sameOriginJson?.success && sameOriginJson.data) allData = sameOriginJson.data;
+        }
+
+        if (allData) {
+          setEmployeeData(allData.employeeData || null);
+          if (allData.stats) setStats(normalizeStats(allData.stats));
+          setMonthSummary(allData.monthSummary || defaultMonthSummary());
+          setFetching(false);
+          return;
+        }
+
+        // 2. Fallback: individual endpoints
         const [empRes, statsRes, monthRes] = await Promise.all([
           fetch(api('/api/dashboard'), authHeaders),
-          isSuperAdmin
-            ? fetch(api('/api/dashboard/dashboard-stats'), authHeaders)
-            : Promise.resolve(null),
-          fetch(api('/api/dashboard/month-summary'), authHeaders),
+          isSuperAdmin ? fetch(api('/api/dashboard/dashboard-stats'), authHeaders) : Promise.resolve(null),
+          fetch(api('/api/month-summary'), authHeaders),
         ]);
 
         let empData = await safeJson(empRes);
-        if (empData?.success) {
-          setEmployeeData(empData.data);
-        } else if (!empRes.ok && base) {
-          const retryRes = await fetch('/api/dashboard', authHeaders);
-          empData = await safeJson(retryRes);
+        if (empData?.success) setEmployeeData(empData.data);
+        else if (!empRes.ok && base) {
+          empData = await safeJson(await fetch('/api/dashboard', authHeaders));
           if (empData?.success) setEmployeeData(empData.data);
-        }
-        if (!empRes.ok && !empData?.success) {
-          console.warn('[Dashboard] /api/dashboard response:', empRes.status, empRes.statusText);
         }
 
         if (isSuperAdmin && statsRes) {
           let statsData = await safeJson(statsRes);
-          if (statsData && statsRes.ok) {
-            setStats(normalizeStats(statsData));
-          } else if (!statsRes?.ok && base) {
-            const retryRes = await fetch('/api/dashboard/dashboard-stats', authHeaders);
-            statsData = await safeJson(retryRes);
+          if (statsData && statsRes.ok) setStats(normalizeStats(statsData));
+          else if (!statsRes?.ok) {
+            statsData = await safeJson(await fetch('/api/dashboard/dashboard-stats', authHeaders));
             if (statsData) setStats(normalizeStats(statsData));
-          }
-          if (statsData) {
-            const normalized = normalizeStats(statsData);
-            if (normalized) {
-              console.log('[Dashboard] Today counts (stats):', normalized);
-            }
           }
         }
 
         let monthData = await safeJson(monthRes);
-        if (monthData?.success && monthData.data) {
-          setMonthSummary(monthData.data);
-          console.log('[Dashboard] Month summary counts:', {
-            workingDays: monthData.data.workingDays,
-            presentDays: monthData.data.presentDays,
-            absentDays: monthData.data.absentDays,
-            remoteDays: monthData.data.remoteDays,
-            leaveDays: monthData.data.leaveDays,
-            totalLateByMinutes: monthData.data.totalLateByMinutes,
-            totalOvertimeMinutes: monthData.data.totalOvertimeMinutes,
-            month: monthData.data.month,
-          });
-        } else {
-          setMonthSummary(defaultMonthSummary());
-          if (!monthRes?.ok) {
-            console.warn('[Dashboard] /api/dashboard/month-summary response:', monthRes?.status, monthRes?.statusText);
-          }
-          // Retry: same-origin /api/dashboard/month-summary or fallback /api/month-summary
-          if (!monthRes?.ok) {
-            const fallbackPaths = base ? ['/api/dashboard/month-summary', '/api/month-summary'] : ['/api/month-summary'];
-            for (const path of fallbackPaths) {
-              const retryRes = await fetch(path, authHeaders);
-              const retryData = await safeJson(retryRes);
-              if (retryData?.success && retryData.data) {
-                setMonthSummary(retryData.data);
-                console.log('[Dashboard] Month summary (fallback):', retryData.data);
-                break;
-              }
+        if (monthData?.success && monthData.data) setMonthSummary(monthData.data);
+        else {
+          for (const path of ['/api/month-summary', '/api/dashboard/month-summary']) {
+            const retryData = await safeJson(await fetch(path, authHeaders));
+            if (retryData?.success && retryData.data) {
+              setMonthSummary(retryData.data);
+              break;
             }
           }
         }
       } catch (err) {
         console.error("Error fetching dashboard:", err);
-        setMonthSummary(defaultMonthSummary());
       } finally {
         setFetching(false);
       }
