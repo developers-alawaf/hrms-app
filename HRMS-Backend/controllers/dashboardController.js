@@ -189,6 +189,8 @@ exports.getDashboardStats = async (req, res) => {
     res.status(500).json({
       error: error.message,
       totalEmployees: 0,
+      activeEmployees: 0,
+      inactiveEmployees: 0,
       presentToday: 0,
       absentToday: 0,
       remoteToday: 0,

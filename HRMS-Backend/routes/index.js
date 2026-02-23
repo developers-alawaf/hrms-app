@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { authenticate } = require('../middleware/auth');
+const { authenticate, authenticateJwt } = require('../middleware/auth');
 const employeeRoutes = require('./employeeRoutes');
 const authRoutes = require('./authRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
+const dashboardController = require('../controllers/dashboardController');
 const attendanceRoutes = require('./attendanceRoutes');
 const leaveRoutes = require('./leaveRoutes');
 const payslipRoutes = require('./payslipRoutes');
@@ -21,7 +22,9 @@ const emailRoutes = require('./emailRoutes');
 router.use('/employees', employeeRoutes);
 router.use('/auth', authRoutes);
 router.use('/deviceLogs', deviceLogsRoutes);
-router.use('/dashboard', authenticate('jwt', { session: false }), dashboardRoutes);
+router.use('/dashboard', authenticateJwt, dashboardRoutes);
+// Fallback route for month-summary (in case /api/dashboard/month-summary fails due to proxy/routing)
+router.get('/month-summary', authenticateJwt, dashboardController.getMonthSummary);
 router.use('/attendance', authenticate('jwt', { session: false }), attendanceRoutes);
 router.use('/leave', authenticate('jwt', { session: false }), leaveRoutes);
 router.use('/payslips', payslipRoutes);

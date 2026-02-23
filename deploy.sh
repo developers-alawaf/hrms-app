@@ -49,7 +49,11 @@ cd "$APP_ROOT"
 if [[ -d .git ]]; then
   git fetch origin
   git checkout "$GIT_BRANCH"
-  git pull origin "$GIT_BRANCH"
+  if ! git pull origin "$GIT_BRANCH"; then
+    log_warn "Git pull had conflicts. Stashing local changes and retrying..."
+    git stash push -m "deploy-stash-$(date +%Y%m%d%H%M)" 2>/dev/null || true
+    git pull origin "$GIT_BRANCH"
+  fi
   log_info "Git pull completed."
 else
   log_warn "Not a git repo, skipping git pull."

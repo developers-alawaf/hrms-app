@@ -113,17 +113,18 @@ const Dashboard = () => {
           if (!monthRes?.ok) {
             console.warn('[Dashboard] /api/dashboard/month-summary response:', monthRes?.status, monthRes?.statusText);
           }
-          if (!monthRes?.ok && base) {
-            const sameOriginRes = await fetch('/api/dashboard/month-summary', authHeaders);
-            const retryData = await safeJson(sameOriginRes);
-            if (retryData?.success && retryData.data) {
-              setMonthSummary(retryData.data);
-              console.log('[Dashboard] Month summary (retry same-origin):', retryData.data);
-            } else {
-              console.log('[Dashboard] Month summary using fallback (zeros):', defaultMonthSummary());
+          // Retry: same-origin /api/dashboard/month-summary or fallback /api/month-summary
+          if (!monthRes?.ok) {
+            const fallbackPaths = base ? ['/api/dashboard/month-summary', '/api/month-summary'] : ['/api/month-summary'];
+            for (const path of fallbackPaths) {
+              const retryRes = await fetch(path, authHeaders);
+              const retryData = await safeJson(retryRes);
+              if (retryData?.success && retryData.data) {
+                setMonthSummary(retryData.data);
+                console.log('[Dashboard] Month summary (fallback):', retryData.data);
+                break;
+              }
             }
-          } else {
-            console.log('[Dashboard] Month summary using fallback (zeros):', defaultMonthSummary());
           }
         }
       } catch (err) {

@@ -26,18 +26,37 @@ passport.use(new JwtStrategy(opts, async (jwt_payload, done) => {
 
 const restrictTo = (...roles) => {
   return (req, res, next) => {
-    if (req.user.role === 'Super Admin') {
+    if (req.user && req.user.role === 'Super Admin') {
       return next();
     }
-    if (!roles.includes(req.user.role)) {
+    if (!req.user || !roles.includes(req.user.role)) {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
     next();
   };
 };
 
+/**
+ * JWT auth with explicit callback - always returns 401 JSON (never 400) on failure.
+ * Ensures req.user is set before passing to next.
+ */
+const authenticateJwt = (req, res, next) => {
+  passport.authenticate('jwt', { session: false }, (err, user) => {
+    if (err) {
+      console.error('[auth] JWT error:', err?.message || err);
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'Authentication required' });
+    }
+    req.user = user;
+    next();
+  })(req, res, next);
+};
+
 module.exports = {
   initialize: () => passport.initialize(),
   authenticate: (strategy, options) => passport.authenticate(strategy, options),
-  restrictTo: restrictTo
+  authenticateJwt,
+  restrictTo
 };
