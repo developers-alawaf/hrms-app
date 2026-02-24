@@ -14,6 +14,7 @@ const AttendanceList = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -141,14 +142,17 @@ const AttendanceList = () => {
     fetchAttendance();
   }, []);
 
-  // Search filter (resets page)
+  // Search + Status filter (resets page)
   useEffect(() => {
-    const filtered = attendanceData.filter((rec) =>
+    let filtered = attendanceData.filter((rec) =>
       (rec.fullName || "").toLowerCase().includes(searchQuery.toLowerCase())
     );
+    if (statusFilter) {
+      filtered = filtered.filter((rec) => (rec.status || "") === statusFilter);
+    }
     setFilteredData(filtered);
     setCurrentPage(1);
-  }, [searchQuery, attendanceData]);
+  }, [searchQuery, statusFilter, attendanceData]);
 
   const handleFilter = () => {
     setCurrentPage(1);
@@ -196,6 +200,19 @@ const AttendanceList = () => {
         <div className="form-group">
           <label>End Date</label>
           <input type="date" className="employee-input" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+        </div>
+        <div className="form-group">
+          <label>Status</label>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="employee-input">
+            <option value="">All Status</option>
+            <option value="Present">Present</option>
+            <option value="Absent">Absent</option>
+            <option value="Remote">Remote</option>
+            <option value="Leave">Leave</option>
+            <option value="Holiday">Holiday</option>
+            <option value="Weekend">Weekend</option>
+            <option value="Incomplete">Incomplete</option>
+          </select>
         </div>
 
         {user && allowedRoles.includes(user.role) && (
