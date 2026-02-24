@@ -13,18 +13,27 @@ exports.setHolidaysForYear = async (req, res) => {
   }
 
   try {
+    // Super Admin: save as global (null) so holidays apply to all employees
+    const targetCompanyId = req.user.role === 'Super Admin' ? null : req.user.companyId;
+    let holidaysToSave = holidays.map(h => ({
+      startDate: moment(h.startDate).startOf('day').toDate(),
+      endDate: h.endDate ? moment(h.endDate).startOf('day').toDate() : moment(h.startDate).startOf('day').toDate(),
+      name: h.name,
+      type: h.type || 'national',
+      applicableToAll: h.applicableToAll !== false
+    }));
+    // Non-Super Admin: exclude holidays that exist in global to avoid duplicating
+    if (req.user.role !== 'Super Admin') {
+      const globalCal = await HolidayCalendar.findOne({ companyId: null, year }).lean();
+      const globalDates = new Set((globalCal?.holidays || []).map(h => moment(h.startDate).format('YYYY-MM-DD')));
+      holidaysToSave = holidaysToSave.filter(h => !globalDates.has(moment(h.startDate).format('YYYY-MM-DD')));
+    }
     const calendar = await HolidayCalendar.findOneAndUpdate(
-      { companyId: req.user.companyId, year },
+      { companyId: targetCompanyId, year },
       { 
-        companyId: req.user.companyId,
+        companyId: targetCompanyId,
         year,
-        holidays: holidays.map(h => ({
-          startDate: moment(h.startDate).startOf('day').toDate(),
-          endDate: h.endDate ? moment(h.endDate).startOf('day').toDate() : moment(h.startDate).startOf('day').toDate(),
-          name: h.name,
-          type: h.type || 'national',
-          applicableToAll: h.applicableToAll !== false
-        }))
+        holidays: holidaysToSave
       },
       { upsert: true, new: true, runValidators: true }
     );
@@ -38,8 +47,23 @@ exports.setHolidaysForYear = async (req, res) => {
 exports.getHolidaysForYear = async (req, res) => {
   const { year = moment().year() } = req.query;
   try {
-    const calendar = await HolidayCalendar.findOne({ companyId: req.user.companyId, year });
-    res.json({ success: true, data: calendar || { year, holidays: [] } });
+    // Super Admin sees global calendar; others see company + global merged
+    let calendar;
+    if (req.user.role === 'Super Admin') {
+      calendar = await HolidayCalendar.findOne({ companyId: null, year });
+    } else {
+      const [companyCal, globalCal] = await Promise.all([
+        HolidayCalendar.findOne({ companyId: req.user.companyId, year }).lean(),
+        HolidayCalendar.findOne({ companyId: null, year }).lean()
+      ]);
+      const companyHolidays = companyCal?.holidays || [];
+      const globalHolidays = globalCal?.holidays || [];
+      const merged = [...companyHolidays, ...globalHolidays].sort(
+        (a, b) => new Date(a.startDate) - new Date(b.startDate)
+      );
+      calendar = companyCal || globalCal ? { year: parseInt(year), holidays: merged } : null;
+    }
+    res.json({ success: true, data: calendar || { year: parseInt(year), holidays: [] } });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
   }
@@ -133,11 +157,12 @@ exports.uploadHolidayCalendar = async (req, res) => {
       return res.status(400).json({ success: false, error: 'No valid holiday entries found in the Excel file.' });
     }
 
-    // Upsert the holiday calendar for the detected year
+    // Super Admin: save as global (null) so holidays apply to all employees
+    const targetCompanyId = req.user.role === 'Super Admin' ? null : req.user.companyId;
     const calendar = await HolidayCalendar.findOneAndUpdate(
-      { companyId: req.user.companyId, year: detectedYear },
+      { companyId: targetCompanyId, year: detectedYear },
       { 
-        companyId: req.user.companyId,
+        companyId: targetCompanyId,
         year: detectedYear,
         holidays: holidaysToSave
       },

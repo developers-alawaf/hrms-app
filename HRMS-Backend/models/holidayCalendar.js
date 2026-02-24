@@ -3,7 +3,8 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const holidayCalendarSchema = new Schema({
-  companyId: { type: Schema.Types.ObjectId, ref: 'Company', required: true },
+  // null = global holidays (added by Super Admin, visible to all employees)
+  companyId: { type: Schema.Types.ObjectId, ref: 'Company', required: false, default: null },
   year: { type: Number, required: true },
   holidays: [
     {

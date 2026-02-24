@@ -2,8 +2,8 @@ import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { getEmployees } from '../api/employee';
 import { sendEmailToEmployees } from '../api/email';
-import { Mail } from 'lucide-react';
-import '../styles/Employee.css';
+import { Mail, Search, X, Users, Send } from 'lucide-react';
+import '../styles/SendEmail.css';
 
 const SendEmailPage = () => {
   const { user } = useContext(AuthContext);
@@ -15,6 +15,7 @@ const SendEmailPage = () => {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -45,11 +46,21 @@ const SendEmailPage = () => {
     );
   };
 
+  const filteredEmployees = employees.filter((emp) => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return true;
+    const name = (emp.fullName || '').toLowerCase();
+    const code = (emp.newEmployeeCode || '').toLowerCase();
+    return name.includes(q) || code.includes(q);
+  });
+
   const handleSelectAll = () => {
-    if (selectedIds.length === employees.length) {
-      setSelectedIds([]);
+    const ids = filteredEmployees.map((e) => e._id);
+    const allFilteredSelected = ids.every((id) => selectedIds.includes(id));
+    if (allFilteredSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !ids.includes(id)));
     } else {
-      setSelectedIds(employees.map((e) => e._id));
+      setSelectedIds((prev) => [...new Set([...prev, ...ids])]);
     }
   };
 
@@ -110,123 +121,161 @@ const SendEmailPage = () => {
 
   if (user?.role !== 'Super Admin') {
     return (
-      <div className="employee-container">
-        <div className="employee-message employee-error">Access denied. Super Admin only.</div>
+      <div className="send-email-page">
+        <div className="send-email-state error">Access denied. Super Admin only.</div>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="employee-container">
-        <div className="employee-message">Loading employees...</div>
+      <div className="send-email-page">
+        <div className="send-email-state">Loading employees...</div>
       </div>
     );
   }
 
   return (
-    <div className="employee-container">
-      <div className="employee-header">
-        <h2 className="employee-title">
-          <Mail className="employee-btn-icon" size={24} />
-          Send Email to Employees
-        </h2>
-      </div>
+    <div className="send-email-page">
+      <header className="send-email-header">
+        <h1>
+          <Mail size={28} />
+          Send Email
+        </h1>
+        <p>Select recipients and compose your message to send via Zoho Mail</p>
+      </header>
 
-      <form onSubmit={handleSubmit} className="employee-form" style={{ maxWidth: 640 }}>
-        <div className="form-group" style={{ marginBottom: 16 }}>
-          <label htmlFor="employee-select" style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-            Select Employee(s)
-          </label>
-          <div style={{ marginBottom: 8 }}>
-            <button
-              type="button"
-              className="employee-button employee-btn-export"
-              onClick={handleSelectAll}
-            >
-              {selectedIds.length === employees.length ? 'Deselect All' : 'Select All'}
-            </button>
-          </div>
-          <div
-            className="employee-input"
-            style={{
-              maxHeight: 200,
-              overflowY: 'auto',
-              padding: 12,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-            }}
-          >
-            {employees.map((emp) => (
-              <label
-                key={emp._id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  cursor: 'pointer',
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(emp._id)}
-                  onChange={() => handleEmployeeToggle(emp._id)}
-                />
-                <span>
-                  {emp.fullName} {emp.newEmployeeCode && `(${emp.newEmployeeCode})`}
-                </span>
-              </label>
-            ))}
-          </div>
-          {employees.length === 0 && (
-            <p className="employee-message" style={{ marginTop: 8 }}>No employees found.</p>
+      <form onSubmit={handleSubmit}>
+        <div className="send-email-card">
+          <h3 className="send-email-card-title">
+            <Users size={20} />
+            Recipients
+          </h3>
+
+          {selectedIds.length > 0 && (
+            <div className="send-email-selected">
+              <div className="send-email-selected-label">
+                Selected ({selectedIds.length})
+              </div>
+              <div className="send-email-chips">
+                {employees
+                  .filter((e) => selectedIds.includes(e._id))
+                  .map((emp) => (
+                    <span key={emp._id} className="send-email-chip">
+                      {emp.fullName}
+                      {emp.newEmployeeCode && (
+                        <span className="send-email-chip-code">{emp.newEmployeeCode}</span>
+                      )}
+                      <button
+                        type="button"
+                        className="send-email-chip-remove"
+                        onClick={() => handleEmployeeToggle(emp._id)}
+                        aria-label="Remove"
+                      >
+                        <X size={14} />
+                      </button>
+                    </span>
+                  ))}
+              </div>
+            </div>
           )}
+
+          <div className="send-email-search-wrap">
+            <Search size={20} />
+            <input
+              type="text"
+              className="send-email-search"
+              placeholder="Search by name or employee code to add more..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search employees"
+            />
+          </div>
+
+          <button
+            type="button"
+            className="send-email-select-all"
+            onClick={handleSelectAll}
+          >
+            {filteredEmployees.length > 0 &&
+            filteredEmployees.every((e) => selectedIds.includes(e._id))
+              ? 'Deselect all visible'
+              : 'Select all visible'}
+          </button>
+
+          <div className="send-email-list">
+            {filteredEmployees.length > 0 ? (
+              filteredEmployees.map((emp) => (
+                <label key={emp._id} className="send-email-list-item">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(emp._id)}
+                    onChange={() => handleEmployeeToggle(emp._id)}
+                  />
+                  <span>
+                    {emp.fullName}
+                    {emp.newEmployeeCode && <code>{emp.newEmployeeCode}</code>}
+                  </span>
+                </label>
+              ))
+            ) : (
+              <div className="send-email-empty">
+                {employees.length === 0
+                  ? 'No employees found.'
+                  : 'No employees match your search.'}
+              </div>
+            )}
+          </div>
         </div>
 
-        <div className="form-group" style={{ marginBottom: 16 }}>
-          <label htmlFor="subject" style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-            Subject
-          </label>
-          <input
-            type="text"
-            id="subject"
-            value={subject}
-            onChange={(e) => setSubject(e.target.value)}
-            className="employee-input"
-            placeholder="Enter email subject"
-            required
-          />
-        </div>
+        <div className="send-email-card">
+          <h3 className="send-email-card-title">
+            <Mail size={20} />
+            Compose
+          </h3>
 
-        <div className="form-group" style={{ marginBottom: 20 }}>
-          <label htmlFor="message" style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-            Message
-          </label>
-          <textarea
-            id="message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            className="employee-input"
-            rows={8}
-            placeholder="Enter your message..."
-            required
-            style={{ resize: 'vertical' }}
-          />
+          <div className="send-email-field">
+            <label htmlFor="subject">Subject</label>
+            <input
+              type="text"
+              id="subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              placeholder="Enter email subject"
+              required
+            />
+          </div>
+
+          <div className="send-email-field">
+            <label htmlFor="message">Message</label>
+            <textarea
+              id="message"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Write your message here..."
+              required
+              rows={6}
+            />
+          </div>
         </div>
 
         {error && (
-          <p className="employee-message employee-error" style={{ marginBottom: 16 }}>{error}</p>
+          <div className="send-email-alert error" role="alert">
+            {error}
+          </div>
         )}
         {success && (
-          <p className="employee-message employee-success" style={{ marginBottom: 16 }}>{success}</p>
+          <div className="send-email-alert success" role="status">
+            {success}
+          </div>
         )}
 
         <button
           type="submit"
-          className="employee-button employee-btn-primary"
+          className="send-email-submit"
           disabled={sending || selectedIds.length === 0}
         >
+          <Send size={20} />
           {sending ? 'Sending...' : 'Send Email'}
         </button>
       </form>

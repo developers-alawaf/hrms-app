@@ -101,12 +101,16 @@ exports.getEmployeeDashboard = async (req, res) => {
     }).select('startDate endDate type status isHalfDay');
 
     const currentYear = moment().year();
-    const holidayCalendar = await HolidayCalendar.findOne({ companyId, year: currentYear });
+    const [companyCal, globalCal] = await Promise.all([
+      HolidayCalendar.findOne({ companyId, year: currentYear }).lean(),
+      HolidayCalendar.findOne({ companyId: null, year: currentYear }).lean()
+    ]);
+    const allHolidays = [...(companyCal?.holidays || []), ...(globalCal?.holidays || [])];
 
-    const upcomingHolidays = holidayCalendar ? holidayCalendar.holidays.filter(h => {
-      const holidayDate = moment(h.date);
+    const upcomingHolidays = allHolidays.filter(h => {
+      const holidayDate = moment(h.startDate || h.date);
       return holidayDate.isBetween(moment().startOf('day'), moment().add(30, 'days').endOf('day'));
-    }) : [];
+    });
 
     const response = {
       personalInfo: {
@@ -140,7 +144,7 @@ exports.getEmployeeDashboard = async (req, res) => {
         isHalfDay: l.isHalfDay
       })),
       holidays: upcomingHolidays.map(h => ({
-        date: moment(h.date).format('YYYY-MM-DD'),
+        date: moment(h.startDate || h.date).format('YYYY-MM-DD'),
         name: h.name,
         type: h.type
       }))
@@ -343,6 +347,7 @@ exports.getRemoteToday = async (req, res) => {
 };
 
 // Current month attendance day counts for the logged-in employee (for all users with employeeId)
+// Super Admin: may pass ?employeeId=xxx to get month summary for any employee
 exports.getMonthSummary = async (req, res) => {
   try {
     console.log('[dashboard] getMonthSummary hit');
@@ -350,8 +355,19 @@ exports.getMonthSummary = async (req, res) => {
     if (!user) {
       return res.status(401).json({ success: false, error: 'Authentication required' });
     }
-    const employeeId = user.employeeId;
-    const companyId = user.companyId;
+    let employeeId = user.employeeId;
+    let companyId = user.companyId;
+
+    // Super Admin: allow ?employeeId=xxx to view any employee's month summary
+    const queryEmployeeId = req.query.employeeId;
+    if (user.role === 'Super Admin' && queryEmployeeId && mongoose.Types.ObjectId.isValid(queryEmployeeId)) {
+      const targetEmp = await Employee.findById(queryEmployeeId).select('companyId').lean();
+      if (targetEmp) {
+        employeeId = new mongoose.Types.ObjectId(queryEmployeeId);
+        companyId = targetEmp.companyId;
+      }
+    }
+
     if (!employeeId || !companyId) {
       // Return 200 with zeroed data so dashboard section still shows (e.g. Super Admin without employee link)
       console.log('[dashboard] getMonthSummary no employeeId/companyId, returning 200 zeroed');
@@ -374,16 +390,26 @@ exports.getMonthSummary = async (req, res) => {
     const tz = 'Asia/Dhaka';
     const monthStart = moment().tz(tz).startOf('month');
     const today = moment().tz(tz).startOf('day');
+    const yesterday = today.clone().subtract(1, 'day');
 
-    // Working days = weekdays (Mon–Fri) from 1st of month to today inclusive, minus company holidays in that range
-    const holidayCalendar = await HolidayCalendar.findOne({ companyId, year: monthStart.year() });
+    // Get employee's shift for weekend days and working hours
+    const employee = await Employee.findById(employeeId).populate('shiftId', 'weekendDays workingHours').lean();
+    const weekendDays = employee?.shiftId?.weekendDays || [5, 6];
+    const shiftWorkingHours = Number(employee?.shiftId?.workingHours) || 8;
+
+    // Working days = non-weekend, non-holiday days from 1st of month to yesterday (exclude today)
+    const [companyCal, globalCal] = await Promise.all([
+      HolidayCalendar.findOne({ companyId, year: monthStart.year() }).lean(),
+      HolidayCalendar.findOne({ companyId: null, year: monthStart.year() }).lean()
+    ]);
+    const allHolidays = [...(companyCal?.holidays || []), ...(globalCal?.holidays || [])];
     const holidayDates = new Set();
-    if (holidayCalendar && holidayCalendar.holidays && holidayCalendar.holidays.length) {
-      holidayCalendar.holidays.forEach((h) => {
+    if (allHolidays.length) {
+      allHolidays.forEach((h) => {
         const start = moment(h.startDate).tz(tz).startOf('day');
         const end = h.endDate ? moment(h.endDate).tz(tz).startOf('day') : start;
         for (let d = moment(start); d.isSameOrBefore(end, 'day'); d.add(1, 'day')) {
-          if (d.isSameOrAfter(monthStart, 'day') && d.isSameOrBefore(today, 'day')) {
+          if (d.isSameOrAfter(monthStart, 'day') && d.isSameOrBefore(yesterday, 'day')) {
             holidayDates.add(d.format('YYYY-MM-DD'));
           }
         }
@@ -391,36 +417,43 @@ exports.getMonthSummary = async (req, res) => {
     }
 
     let workingDays = 0;
-    for (let d = moment(monthStart); d.isSameOrBefore(today, 'day'); d.add(1, 'day')) {
-      const dayOfWeek = d.isoWeekday(); // 1 = Mon, 7 = Sun
-      const isWeekday = dayOfWeek >= 1 && dayOfWeek <= 5;
+    for (let d = moment(monthStart); d.isSameOrBefore(yesterday, 'day'); d.add(1, 'day')) {
+      const dayNum = d.day(); // 0=Sun, 1=Mon, ..., 6=Sat
+      const isWeekend = weekendDays.includes(dayNum);
       const isHoliday = holidayDates.has(d.format('YYYY-MM-DD'));
-      if (isWeekday && !isHoliday) workingDays++;
+      if (!isWeekend && !isHoliday) workingDays++;
     }
 
     const monthStartDate = monthStart.toDate();
-    const todayDate = today.toDate();
+    const endDate = yesterday.toDate();
 
     const records = await EmployeesAttendance.find({
       employeeId,
       companyId,
-      date: { $gte: monthStartDate, $lte: todayDate },
+      date: { $gte: monthStartDate, $lte: endDate },
     })
-      .select('status lateBy overtimeHours')
+      .select('status work_hours')
       .lean();
 
     const presentDays = records.filter((r) => r.status === 'Present').length;
+    const incompleteDays = records.filter((r) => r.status === 'Incomplete').length;
     const remoteDays = records.filter((r) => r.status === 'Remote').length;
     const leaveDays = records.filter((r) => r.status === 'Leave').length;
-    // Absent = working days minus (present + remote + leave); cap at 0
-    const absentDays = Math.max(0, workingDays - presentDays - remoteDays - leaveDays);
+    // Absent = working days minus (present + incomplete + remote + leave); weekend/holiday are NOT working days
+    const attendedDays = presentDays + incompleteDays + remoteDays + leaveDays;
+    const absentDays = Math.max(0, workingDays - attendedDays);
 
-    // Total late by (minutes) and overtime (overtimeHours stored as decimal hours → convert to minutes for display)
-    const totalLateByMinutes = records.reduce((sum, r) => sum + (Number(r.lateBy) || 0), 0);
-    const totalOvertimeMinutes = records.reduce((sum, r) => {
-      const hours = Number(r.overtimeHours);
-      return sum + (Number.isNaN(hours) ? 0 : Math.round(hours * 60));
-    }, 0);
+    // Late by / Overtime: compare actual total work hours vs expected (on days they punched)
+    // Expected = (presentDays + incompleteDays) * shift hours per day
+    // Actual > expected → Overtime. Actual < expected → Late by (deficit)
+    const punchedDays = presentDays + incompleteDays;
+    const actualWorkHours = records
+      .filter((r) => r.status === 'Present' || r.status === 'Incomplete')
+      .reduce((sum, r) => sum + (Number(r.work_hours) || 0), 0);
+    const expectedWorkHours = punchedDays * shiftWorkingHours;
+    const diffMinutes = Math.round((actualWorkHours - expectedWorkHours) * 60);
+    const totalLateByMinutes = diffMinutes < 0 ? Math.abs(diffMinutes) : 0;
+    const totalOvertimeMinutes = diffMinutes > 0 ? diffMinutes : 0;
 
     console.log('[dashboard] getMonthSummary 200', { workingDays, presentDays, absentDays, remoteDays, leaveDays });
     res.status(200).json({
@@ -474,19 +507,21 @@ exports.getDashboardAll = async (req, res) => {
       const employee = await Employee.findOne({ _id: employeeId, companyId }).select('fullName newEmployeeCode designation assignedDepartment joiningDate email personalPhoneNumber');
       if (employee) {
         const startDate = moment().tz(tz).subtract(7, 'days').startOf('day');
-        const [attendance, payslips, leaveRequests, holidayCalendar] = await Promise.all([
+        const [attendance, payslips, leaveRequests, companyCal, globalCal] = await Promise.all([
           EmployeesAttendance.find({ employeeId, companyId, date: { $gte: startDate.toDate() } }).select('date check_in check_out work_hours status leave_type').lean(),
           Payslip.find({ employeeId, companyId, month: { $gte: moment().subtract(3, 'months').format('YYYY-MM') } }).select('month netPay status generatedDate').lean(),
           LeaveRequest.find({ employeeId, companyId, startDate: { $gte: moment().startOf('day').toDate() } }).select('startDate endDate type status isHalfDay').lean(),
-          HolidayCalendar.findOne({ companyId, year: moment().year() })
+          HolidayCalendar.findOne({ companyId, year: moment().year() }).lean(),
+          HolidayCalendar.findOne({ companyId: null, year: moment().year() }).lean()
         ]);
-        const upcomingHolidays = holidayCalendar?.holidays?.filter(h => moment(h.date).isBetween(moment().startOf('day'), moment().add(30, 'days').endOf('day'))) || [];
+        const allHolidays = [...(companyCal?.holidays || []), ...(globalCal?.holidays || [])];
+        const upcomingHolidays = allHolidays.filter(h => moment(h.startDate || h.date).isBetween(moment().startOf('day'), moment().add(30, 'days').endOf('day')));
         employeeData = {
           personalInfo: { fullName: employee.fullName, employeeCode: employee.newEmployeeCode, designation: employee.designation, department: employee.assignedDepartment, joiningDate: moment(employee.joiningDate).format('YYYY-MM-DD'), email: employee.email, phone: employee.personalPhoneNumber },
           attendance: attendance.map(a => ({ date: moment(a.date).tz(tz).format('YYYY-MM-DD'), check_in: a.check_in ? moment(a.check_in).tz(tz).format('HH:mm:ss') : null, check_out: a.check_out ? moment(a.check_out).tz(tz).format('HH:mm:ss') : null, work_hours: a.work_hours != null ? a.work_hours.toFixed(2) : null, status: a.status, leave_type: a.leave_type })),
           payslips: payslips.map(p => ({ month: p.month, netPay: p.netPay, status: p.status, generatedDate: moment(p.generatedDate).format('YYYY-MM-DD') })),
           leaveRequests: leaveRequests.map(l => ({ startDate: moment(l.startDate).format('YYYY-MM-DD'), endDate: moment(l.endDate).format('YYYY-MM-DD'), type: l.type, status: l.status, isHalfDay: l.isHalfDay })),
-          holidays: upcomingHolidays.map(h => ({ date: moment(h.date).format('YYYY-MM-DD'), name: h.name, type: h.type }))
+          holidays: upcomingHolidays.map(h => ({ date: moment(h.startDate || h.date).format('YYYY-MM-DD'), name: h.name, type: h.type }))
         };
       }
     }
@@ -505,30 +540,49 @@ exports.getDashboardAll = async (req, res) => {
     if (employeeId && companyId) {
       const monthStart = moment().tz(tz).startOf('month');
       const todayM = moment().tz(tz).startOf('day');
-      const holidayCal = await HolidayCalendar.findOne({ companyId, year: monthStart.year() });
+      const yesterdayM = todayM.clone().subtract(1, 'day');
+      const emp = await Employee.findById(employeeId).populate('shiftId', 'weekendDays workingHours').lean();
+      const weekendDays = emp?.shiftId?.weekendDays || [5, 6];
+      const shiftWorkingHours = Number(emp?.shiftId?.workingHours) || 8;
+      const [companyCal, globalCal] = await Promise.all([
+        HolidayCalendar.findOne({ companyId, year: monthStart.year() }).lean(),
+        HolidayCalendar.findOne({ companyId: null, year: monthStart.year() }).lean()
+      ]);
+      const allHolidays = [...(companyCal?.holidays || []), ...(globalCal?.holidays || [])];
       const holidayDates = new Set();
-      if (holidayCal?.holidays?.length) {
-        holidayCal.holidays.forEach(h => {
+      if (allHolidays.length) {
+        allHolidays.forEach(h => {
           const start = moment(h.startDate).tz(tz).startOf('day');
           const end = h.endDate ? moment(h.endDate).tz(tz).startOf('day') : start;
           for (let d = moment(start); d.isSameOrBefore(end, 'day'); d.add(1, 'day')) {
-            if (d.isSameOrAfter(monthStart, 'day') && d.isSameOrBefore(todayM, 'day')) holidayDates.add(d.format('YYYY-MM-DD'));
+            if (d.isSameOrAfter(monthStart, 'day') && d.isSameOrBefore(yesterdayM, 'day')) holidayDates.add(d.format('YYYY-MM-DD'));
           }
         });
       }
       let workingDays = 0;
-      for (let d = moment(monthStart); d.isSameOrBefore(todayM, 'day'); d.add(1, 'day')) {
-        if (d.isoWeekday() >= 1 && d.isoWeekday() <= 5 && !holidayDates.has(d.format('YYYY-MM-DD'))) workingDays++;
+      for (let d = moment(monthStart); d.isSameOrBefore(yesterdayM, 'day'); d.add(1, 'day')) {
+        const dayNum = d.day();
+        const isWeekend = weekendDays.includes(dayNum);
+        const isHoliday = holidayDates.has(d.format('YYYY-MM-DD'));
+        if (!isWeekend && !isHoliday) workingDays++;
       }
-      const records = await EmployeesAttendance.find({ employeeId, companyId, date: { $gte: monthStart.toDate(), $lte: todayM.toDate() } }).select('status lateBy overtimeHours').lean();
+      const records = await EmployeesAttendance.find({ employeeId, companyId, date: { $gte: monthStart.toDate(), $lte: yesterdayM.toDate() } }).select('status work_hours').lean();
       const presentDays = records.filter(r => r.status === 'Present').length;
+      const incompleteDays = records.filter(r => r.status === 'Incomplete').length;
       const remoteDays = records.filter(r => r.status === 'Remote').length;
       const leaveDays = records.filter(r => r.status === 'Leave').length;
+      const attendedDays = presentDays + incompleteDays + remoteDays + leaveDays;
+      const punchedDays = presentDays + incompleteDays;
+      const actualWorkHours = records.filter(r => r.status === 'Present' || r.status === 'Incomplete').reduce((s, r) => s + (Number(r.work_hours) || 0), 0);
+      const expectedWorkHours = punchedDays * shiftWorkingHours;
+      const diffMinutes = Math.round((actualWorkHours - expectedWorkHours) * 60);
+      const totalLateByMinutes = diffMinutes < 0 ? Math.abs(diffMinutes) : 0;
+      const totalOvertimeMinutes = diffMinutes > 0 ? diffMinutes : 0;
       monthSummary = {
         workingDays, presentDays, remoteDays, leaveDays,
-        absentDays: Math.max(0, workingDays - presentDays - remoteDays - leaveDays),
-        totalLateByMinutes: records.reduce((s, r) => s + (Number(r.lateBy) || 0), 0),
-        totalOvertimeMinutes: records.reduce((s, r) => s + (Number.isNaN(Number(r.overtimeHours)) ? 0 : Math.round(Number(r.overtimeHours) * 60)), 0),
+        absentDays: Math.max(0, workingDays - attendedDays),
+        totalLateByMinutes,
+        totalOvertimeMinutes,
         month: moment().tz(tz).format('YYYY-MM')
       };
     }

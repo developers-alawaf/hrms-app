@@ -1,6 +1,8 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useMemo } from "react";
 import { Link, Navigate } from "react-router-dom";
+import Select from "react-select";
 import { AuthContext } from "../context/AuthContext";
+import { getEmployees } from "../api/employee";
 import "../styles/Dashboard.css";
 
 const defaultMonthSummary = () => ({
@@ -20,6 +22,11 @@ const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [monthSummary, setMonthSummary] = useState(defaultMonthSummary);
   const [fetching, setFetching] = useState(true);
+  // Super Admin: employee selector and selected employee's month report
+  const [employees, setEmployees] = useState([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
+  const [selectedEmployeeMonthSummary, setSelectedEmployeeMonthSummary] = useState(null);
+  const [loadingEmployeeSummary, setLoadingEmployeeSummary] = useState(false);
 
   // API base: use VITE_API_URL when set; otherwise '' for same-origin (production proxy /api -> backend)
   const getApiBase = () => {
@@ -124,6 +131,92 @@ const Dashboard = () => {
     if (user) fetchDashboard();
   }, [user]);
 
+  // Super Admin: fetch employees list for selector
+  useEffect(() => {
+    if (user?.role !== "Super Admin") return;
+    const loadEmployees = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await getEmployees(token);
+        if (res?.success && Array.isArray(res.data)) {
+          setEmployees(
+            res.data
+              .filter((e) => e._id && (e.fullName || e.newEmployeeCode))
+              .sort((a, b) =>
+                (a.fullName || "").localeCompare(b.fullName || "")
+              )
+          );
+        }
+      } catch (err) {
+        console.error("Error fetching employees for selector:", err);
+      }
+    };
+    loadEmployees();
+  }, [user?.role]);
+
+  // Super Admin: fetch month summary when employee selected
+  useEffect(() => {
+    if (user?.role !== "Super Admin" || !selectedEmployeeId) {
+      setSelectedEmployeeMonthSummary(null);
+      return;
+    }
+    const base =
+      typeof import.meta.env.VITE_API_URL === "string"
+        ? import.meta.env.VITE_API_URL.replace(/\/$/, "")
+        : "";
+    const api = (path) =>
+      `${base}${path.startsWith("/") ? path : `/${path}`}`;
+    const authHeaders = {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    };
+    const safeJson = (res) =>
+      res.text().then((text) => {
+        try {
+          return text ? JSON.parse(text) : null;
+        } catch {
+          return null;
+        }
+      });
+
+    let cancelled = false;
+    setLoadingEmployeeSummary(true);
+    setSelectedEmployeeMonthSummary(null);
+    fetch(
+      api(`/api/month-summary?employeeId=${encodeURIComponent(selectedEmployeeId)}`),
+      authHeaders
+    )
+      .then(safeJson)
+      .then((json) => {
+        if (!cancelled && json?.success && json.data) {
+          setSelectedEmployeeMonthSummary(json.data);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) console.error("Error fetching employee month summary:", err);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingEmployeeSummary(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.role, selectedEmployeeId]);
+
+  const employeeOptions = useMemo(
+    () =>
+      employees.map((emp) => ({
+        value: emp._id,
+        label: `${emp.fullName || "Unnamed"}${emp.newEmployeeCode ? ` (${emp.newEmployeeCode})` : ""}`.trim(),
+      })),
+    [employees]
+  );
+
+  const selectedOption = useMemo(
+    () => employeeOptions.find((o) => o.value === selectedEmployeeId) ?? null,
+    [employeeOptions, selectedEmployeeId]
+  );
+
   const todayFormatted = new Date().toLocaleDateString("en-GB", {
     weekday: "long",
     day: "numeric",
@@ -200,45 +293,137 @@ const Dashboard = () => {
         </section>
       )}
 
-      {monthSummary != null && (
+      {/* Super Admin: Employee selector + monthly attendance report */}
+      {user.role === "Super Admin" && (
+        <section className="dashboard-stats-section" aria-label="Employee monthly report">
+          <div className="dashboard-section-head">
+            <h2 className="dashboard-section-title">Employee attendance this month</h2>
+            <Select
+              className="dashboard-employee-select"
+              classNamePrefix="dashboard-select"
+              options={employeeOptions}
+              value={selectedOption}
+              onChange={(opt) => setSelectedEmployeeId(opt?.value ?? "")}
+              placeholder="Search and select employee..."
+              isClearable
+              isSearchable
+              aria-label="Select employee"
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  minWidth: 260,
+                  background: "var(--dash-surface)",
+                  borderColor: "var(--dash-border)",
+                  "&:hover": { borderColor: "var(--dash-accent)" },
+                }),
+                menu: (base) => ({
+                  ...base,
+                  background: "var(--dash-surface)",
+                  border: "1px solid var(--dash-border)",
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  background: state.isFocused ? "var(--dash-accent-soft)" : "transparent",
+                  color: "var(--dash-text)",
+                }),
+                singleValue: (base) => ({ ...base, color: "var(--dash-text)" }),
+                input: (base) => ({ ...base, color: "var(--dash-text)" }),
+                placeholder: (base) => ({ ...base, color: "var(--dash-text-muted)" }),
+              }}
+            />
+          </div>
+          {selectedEmployeeId && (
+            loadingEmployeeSummary ? (
+              <div className="dashboard-loading-inline">
+                <div className="dashboard-loading-spinner" aria-hidden="true" />
+                <span>Loading report...</span>
+              </div>
+            ) : selectedEmployeeMonthSummary != null ? (
+              <div className="dashboard-stats">
+                <Link to="/attendance" className="stat-card stat-card--total stat-card--link">
+                  <span className="stat-card__label">Working days this month</span>
+                  <span className="stat-card__value">{selectedEmployeeMonthSummary.workingDays ?? 0}</span>
+                  <span className="stat-card__sublabel">days</span>
+                </Link>
+                <Link to="/attendance" className="stat-card stat-card--present stat-card--link">
+                  <span className="stat-card__label">Present this month</span>
+                  <span className="stat-card__value">{selectedEmployeeMonthSummary.presentDays ?? 0}</span>
+                  <span className="stat-card__sublabel">days</span>
+                </Link>
+                <Link to="/attendance" className="stat-card stat-card--absent stat-card--link">
+                  <span className="stat-card__label">Absent this month</span>
+                  <span className="stat-card__value">{selectedEmployeeMonthSummary.absentDays ?? 0}</span>
+                  <span className="stat-card__sublabel">days</span>
+                </Link>
+                <Link to="/attendance" className="stat-card stat-card--remote stat-card--link">
+                  <span className="stat-card__label">Remote this month</span>
+                  <span className="stat-card__value">{selectedEmployeeMonthSummary.remoteDays ?? 0}</span>
+                  <span className="stat-card__sublabel">days</span>
+                </Link>
+                <Link to="/attendance" className="stat-card stat-card--leave stat-card--link">
+                  <span className="stat-card__label">Leave this month</span>
+                  <span className="stat-card__value">{selectedEmployeeMonthSummary.leaveDays ?? 0}</span>
+                  <span className="stat-card__sublabel">days</span>
+                </Link>
+                <Link to="/attendance" className="stat-card stat-card--late stat-card--link">
+                  <span className="stat-card__label">Late by this month</span>
+                  <span className="stat-card__value">{formatMinutesToHoursMinutes(selectedEmployeeMonthSummary.totalLateByMinutes ?? 0)}</span>
+                  <span className="stat-card__sublabel">total</span>
+                </Link>
+                <Link to="/attendance" className="stat-card stat-card--overtime stat-card--link">
+                  <span className="stat-card__label">Overtime this month</span>
+                  <span className="stat-card__value">{formatMinutesToHoursMinutes(selectedEmployeeMonthSummary.totalOvertimeMinutes ?? 0)}</span>
+                  <span className="stat-card__sublabel">total</span>
+                </Link>
+              </div>
+            ) : null
+          )}
+          {selectedEmployeeId && !loadingEmployeeSummary && selectedEmployeeMonthSummary == null && (
+            <p className="dashboard-empty-state">No attendance data available for this employee.</p>
+          )}
+        </section>
+      )}
+
+      {/* Regular users: own attendance this month */}
+      {user.role !== "Super Admin" && monthSummary != null && (
         <section className="dashboard-stats-section" aria-label="This month summary">
           <h2 className="dashboard-section-title">Your attendance this month</h2>
           <div className="dashboard-stats">
-          <div className="stat-card stat-card--total">
-            <span className="stat-card__label">Working days this month</span>
-            <span className="stat-card__value">{monthSummary.workingDays ?? 0}</span>
-            <span className="stat-card__sublabel">days</span>
-          </div>
-          <div className="stat-card stat-card--present">
-            <span className="stat-card__label">Present this month</span>
-            <span className="stat-card__value">{monthSummary.presentDays ?? 0}</span>
-            <span className="stat-card__sublabel">days</span>
-          </div>
-          <div className="stat-card stat-card--absent">
-            <span className="stat-card__label">Absent this month</span>
-            <span className="stat-card__value">{monthSummary.absentDays ?? 0}</span>
-            <span className="stat-card__sublabel">days</span>
-          </div>
-          <div className="stat-card stat-card--remote">
-            <span className="stat-card__label">Remote this month</span>
-            <span className="stat-card__value">{monthSummary.remoteDays ?? 0}</span>
-            <span className="stat-card__sublabel">days</span>
-          </div>
-          <div className="stat-card stat-card--leave">
-            <span className="stat-card__label">Leave this month</span>
-            <span className="stat-card__value">{monthSummary.leaveDays ?? 0}</span>
-            <span className="stat-card__sublabel">days</span>
-          </div>
-          <div className="stat-card stat-card--late">
-            <span className="stat-card__label">Late by this month</span>
-            <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalLateByMinutes ?? 0)}</span>
-            <span className="stat-card__sublabel">total</span>
-          </div>
-          <div className="stat-card stat-card--overtime">
-            <span className="stat-card__label">Overtime this month</span>
-            <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalOvertimeMinutes ?? 0)}</span>
-            <span className="stat-card__sublabel">total</span>
-          </div>
+            <Link to="/attendance" className="stat-card stat-card--total stat-card--link">
+              <span className="stat-card__label">Working days this month</span>
+              <span className="stat-card__value">{monthSummary.workingDays ?? 0}</span>
+              <span className="stat-card__sublabel">days</span>
+            </Link>
+            <Link to="/attendance" className="stat-card stat-card--present stat-card--link">
+              <span className="stat-card__label">Present this month</span>
+              <span className="stat-card__value">{monthSummary.presentDays ?? 0}</span>
+              <span className="stat-card__sublabel">days</span>
+            </Link>
+            <Link to="/attendance" className="stat-card stat-card--absent stat-card--link">
+              <span className="stat-card__label">Absent this month</span>
+              <span className="stat-card__value">{monthSummary.absentDays ?? 0}</span>
+              <span className="stat-card__sublabel">days</span>
+            </Link>
+            <Link to="/attendance" className="stat-card stat-card--remote stat-card--link">
+              <span className="stat-card__label">Remote this month</span>
+              <span className="stat-card__value">{monthSummary.remoteDays ?? 0}</span>
+              <span className="stat-card__sublabel">days</span>
+            </Link>
+            <Link to="/attendance" className="stat-card stat-card--leave stat-card--link">
+              <span className="stat-card__label">Leave this month</span>
+              <span className="stat-card__value">{monthSummary.leaveDays ?? 0}</span>
+              <span className="stat-card__sublabel">days</span>
+            </Link>
+            <Link to="/attendance" className="stat-card stat-card--late stat-card--link">
+              <span className="stat-card__label">Late by this month</span>
+              <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalLateByMinutes ?? 0)}</span>
+              <span className="stat-card__sublabel">total</span>
+            </Link>
+            <Link to="/attendance" className="stat-card stat-card--overtime stat-card--link">
+              <span className="stat-card__label">Overtime this month</span>
+              <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalOvertimeMinutes ?? 0)}</span>
+              <span className="stat-card__sublabel">total</span>
+            </Link>
           </div>
         </section>
       )}

@@ -20,6 +20,10 @@ function getTransporter() {
       console.warn('[EmailService] Mail not configured: MAIL_USERNAME/MAIL_PASSWORD or ZOHO_EMAIL/ZOHO_PASSWORD required.');
       return null;
     }
+    // Debug: log config on first use (no password). Helps verify correct .env is loaded.
+    const maskedUser = mailUser ? mailUser.replace(/(.{2}).*(@.*)/, '$1***$2') : '(empty)';
+    console.log('[EmailService] Config: host=' + mailHost + ' port=' + mailPort + ' user=' + maskedUser);
+
     // Port 465 = implicit SSL (secure: true)
     // Port 587 = STARTTLS (secure: false, requireTLS: true) - use this if 465 gives "wrong version number"
     const useImplicitSSL = mailPort === 465;
