@@ -20,7 +20,10 @@ async function syncAttendance(companyId, startDate, endDate) {
     for (let y = startYear; y <= endYear; y++) {
         years.push(y);
     }
-    const holidayCalendars = await HolidayCalendar.find({ companyId, year: { $in: years } }).lean();
+    const holidayCalendars = await HolidayCalendar.find({
+      $or: [{ companyId }, { companyId: null }],
+      year: { $in: years }
+    }).lean();
     const holidays = holidayCalendars.flatMap(cal => cal.holidays);
 
     const leaveRequests = await LeaveRequest.find({ companyId, status: 'approved', startDate: { $lte: end.toDate() }, endDate: { $gte: start.toDate() } });

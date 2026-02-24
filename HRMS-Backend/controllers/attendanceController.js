@@ -119,10 +119,11 @@ exports.getAttendance = async (req, res) => {
     const years = [];
     for (let y = startYear; y <= endYear; y++) years.push(y);
 
-    const holidayCalendars = await HolidayCalendar.find({
-      ...(userRole !== 'Super Admin' && { companyId: tokenCompanyId }),
-      year: { $in: years }
-    }).lean();
+    // Super Admin: all calendars. Others: company-specific + global (null) so employees see holidays added by Super Admin
+    const holidayQuery = userRole === 'Super Admin'
+      ? { year: { $in: years } }
+      : { $or: [{ companyId: tokenCompanyId }, { companyId: null }], year: { $in: years } };
+    const holidayCalendars = await HolidayCalendar.find(holidayQuery).lean();
 
     const holidays = holidayCalendars.flatMap(cal => cal.holidays || []);
 
@@ -240,13 +241,19 @@ exports.getAttendance = async (req, res) => {
           record.status = 'Weekend';
         }
 
-        // Holiday & Leave override (only if not already Present/Incomplete/Weekend)
+        // Holiday & Leave override
         if (isHoliday && ['Absent', 'Weekend'].includes(record.status) && !rec) {
           record.status = 'Holiday';
         }
-        if (leave && ['Absent', 'Holiday', 'Weekend'].includes(record.status)) {
-          record.status = leave.type === 'remote' ? 'Remote' : 'Leave';
-          record.leave_type = leave.type;
+        if (leave) {
+          // Approved remote: always show Remote (overrides Incomplete, Present, Absent, etc.)
+          if (leave.type === 'remote') {
+            record.status = 'Remote';
+            record.leave_type = leave.type;
+          } else if (['Absent', 'Holiday', 'Weekend', 'Incomplete'].includes(record.status)) {
+            record.status = 'Leave';
+            record.leave_type = leave.type;
+          }
         }
 
         // Calculate Late & Overtime (only for Present/Incomplete days with shift)
