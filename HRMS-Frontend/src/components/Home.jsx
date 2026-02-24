@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, Users, Calendar, Mail, Shield, ArrowRight, Sparkles } from 'lucide-react';
+import { AuthContext } from '../context/AuthContext';
 import '../styles/Home.css';
 
 const Home = () => {
+  const { user } = useContext(AuthContext);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(false);
 
@@ -60,10 +62,17 @@ const Home = () => {
             Streamline your HR operations with our powerful and intuitive platform.
             <Sparkles className="sparkles-icon" />
           </p>
-          <Link to="/login" className="login-button">
-            <span>Login to Get Started</span>
-            <ArrowRight className="arrow-icon" />
-          </Link>
+          {user ? (
+            <Link to="/dashboard" className="login-button">
+              <span>Go to Dashboard</span>
+              <ArrowRight className="arrow-icon" />
+            </Link>
+          ) : (
+            <Link to="/login" className="login-button">
+              <span>Login to Get Started</span>
+              <ArrowRight className="arrow-icon" />
+            </Link>
+          )}
         </div>
       </header>
 
@@ -89,10 +98,17 @@ const Home = () => {
           <p className="cta-subtitle">
             Join thousands of businesses using Alawaf HRMS to manage their workforce efficiently.
           </p>
-          <Link to="/login" className="login-button cta-button">
-            <span>Login Now</span>
-            <ArrowRight className="arrow-icon" />
-          </Link>
+          {user ? (
+            <Link to="/dashboard" className="login-button cta-button">
+              <span>Go to Dashboard</span>
+              <ArrowRight className="arrow-icon" />
+            </Link>
+          ) : (
+            <Link to="/login" className="login-button cta-button">
+              <span>Login Now</span>
+              <ArrowRight className="arrow-icon" />
+            </Link>
+          )}
         </div>
       </section>
     </div>
