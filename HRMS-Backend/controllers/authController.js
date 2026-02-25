@@ -213,6 +213,59 @@ exports.changePassword = async (req, res) => {
   }
 };
 
+/**
+ * Forgot Password - Self-service: user enters email, receives reset link.
+ * No auth required. Always returns success for security (don't reveal if email exists).
+ */
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      return res.status(400).json({ success: false, error: 'Email is required' });
+    }
+    const trimmedEmail = email.trim();
+    const user = await User.findOne({ email: trimmedEmail });
+    if (!user) {
+      // For security: don't reveal that the email doesn't exist
+      console.log('forgotPassword - Email not found (generic response):', trimmedEmail);
+      return res.status(200).json({ success: true, message: 'If an account exists with this email, you will receive a password reset link shortly.' });
+    }
+    // Invalidate any previous unused reset tokens for this user
+    await PasswordReset.updateMany({ userId: user._id, used: false }, { $set: { used: true } });
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = moment().add(1, 'hour').toDate();
+    const passwordReset = new PasswordReset({
+      userId: user._id,
+      token,
+      expiresAt,
+    });
+    await passwordReset.save();
+    const resetLink = `${(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '')}/reset-password?token=${token}`;
+    const transport = emailService.getTransporter();
+    if (!transport) {
+      console.error('forgotPassword - Email service not configured');
+      return res.status(200).json({ success: true, message: 'If an account exists with this email, you will receive a password reset link shortly.' });
+    }
+    await emailService.sendMail({
+      to: user.email,
+      subject: 'HRMS Password Reset',
+      html: `You have requested to reset your password. Click the link below to set a new password:<br><br>
+             <a href="${resetLink}">Reset Password</a><br><br>
+             This link expires in 1 hour. If you did not request this, please ignore this email.`,
+    });
+    console.log('forgotPassword - Reset link sent to:', user.email);
+    return res.status(200).json({ success: true, message: 'If an account exists with this email, you will receive a password reset link shortly.' });
+  } catch (error) {
+    console.error('forgotPassword - Error:', error);
+    // Return actual error for config issues (535 etc) so admin can fix
+    const isConfigError = error.message && (error.message.includes('535') || error.message.includes('Email service not configured'));
+    if (isConfigError) {
+      return res.status(500).json({ success: false, error: error.message });
+    }
+    return res.status(200).json({ success: true, message: 'If an account exists with this email, you will receive a password reset link shortly.' });
+  }
+};
+
 exports.requestPasswordReset = async (req, res) => {
   try {
     console.log('requestPasswordReset - User role:', req.user.role);
@@ -239,8 +292,7 @@ exports.requestPasswordReset = async (req, res) => {
     try {
       const transport = emailService.getTransporter();
       if (!transport) throw new Error('Email service not configured');
-      await transport.sendMail({
-        from: `"${process.env.MAIL_FROM_NAME || 'HRMS'}" <${process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL}>`,
+      await emailService.sendMail({
         to: user.email,
         subject: 'HRMS Password Reset',
         html: `You have requested a password reset. Please reset your password: <a href="${(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '')}/reset-password?token=${token}">Reset Password</a><br>This link expires in 7 days.`
@@ -273,6 +325,9 @@ exports.resetPassword = async (req, res) => {
     if (!user) {
       console.log('resetPassword - User not found for token:', token);
       return res.status(400).json({ success: false, error: 'User not found' });
+    }
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 8 characters long.' });
     }
     user.password = newPassword;
     user.isActive = true;
@@ -322,8 +377,7 @@ exports.resendInvitation = async (req, res) => {
     const invitationLink = `${(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '')}/accept-invitation?token=${invitationToken}`;
     const transport = emailService.getTransporter();
     if (!transport) throw new Error('Email service not configured');
-    await transport.sendMail({
-      from: `"${process.env.MAIL_FROM_NAME || 'HRMS'}" <${process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL}>`,
+    await emailService.sendMail({
       to: user.email,
       subject: 'HRMS Invitation',
       html: `Welcome to the HRMS! Your temporary password is: <b>${temporaryPassword}</b><br>
@@ -385,8 +439,7 @@ exports.forceResendInvitation = async (req, res) => {
     const invitationLink = `${(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '')}/accept-invitation?token=${invitationToken}`;
     const transport = emailService.getTransporter();
     if (!transport) throw new Error('Email service not configured');
-    await transport.sendMail({
-      from: `"${process.env.MAIL_FROM_NAME || 'HRMS'}" <${process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL}>`,
+    await emailService.sendMail({
       to: user.email,
       subject: 'HRMS Invitation (New)',
       html: `A new invitation has been generated for you. Your new temporary password is: <b>${temporaryPassword}</b><br>

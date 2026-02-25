@@ -120,6 +120,9 @@ const Login = () => {
             </div>
           </div>
           {error && <p className="error-message">{error}</p>}
+          <p className="forgot-link">
+            <Link to="/forgot-password">Forgot Password?</Link>
+          </p>
           <button
             type="submit"
             disabled={loading}
@@ -128,10 +131,10 @@ const Login = () => {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-        <p className="invitation-link">
+        {/* <p className="invitation-link">
           New user?{' '}
           <Link to="/accept-invitation">Accept Invitation</Link>
-        </p>
+        </p> */}
         <p className="powered-by">Powered by Alawaf</p>
       </div>
     </div>

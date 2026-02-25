@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { resetPassword } from '../api/auth';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Lock } from 'lucide-react';
+import '../styles/Login.css';
 
 const ResetPassword = () => {
   const [formData, setFormData] = useState({
@@ -14,7 +15,7 @@ const ResetPassword = () => {
   const [loading, setLoading] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -22,8 +23,9 @@ const ResetPassword = () => {
     const token = new URLSearchParams(location.search).get('token');
     if (token) {
       setFormData(prev => ({ ...prev, token }));
+      setError('');
     } else {
-      setError('No reset token found. Please request a new password reset link.');
+      setError('No reset token found. Please request a new password reset link from the login page.');
     }
   }, [location]);
 
@@ -38,8 +40,8 @@ const ResetPassword = () => {
       return;
     }
     if (formData.newPassword.length < 8) {
-        setError('Password must be at least 8 characters long');
-        return;
+      setError('Password must be at least 8 characters long');
+      return;
     }
     setLoading(true);
     setError('');
@@ -48,74 +50,104 @@ const ResetPassword = () => {
       const data = await resetPassword(formData.token, formData.newPassword);
       if (data.success) {
         setSuccess('Password reset successfully! You will be redirected to the login page.');
-        setTimeout(() => {
-          navigate('/login');
-        }, 3000);
+        setTimeout(() => navigate('/login'), 2000);
       } else {
         setError(data.error || 'Failed to reset password.');
       }
     } catch (err) {
-      setError('An error occurred. Please try again.');
+      setError(err.error || 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  if (!formData.token) {
+    return (
+      <div className="login-container">
+        <div className="particle-background">
+          {[...Array(15)].map((_, i) => (
+            <div key={i} className={`particle particle-${i}`} />
+          ))}
+        </div>
+        <div className="login-card">
+          <Link to="/login" className="back-link">
+            <ArrowLeft className="back-icon" />
+            Back to Login
+          </Link>
+          <div className="logo-container">
+            <img src="/Kloud_Technologies_Logo.svg" alt="Alawaf HRMS Logo" className="login-logo" />
+          </div>
+          <h2 className="login-title">Reset Password</h2>
+          <p className="error-message">{error}</p>
+          <p className="invitation-link">
+            <Link to="/forgot-password">Request a new reset link</Link>
+          </p>
+          <p className="powered-by">Powered by Alawaf</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container">
-      <div className="row justify-content-center">
-        <div className="col-md-6">
-          <div className="card mt-5">
-            <div className="card-body">
-              <h2 className="card-title text-center">Reset Password</h2>
-              {error && <div className="alert alert-danger">{error}</div>}
-              {success && <div className="alert alert-success">{success}</div>}
-              <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                  <label htmlFor="newPassword">New Password</label>
-                  <div className="input-group">
-                    <input
-                      type={showNewPassword ? 'text' : 'password'}
-                      className="form-control"
-                      id="newPassword"
-                      name="newPassword"
-                      value={formData.newPassword}
-                      onChange={handleChange}
-                      required
-                    />
-                    <div className="input-group-append">
-                      <span className="input-group-text" onClick={() => setShowNewPassword(!showNewPassword)}>
-                        {showNewPassword ? <EyeOff /> : <Eye />}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="confirmPassword">Confirm New Password</label>
-                  <div className="input-group">
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      className="form-control"
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      required
-                    />
-                    <div className="input-group-append">
-                      <span className="input-group-text" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                        {showConfirmPassword ? <EyeOff /> : <Eye />}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
-                  {loading ? 'Resetting...' : 'Reset Password'}
-                </button>
-              </form>
+    <div className="login-container">
+      <div className="particle-background">
+        {[...Array(15)].map((_, i) => (
+          <div key={i} className={`particle particle-${i}`} />
+        ))}
+      </div>
+      <div className="login-card">
+        <Link to="/login" className="back-link">
+          <ArrowLeft className="back-icon" />
+          Back to Login
+        </Link>
+        <div className="logo-container">
+          <img src="/Kloud_Technologies_Logo.svg" alt="Alawaf HRMS Logo" className="login-logo" />
+        </div>
+        <h2 className="login-title">Set New Password</h2>
+        <p className="forgot-subtitle">Enter your new password below. It must be at least 8 characters.</p>
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="input-group">
+            <Lock className="input-icon" />
+            <input
+              type={showNewPassword ? 'text' : 'password'}
+              name="newPassword"
+              value={formData.newPassword}
+              onChange={handleChange}
+              placeholder="New Password"
+              className="login-input"
+              required
+              disabled={loading}
+            />
+            <div className="password-toggle-icon" onClick={() => setShowNewPassword(!showNewPassword)}>
+              {showNewPassword ? <EyeOff /> : <Eye />}
             </div>
           </div>
-        </div>
+          <div className="input-group">
+            <Lock className="input-icon" />
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Confirm New Password"
+              className="login-input"
+              required
+              disabled={loading}
+            />
+            <div className="password-toggle-icon" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+              {showConfirmPassword ? <EyeOff /> : <Eye />}
+            </div>
+          </div>
+          {error && <p className="error-message">{error}</p>}
+          {success && <p className="success-message">{success}</p>}
+          <button type="submit" disabled={loading} className="login-button">
+            {loading ? 'Resetting...' : 'Reset Password'}
+          </button>
+        </form>
+        <p className="invitation-link">
+          Remember your password? <Link to="/login">Back to Login</Link>
+        </p>
+        <p className="powered-by">Powered by Alawaf</p>
       </div>
     </div>
   );

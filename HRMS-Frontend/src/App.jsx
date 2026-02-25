@@ -120,7 +120,7 @@ function App() {
   );
   const location = useLocation();
 
-  const publicRoutes = ['/', '/login', '/accept-invitation'];
+  const publicRoutes = ['/', '/login', '/accept-invitation', '/forgot-password', '/reset-password'];
   const isPublicRoute = publicRoutes.includes(location.pathname);
 
   useEffect(() => {

@@ -170,6 +170,19 @@
   font-size: 0.9rem;
 }
 
+.success-message {
+  color: #4ade80;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.forgot-subtitle {
+  color: var(--app-text-muted);
+  text-align: center;
+  font-size: 0.9rem;
+  margin: -15px 0 20px 0;
+}
+
 .login-button {
   padding: 12px;
   background: var(--app-accent);
@@ -209,6 +222,22 @@
 
 .login-button:hover::before {
   left: 100%;
+}
+
+.forgot-link {
+  text-align: right;
+  margin: -10px 0 0 0;
+  font-size: 0.9rem;
+}
+
+.forgot-link a {
+  color: var(--app-accent);
+  text-decoration: none;
+}
+
+.forgot-link a:hover {
+  color: var(--app-accent-light);
+  text-decoration: underline;
 }
 
 .invitation-link {

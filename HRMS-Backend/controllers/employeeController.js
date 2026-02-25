@@ -223,8 +223,7 @@ exports.createEmployee = async (req, res) => {
       try {
         const transport = emailService.getTransporter();
         if (!transport) throw new Error('Email service not configured');
-        await transport.sendMail({
-          from: `"${process.env.MAIL_FROM_NAME || 'HRMS'}" <${process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL}>`,
+        await emailService.sendMail({
           to: email,
           subject: 'HRMS Invitation',
           html: `Welcome to the HRMS! Your temporary password is: <b>${temporaryPassword}</b><br>
@@ -478,8 +477,7 @@ exports.updateEmployee = async (req, res) => {
       try {
         const transport = emailService.getTransporter();
         if (!transport) throw new Error('Email service not configured');
-        await transport.sendMail({
-          from: `"${process.env.MAIL_FROM_NAME || 'HRMS'}" <${process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL}>`,
+        await emailService.sendMail({
           to: req.body.email,
           subject: 'HRMS Invitation',
           html: `Welcome to the HRMS! Your temporary password is: <b>${temporaryPassword}</b><br>

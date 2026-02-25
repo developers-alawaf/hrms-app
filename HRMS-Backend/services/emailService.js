@@ -1,51 +1,121 @@
 /**
  * Centralized Email Service for HRMS
- * Supports Laravel-style MAIL_* vars and ZOHO_* vars for backward compatibility.
- * Uses Zoho SMTP - host depends on region:
- *   - smtppro.zoho.com  (US/global, paid org with custom domain)
- *   - smtppro.zoho.in   (India/Asia - use this if 535 auth fails with .com)
- *   - smtppro.zoho.eu   (Europe)
- * See Zoho Mail Settings > Server Configuration Details for your exact host.
+ * Zoho SMTP: smtp.zoho.in / smtppro.zoho.in (Asia), smtp.zoho.com / smtppro.zoho.com (US)
+ * 535 fix: MUST use App Password from https://accounts.zoho.com/home#security/app_password
  */
 const nodemailer = require('nodemailer');
 
-const mailHost = process.env.MAIL_HOST || process.env.EMAIL_HOST || process.env.ZOHO_SMTP_HOST || 'smtppro.zoho.com';
-const mailPort = parseInt(process.env.MAIL_PORT || process.env.EMAIL_PORT || '465', 10);
-const mailUser = process.env.MAIL_USERNAME || process.env.MAIL_FROM_ADDRESS || process.env.ZOHO_EMAIL || process.env.EMAIL_USER;
-const mailPass = process.env.MAIL_PASSWORD || process.env.ZOHO_PASSWORD || process.env.EMAIL_PASS;
-const mailFrom = process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL || mailUser;
-const mailFromName = process.env.MAIL_FROM_NAME || process.env.APP_NAME || 'HRMS';
+const _s = (v) => (typeof v === 'string' ? v.trim() : v) || '';
+
+function getMailConfig() {
+  const host = _s(process.env.MAIL_HOST || process.env.ZOHO_SMTP_HOST || 'smtppro.zoho.in');
+  const port = parseInt(process.env.MAIL_PORT || process.env.EMAIL_PORT || '465', 10);
+  const user = _s(process.env.MAIL_USERNAME || process.env.MAIL_FROM_ADDRESS || process.env.ZOHO_EMAIL || process.env.EMAIL_USER);
+  const pass = _s(process.env.MAIL_PASSWORD || process.env.ZOHO_PASSWORD || process.env.EMAIL_PASS);
+  const fromAddr = _s(process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL) || user;
+  const fromName = _s(process.env.MAIL_FROM_NAME || process.env.APP_NAME) || 'HRMS';
+  return { host, port, user, pass, fromAddr, fromName };
+}
 
 let transporter = null;
+let transporterConfig = null;
+
+function createTransport(host, port, user, pass) {
+  const secure = port === 465;
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    requireTLS: !secure && port === 587,
+    auth: { user, pass },
+    tls: { rejectUnauthorized: process.env.NODE_ENV === 'production' },
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+  });
+}
 
 function getTransporter() {
-  if (!transporter) {
-    if (!mailUser || !mailPass) {
-      console.warn('[EmailService] Mail not configured: MAIL_USERNAME/MAIL_PASSWORD or ZOHO_EMAIL/ZOHO_PASSWORD required.');
-      return null;
-    }
-    // Debug: log config on first use (no password). Helps verify correct .env is loaded.
-    const maskedUser = mailUser ? mailUser.replace(/(.{2}).*(@.*)/, '$1***$2') : '(empty)';
-    console.log('[EmailService] Config: host=' + mailHost + ' port=' + mailPort + ' user=' + maskedUser);
-
-    // Port 465 = implicit SSL (secure: true)
-    // Port 587 = STARTTLS (secure: false, requireTLS: true) - use this if 465 gives "wrong version number"
-    const useImplicitSSL = mailPort === 465;
-    transporter = nodemailer.createTransport({
-      host: mailHost,
-      port: mailPort,
-      secure: useImplicitSSL,
-      requireTLS: !useImplicitSSL && mailPort === 587,
-      auth: {
-        user: mailUser,
-        pass: mailPass
-      },
-      tls: {
-        rejectUnauthorized: process.env.NODE_ENV === 'production'
-      }
-    });
+  const { host, port, user, pass } = getMailConfig();
+  if (!user || !pass) {
+    console.warn('[EmailService] MAIL_USERNAME and MAIL_PASSWORD required in .env');
+    return null;
+  }
+  const key = `${host}:${port}`;
+  if (!transporter || transporterConfig !== key) {
+    transporterConfig = key;
+    const masked = user.replace(/(.{2}).*(@.*)/, '$1***$2');
+    console.log('[EmailService] Using ' + host + ':' + port + ' user=' + masked);
+    transporter = createTransport(host, port, user, pass);
   }
   return transporter;
+}
+
+function resetTransporter() {
+  transporter = null;
+  transporterConfig = null;
+}
+
+function log535Help() {
+  console.error('[EmailService] 535 = wrong password. Use Zoho App Password: https://accounts.zoho.com/home#security/app_password');
+}
+
+// Zoho hosts/ports to try on 535 (Asia first for alawaf.com.bd)
+const ZOHO_FALLBACKS = [
+  { host: 'smtp.zoho.in', port: 587 },
+  { host: 'smtp.zoho.in', port: 465 },
+  { host: 'smtppro.zoho.in', port: 587 },
+  { host: 'smtppro.zoho.in', port: 465 },
+  { host: 'smtp.zoho.com', port: 587 },
+  { host: 'smtp.zoho.com', port: 465 },
+  { host: 'smtppro.zoho.com', port: 587 },
+  { host: 'smtppro.zoho.com', port: 465 },
+];
+
+async function sendMail(mailOptions) {
+  const { fromAddr, fromName, user } = getMailConfig();
+  const defaultFrom = `"${fromName}" <${fromAddr || user}>`;
+  const opts = { ...mailOptions, from: mailOptions.from || defaultFrom };
+  const cfg = getMailConfig();
+  if (!cfg.user || !cfg.pass) throw new Error('Email service not configured');
+  const configs = [{ host: cfg.host, port: cfg.port }];
+  for (const f of ZOHO_FALLBACKS) {
+    if (configs.every(c => c.host !== f.host || c.port !== f.port)) configs.push(f);
+  }
+  let lastErr;
+  let idx = 0;
+  for (const { host, port } of configs) {
+    try {
+      const t = createTransport(host, port, cfg.user, cfg.pass);
+      const result = await t.sendMail(opts);
+      if (idx > 0) console.log('[EmailService] Success with ' + host + ':' + port);
+      return result;
+    } catch (err) {
+      lastErr = err;
+      if (err.message && err.message.includes('535')) {
+        console.log('[EmailService] 535 on ' + host + ':' + port + ', trying next...');
+      } else {
+        throw err;
+      }
+    }
+    idx++;
+  }
+  log535Help();
+  throw lastErr;
+}
+
+/** Verify SMTP connection on startup (optional - set MAIL_VERIFY_ON_START=true) */
+async function verifyConnection() {
+  const t = getTransporter();
+  if (!t) return false;
+  try {
+    await t.verify();
+    console.log('[EmailService] SMTP connection verified successfully');
+    return true;
+  } catch (err) {
+    console.error('[EmailService] SMTP verify failed:', err.message);
+    if (err.message && err.message.includes('535')) log535Help();
+    return false;
+  }
 }
 
 /**
@@ -60,6 +130,7 @@ function getTransporter() {
  * @param {string} [options.remarks] - Optional remarks
  */
 async function sendLeaveRequestNotificationToManager(options) {
+  const { fromName } = getMailConfig();
   const { managerEmail, employeeName, type, startDate, endDate, isHalfDay, remarks } = options;
   const emails = Array.isArray(managerEmail) ? managerEmail : (managerEmail ? [managerEmail] : []);
   const validEmails = emails.map(e => (e || '').trim()).filter(Boolean);
@@ -126,7 +197,7 @@ async function sendLeaveRequestNotificationToManager(options) {
       <p>Please log in to the HRMS portal to review and approve or deny this request.</p>
     </div>
     <div class="footer">
-      This is an automated notification from ${mailFromName}.
+      This is an automated notification from ${fromName}.
     </div>
   </div>
 </body>
@@ -134,8 +205,7 @@ async function sendLeaveRequestNotificationToManager(options) {
 `;
 
   try {
-    await transport.sendMail({
-      from: `"${mailFromName}" <${mailFrom}>`,
+    await sendMail({
       to: validEmails.join(', '),
       subject,
       text,
@@ -145,6 +215,7 @@ async function sendLeaveRequestNotificationToManager(options) {
     return { sent: true };
   } catch (err) {
     console.error('[EmailService] Failed to send manager notification:', err.message);
+    if (err.message && err.message.includes('535')) log535Help();
     return { sent: false, reason: err.message };
   }
 }
@@ -174,8 +245,7 @@ async function sendCustomEmail(options) {
   }
 
   try {
-    await transport.sendMail({
-      from: `"${mailFromName}" <${mailFrom}>`,
+    await sendMail({
       to: recipients.join(', '),
       subject: subject || '(No subject)',
       text: text || '',
@@ -185,12 +255,15 @@ async function sendCustomEmail(options) {
     return { sent: true };
   } catch (err) {
     console.error('[EmailService] Failed to send custom email:', err.message);
+    if (err.message && err.message.includes('535')) log535Help();
     return { sent: false, reason: err.message };
   }
 }
 
 module.exports = {
   getTransporter,
+  sendMail,
+  verifyConnection,
   sendLeaveRequestNotificationToManager,
   sendCustomEmail
 };

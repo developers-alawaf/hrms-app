@@ -37,6 +37,27 @@ router.post('/login', authController.login);
 
 /**
  * @swagger
+ * /api/forgot-password:
+ *   post:
+ *     summary: Request a password reset link (self-service, no auth)
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: If email exists, reset link sent
+ */
+router.post('/forgot-password', authController.forgotPassword);
+
+/**
+ * @swagger
  * /api/accept-invitation:
  *   post:
  *     summary: Accept an invitation and set a password

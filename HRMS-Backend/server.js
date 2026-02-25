@@ -47,9 +47,11 @@
 
 // server.js
 const path = require('path');
+// Load env-specific file first, then .env as fallback for any missing vars
 require('dotenv').config({
   path: path.resolve(__dirname, `.env.${process.env.NODE_ENV || 'development'}`),
 });
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const express = require('express');
 const cors = require('cors');
@@ -206,6 +208,11 @@ const startServer = async () => {
 
       // Start cron jobs only after server is up
       require('./services/cronJob');
+
+      // Optionally verify email connection on startup (set MAIL_VERIFY_ON_START=true)
+      if (process.env.MAIL_VERIFY_ON_START === 'true') {
+        require('./services/emailService').verifyConnection().catch(() => {});
+      }
     });
   } catch (error) {
     console.error('Failed to start server:', error.message);

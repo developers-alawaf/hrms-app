@@ -55,6 +55,15 @@ export const resendInvitation = async (email, token) => {
   }
 };
 
+export const forgotPassword = async (email) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/auth/forgot-password`, { email });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { success: false, error: 'Network error' };
+  }
+};
+
 export const resetPassword = async (token, newPassword) => {
   try {
     const response = await axios.post(`${API_URL}/api/auth/reset-password`, { token, newPassword });
