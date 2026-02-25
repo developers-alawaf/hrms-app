@@ -150,32 +150,50 @@ exports.createLeaveRequest = async (req, res) => {
     console.log(`✅ Created leave request: employeeId: ${req.user.employeeId}, startDate: ${start.toISOString()}, endDate: ${end.toISOString()}`);
     res.status(201).json({ success: true, data: leaveRequest });
 
-    // Notify manager by email (non-blocking - do not delay response)
-    const managerId = employee.managerId;
-    if (managerId) {
-      (async () => {
-        try {
+    // Notify manager (or HR/Admin if no manager) by email (non-blocking - do not delay response)
+    (async () => {
+      try {
+        let approverEmails = [];
+        const managerId = employee.managerId;
+        if (managerId) {
           const managerUser = await User.findOne({ employeeId: managerId }).select('email').lean();
           const managerEmployee = await Employee.findById(managerId).select('email').lean();
-          const managerEmail = managerUser?.email || managerEmployee?.email;
-          if (managerEmail) {
-            await emailService.sendLeaveRequestNotificationToManager({
-              managerEmail,
-              employeeName: employee.fullName || 'Employee',
-              type: leaveRequest.type,
-              startDate: leaveRequest.startDate,
-              endDate: leaveRequest.endDate,
-              isHalfDay: leaveRequest.isHalfDay,
-              remarks: leaveRequest.remarks || null
-            });
-          } else {
-            console.warn(`[LeaveRequest] Manager ${managerId} has no email; notification skipped.`);
-          }
-        } catch (err) {
-          console.error('[LeaveRequest] Failed to send manager notification:', err.message);
+          const managerEmail = (managerUser?.email || managerEmployee?.email || '').trim();
+          if (managerEmail) approverEmails.push(managerEmail);
         }
-      })();
-    }
+        // Fallback: if no manager or manager has no email, notify HR Manager / Company Admin
+        if (approverEmails.length === 0) {
+          const hrOrAdminUsers = await User.find({
+            companyId: req.user.companyId,
+            role: { $in: ['HR Manager', 'Company Admin'] },
+            isActive: true
+          }).select('email').lean();
+          const seen = new Set();
+          for (const u of hrOrAdminUsers) {
+            const e = (u?.email || '').trim();
+            if (e && !seen.has(e.toLowerCase())) {
+              approverEmails.push(e);
+              seen.add(e.toLowerCase());
+            }
+          }
+        }
+        if (approverEmails.length > 0) {
+          await emailService.sendLeaveRequestNotificationToManager({
+            managerEmail: approverEmails,
+            employeeName: employee.fullName || 'Employee',
+            type: leaveRequest.type,
+            startDate: leaveRequest.startDate,
+            endDate: leaveRequest.endDate,
+            isHalfDay: leaveRequest.isHalfDay,
+            remarks: leaveRequest.remarks || null
+          });
+        } else {
+          console.warn('[LeaveRequest] No approver email found (manager or HR/Admin); notification skipped.');
+        }
+      } catch (err) {
+        console.error('[LeaveRequest] Failed to send manager notification:', err.message);
+      }
+    })();
 
     // Log leave request creation (non-blocking)
     const userInfo = activityLogService.extractUserInfo(req);

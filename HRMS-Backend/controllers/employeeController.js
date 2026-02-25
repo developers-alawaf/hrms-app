@@ -228,7 +228,7 @@ exports.createEmployee = async (req, res) => {
           to: email,
           subject: 'HRMS Invitation',
           html: `Welcome to the HRMS! Your temporary password is: <b>${temporaryPassword}</b><br>
-                 Accept invitation: <a href="${process.env.FRONTEND_URL}/accept-invitation?token=${token}">Click Here</a><br>
+                 Accept invitation: <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/accept-invitation?token=${token}">Click Here</a><br>
                  Expires on ${moment(expiresAt).format('YYYY-MM-DD')}.`,
         });
       } catch (emailErr) {
@@ -472,7 +472,7 @@ exports.updateEmployee = async (req, res) => {
           to: req.body.email,
           subject: 'HRMS Invitation',
           html: `Welcome to the HRMS! Your temporary password is: <b>${temporaryPassword}</b><br>
-                 Accept invitation: <a href="${process.env.FRONTEND_URL}/accept-invitation?token=${token}">Click Here</a><br>
+                 Accept invitation: <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/accept-invitation?token=${token}">Click Here</a><br>
                  Expires on ${moment(expiresAt).format('YYYY-MM-DD')}.`
         });
       } catch (emailErr) {
