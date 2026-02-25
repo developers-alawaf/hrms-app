@@ -440,7 +440,7 @@ exports.initialSetup = async (req, res) => {
     const employee = new Employee({
       fullName,
       email,
-      // newEmployeeCode,
+      newEmployeeCode: '00000',
       // companyId: company._id,
       role: 'Super Admin',
       employeeStatus: 'active',

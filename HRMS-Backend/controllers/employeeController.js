@@ -414,6 +414,17 @@ exports.updateEmployee = async (req, res) => {
       Object.entries(allowedUpdates).filter(([_, v]) => v !== undefined)
     );
 
+    // Normalize managerId - must be valid ObjectId string or null (avoid "[object Object]" from populated data)
+    if ('managerId' in updates) {
+      const raw = updates.managerId;
+      const id = (typeof raw === 'object' && raw !== null && raw._id) ? raw._id : raw;
+      if (!id || id === '' || id === '[object Object]' || !mongoose.Types.ObjectId.isValid(id)) {
+        updates.managerId = null;
+      } else {
+        updates.managerId = id;
+      }
+    }
+
     // ========== DEVICE USER ==========
     if ((createDeviceUser === true || createDeviceUser === 'true') && !employee.deviceUserId) {
       const existsOnDevice = await zkService.checkUserExistsOnDevice(employee.newEmployeeCode);

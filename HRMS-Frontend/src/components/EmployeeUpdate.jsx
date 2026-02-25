@@ -153,7 +153,7 @@ const EmployeeUpdate = () => {
             separationReason: emp.separationReason || '',
             separationRemarks: emp.separationRemarks || '',
             idCardReturned: emp.idCardReturned || false,
-            managerId: emp.managerId || '',
+            managerId: emp.managerId?._id || emp.managerId || '',
             passportSizePhoto: null,
             appointmentLetter: null,
             resume: null,

@@ -184,7 +184,7 @@ const EmployeeList = () => {
 
   const handleDelete = async (employee) => {
     const confirmed = window.confirm(
-      `Are you sure you want to delete "${employee.fullName}" (${employee.newEmployeeCode})? This will remove the employee and all related data (user account, leave, attendance, documents, etc.). This action cannot be undone.`
+      `Are you sure you want to delete "${employee.fullName}" (${employee.newEmployeeCode || '-'})? This will remove the employee and all related data (user account, leave, attendance, documents, etc.). This action cannot be undone.`
     );
     if (!confirmed) return;
     setDeletingId(employee._id);
@@ -468,7 +468,7 @@ const EmployeeList = () => {
                         displayValue = getCompanyName(displayValue);
                       } else if (key === 'managerId') {
                         const manager = employees.find(emp => emp._id === displayValue);
-                        displayValue = manager ? `${manager.fullName} (${manager.newEmployeeCode})` : '-';
+                        displayValue = manager ? `${manager.fullName} (${manager.newEmployeeCode || '-'})` : '-';
                       } else if (key === 'shift' && displayValue && displayValue.name) {
                         return (
                           <div key={key} className="modal-detail-item">
