@@ -179,9 +179,10 @@ exports.getAttendance = async (req, res) => {
         const rec = attendanceMap.get(key);
         const leave = leaveMap.get(key);
 
-        // Check if today is weekend for this employee's shift
+        // Check if today is weekend for this employee's shift (default Friday & Saturday for all)
         const dayOfWeek = currentDay.day(); // 0=Sunday, 1=Monday, ..., 5=Friday, 6=Saturday
-        const isWeekend = employee.shiftId?.weekendDays?.includes(dayOfWeek);
+        const weekendDays = employee.shiftId?.weekendDays ?? [5, 6];
+        const isWeekend = weekendDays.includes(dayOfWeek);
 
         const record = {
           employeeId: empIdStr,
@@ -220,20 +221,11 @@ exports.getAttendance = async (req, res) => {
           const checkOutFormatted = rec.check_out
             ? timezone.format(rec.check_out, 'HH:mm:ss')
             : null;
-          
-          // Debug log to understand the timezone conversion
-          if (rec.check_in) {
-            const checkInUTC = moment(rec.check_in);
-            const checkInLocal = timezone.fromUTC(rec.check_in);
-            console.log(`🔍 DEBUG check_in - Employee: ${empIdStr}, Date: ${dateStr}`);
-            console.log(`   DB Value (UTC): ${rec.check_in}`);
-            console.log(`   Formatted: ${checkInFormatted}`);
-            console.log(`   From UTC moment: ${checkInLocal.format('YYYY-MM-DD HH:mm:ss ZZ')}`);
-          }
-          
+
           record.check_in = checkInFormatted;
           record.check_out = checkOutFormatted;
-          record.status = rec.check_out ? 'Present' : 'Incomplete';
+          // If employee has check_in, they are Present (whether or not they checked out)
+          record.status = rec.check_in ? 'Present' : 'Incomplete';
         }
 
         // Set Weekend status first (only if no punch record)

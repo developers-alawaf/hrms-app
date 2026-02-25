@@ -2,7 +2,11 @@ const Payslip = require('../models/payslip');
 const Salary = require('../models/salary');
 const EmployeesAttendance = require('../models/employeesAttendance');
 const LeaveRequest = require('../models/leaveRequest');
+const HolidayCalendar = require('../models/holidayCalendar');
+const Employee = require('../models/employee');
 const moment = require('moment-timezone');
+
+const TZ = 'Asia/Dhaka';
 
 exports.generatePayslip = async (req, res) => {
   try {
@@ -16,15 +20,43 @@ exports.generatePayslip = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Salary not found' });
     }
 
-    const startDate = moment(month, 'YYYY-MM').startOf('month').toDate();
-    const endDate = moment(month, 'YYYY-MM').endOf('month').toDate();
+    const startDate = moment(month, 'YYYY-MM').tz(TZ).startOf('month').toDate();
+    const endDate = moment(month, 'YYYY-MM').tz(TZ).endOf('month').toDate();
     const attendance = await EmployeesAttendance.find({ employeeId, companyId, date: { $gte: startDate, $lte: endDate } });
     const leaveRequests = await LeaveRequest.find({ employeeId, companyId, status: 'approved', startDate: { $lte: endDate }, endDate: { $gte: startDate } });
 
-    const workDays = moment(endDate).diff(startDate, 'days') + 1;
-    const presentDays = attendance.filter(a => a.status === 'Present').length;
-    const leaveDays = leaveRequests.reduce((sum, lr) => sum + moment(lr.endDate).diff(lr.startDate, 'days') + 1, 0);
-    const absentDays = workDays - presentDays - leaveDays - attendance.filter(a => a.status === 'Weekend' || a.status === 'Holiday').length;
+    // Working days = non-weekend, non-holiday days (holidays must NOT be counted)
+    const employee = await Employee.findById(employeeId).populate('shiftId', 'weekendDays').lean();
+    const weekendDays = employee?.shiftId?.weekendDays ?? [5, 6]; // Default Fri, Sat
+    const monthStart = moment(month, 'YYYY-MM').tz(TZ).startOf('month');
+    const monthEnd = moment(month, 'YYYY-MM').tz(TZ).endOf('month');
+    const companyIdForCal = companyId ?? null;
+    const [companyCal, globalCal] = await Promise.all([
+      HolidayCalendar.findOne({ companyId: companyIdForCal, year: monthStart.year() }).lean(),
+      HolidayCalendar.findOne({ companyId: null, year: monthStart.year() }).lean()
+    ]);
+    const allHolidays = [...(companyCal?.holidays || []), ...(globalCal?.holidays || [])];
+    const holidayDates = new Set();
+    allHolidays.forEach((h) => {
+      const start = moment(h.startDate).tz(TZ).startOf('day');
+      const end = h.endDate ? moment(h.endDate).tz(TZ).startOf('day') : start;
+      for (let d = moment(start); d.isSameOrBefore(end, 'day'); d.add(1, 'day')) {
+        if (d.isSameOrAfter(monthStart, 'day') && d.isSameOrBefore(monthEnd, 'day')) {
+          holidayDates.add(d.format('YYYY-MM-DD'));
+        }
+      }
+    });
+    let workDays = 0;
+    for (let d = moment(monthStart); d.isSameOrBefore(monthEnd, 'day'); d.add(1, 'day')) {
+      const dayNum = d.day();
+      const isWeekend = weekendDays.includes(dayNum);
+      const isHoliday = holidayDates.has(d.format('YYYY-MM-DD'));
+      if (!isWeekend && !isHoliday) workDays++;
+    }
+
+    const presentDays = attendance.filter(a => a.status === 'Present' || a.status === 'Incomplete').length;
+    const leaveDays = leaveRequests.reduce((sum, lr) => sum + moment(lr.endDate).diff(moment(lr.startDate), 'days') + 1, 0);
+    const absentDays = Math.max(0, workDays - presentDays - leaveDays);
 
     const netPay = salary.basicSalary + salary.allowances.reduce((sum, a) => sum + a.amount, 0) - salary.deductions.reduce((sum, d) => sum + d.amount, 0);
 

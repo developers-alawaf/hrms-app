@@ -34,7 +34,12 @@ const RemoteList = () => {
       if (data.success) {
         const remoteOnly = data.data
           .filter(request => request.type === 'remote')
-          .sort((a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate));
+          .sort((a, b) => {
+            const aPending = (a.status || '').toLowerCase() === 'pending' ? 1 : 0;
+            const bPending = (b.status || '').toLowerCase() === 'pending' ? 1 : 0;
+            if (bPending !== aPending) return bPending - aPending;
+            return String(b._id || '').localeCompare(String(a._id || ''));
+          });
         setRemoteRequests(remoteOnly);
         setFilteredRequests(remoteOnly);
       } else {
@@ -57,8 +62,13 @@ const RemoteList = () => {
       );
     }
 
-    // Keep newest first (in case filter changed order)
-    filtered.sort((a, b) => new Date(b.createdAt || b.startDate) - new Date(a.createdAt || a.startDate));
+    // Pending first, then ID descending
+    filtered.sort((a, b) => {
+      const aPending = (a.status || '').toLowerCase() === 'pending' ? 1 : 0;
+      const bPending = (b.status || '').toLowerCase() === 'pending' ? 1 : 0;
+      if (bPending !== aPending) return bPending - aPending;
+      return String(b._id || '').localeCompare(String(a._id || ''));
+    });
 
     setFilteredRequests(filtered);
     setCurrentPage(1);

@@ -53,8 +53,14 @@ const LeaveList = () => {
       const token = localStorage.getItem('token');
       const data = await getLeaveRequests(token);
       if (data.success) {
-        setLeaveRequests(data.data);
-        setFilteredRequests(data.data);
+        const sorted = [...data.data].sort((a, b) => {
+          const aPending = (a.status || '').toLowerCase() === 'pending' ? 1 : 0;
+          const bPending = (b.status || '').toLowerCase() === 'pending' ? 1 : 0;
+          if (bPending !== aPending) return bPending - aPending;
+          return String(b._id || '').localeCompare(String(a._id || ''));
+        });
+        setLeaveRequests(sorted);
+        setFilteredRequests(sorted);
       } else {
         setError(data.error || 'Failed to fetch leave requests');
       }
@@ -66,7 +72,7 @@ const LeaveList = () => {
   };
 
   useEffect(() => {
-    let filtered = leaveRequests;
+    let filtered = [...leaveRequests];
 
     // Exclude Remote type from Leave History list
     filtered = filtered.filter(request =>
@@ -79,6 +85,14 @@ const LeaveList = () => {
          request.employeeId?.newEmployeeCode?.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
+
+    // Pending first, then ID descending
+    filtered.sort((a, b) => {
+      const aPending = (a.status || '').toLowerCase() === 'pending' ? 1 : 0;
+      const bPending = (b.status || '').toLowerCase() === 'pending' ? 1 : 0;
+      if (bPending !== aPending) return bPending - aPending;
+      return String(b._id || '').localeCompare(String(a._id || ''));
+    });
 
     setFilteredRequests(filtered);
     setCurrentPage(1);

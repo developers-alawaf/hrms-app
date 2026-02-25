@@ -365,7 +365,7 @@ const Dashboard = () => {
                   <span className="stat-card__value">{selectedEmployeeMonthSummary.leaveDays ?? 0}</span>
                   <span className="stat-card__sublabel">days</span>
                 </Link>
-                <Link to="/attendance" className="stat-card stat-card--late stat-card--link">
+                {/* <Link to="/attendance" className="stat-card stat-card--late stat-card--link">
                   <span className="stat-card__label">Late by this month</span>
                   <span className="stat-card__value">{formatMinutesToHoursMinutes(selectedEmployeeMonthSummary.totalLateByMinutes ?? 0)}</span>
                   <span className="stat-card__sublabel">total</span>
@@ -374,7 +374,7 @@ const Dashboard = () => {
                   <span className="stat-card__label">Overtime this month</span>
                   <span className="stat-card__value">{formatMinutesToHoursMinutes(selectedEmployeeMonthSummary.totalOvertimeMinutes ?? 0)}</span>
                   <span className="stat-card__sublabel">total</span>
-                </Link>
+                </Link> */}
               </div>
             ) : null
           )}
@@ -414,7 +414,7 @@ const Dashboard = () => {
               <span className="stat-card__value">{monthSummary.leaveDays ?? 0}</span>
               <span className="stat-card__sublabel">days</span>
             </Link>
-            <Link to="/attendance" className="stat-card stat-card--late stat-card--link">
+            {/* <Link to="/attendance" className="stat-card stat-card--late stat-card--link">
               <span className="stat-card__label">Late by this month</span>
               <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalLateByMinutes ?? 0)}</span>
               <span className="stat-card__sublabel">total</span>
@@ -423,7 +423,7 @@ const Dashboard = () => {
               <span className="stat-card__label">Overtime this month</span>
               <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalOvertimeMinutes ?? 0)}</span>
               <span className="stat-card__sublabel">total</span>
-            </Link>
+            </Link> */}
           </div>
         </section>
       )}
