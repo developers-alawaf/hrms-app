@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { createLeaveRequest, getLeaveRequests, approveLeaveRequest, denyLeaveRequest, getLeaveSummary } from '../api/leave';
+import { createLeaveRequest, getLeaveRequests, approveLeaveRequest, denyLeaveRequest, deleteLeaveRequest, getLeaveSummary } from '../api/leave';
+import { Trash2 } from 'lucide-react';
 import '../styles/Leave.css';
 
 const LeaveList = () => {
@@ -23,6 +24,7 @@ const LeaveList = () => {
   const [loadingList, setLoadingList] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchLeaveRequests();
@@ -171,6 +173,28 @@ const LeaveList = () => {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this leave request? This action cannot be undone.')) return;
+    try {
+      setError('');
+      setSuccess('');
+      setDeletingId(id);
+      const token = localStorage.getItem('token');
+      const data = await deleteLeaveRequest(id, token);
+      if (data.success) {
+        setSuccess('Leave request deleted successfully!');
+        await fetchLeaveRequests();
+        await fetchMyLeaveSummary();
+      } else {
+        setError(data.error || 'Failed to delete leave request');
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || err.message || 'Failed to delete leave request');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const indexOfLastRequest = currentPage * rowsPerPage;
   const indexOfFirstRequest = indexOfLastRequest - rowsPerPage;
   const currentRequests = filteredRequests.slice(indexOfFirstRequest, indexOfLastRequest);
@@ -213,15 +237,13 @@ const LeaveList = () => {
       <div className="leave-header">
         <h3 className="leave-section-title">Leave History</h3>
         <div className="leave-controls">
-          {(user?.role === 'HR Manager' || user?.role === 'Manager') && (
-            <input
-              type="text"
-              placeholder="Search by employee name or code"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="employee-input employee-search"
-            />
-          )}
+          <input
+            type="text"
+            placeholder="Search by employee name or code"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="employee-input employee-search"
+          />
         </div>
       </div>
 
@@ -265,6 +287,18 @@ const LeaveList = () => {
                               <button onClick={() => handleApprove(request._id)} className="employee-button approve-button">Approve</button>
                               <button onClick={() => handleDeny(request._id)} className="employee-button deny-button">Deny</button>
                             </>
+                          )}
+                          {user?.role === 'Super Admin' && (
+                            <button
+                              onClick={() => handleDelete(request._id)}
+                              disabled={deletingId === request._id}
+                              className="employee-button leave-delete-button"
+                              title="Delete leave request"
+                              style={{ marginLeft: canApproveDeny ? '0.5rem' : 0 }}
+                            >
+                              <Trash2 size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                              {deletingId === request._id ? 'Deleting…' : 'Delete'}
+                            </button>
                           )}
                         </td>
                       )}

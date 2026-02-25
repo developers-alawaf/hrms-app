@@ -6,6 +6,7 @@ const leaveController = require('../controllers/leaveController');
 router.post('/',  leaveController.createLeaveRequest);
 router.post('/:id/approve', restrictTo('Manager', 'HR Manager', 'Super Admin', 'Company Admin', 'C-Level Executive'), leaveController.approveLeaveRequest);
 router.post('/:id/deny', restrictTo('Manager', 'HR Manager', 'Super Admin', 'Company Admin' , 'C-Level Executive'), leaveController.denyLeaveRequest);
+router.delete('/:id', restrictTo('Super Admin'), leaveController.deleteLeaveRequest);
 router.get('/', leaveController.getLeaveRequests);
 router.get('/summary', authenticate('jwt', { session: false }), leaveController.getLeaveSummary);
 

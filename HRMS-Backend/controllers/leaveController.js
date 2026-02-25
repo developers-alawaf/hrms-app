@@ -362,6 +362,87 @@ exports.approveLeaveRequest = async (req, res) => {
   }
 };
 
+exports.deleteLeaveRequest = async (req, res) => {
+  try {
+    const leaveRequest = await LeaveRequest.findById(req.params.id);
+    if (!leaveRequest) {
+      return res.status(404).json({ success: false, error: 'Leave request not found' });
+    }
+
+    // Revert attendance if the leave was approved (attendance was updated on approval)
+    if (leaveRequest.status === 'approved') {
+      const status = leaveRequest.type === 'remote' ? 'Remote' : 'Leave';
+      let currentDate = new Date(leaveRequest.startDate);
+      const endDateLoop = new Date(leaveRequest.endDate);
+      while (currentDate <= endDateLoop) {
+        const normalizedDate = moment.utc(currentDate).startOf('day').toDate();
+        const existingAttendance = await EmployeesAttendance.findOne({
+          employeeId: leaveRequest.employeeId,
+          date: normalizedDate
+        });
+        if (existingAttendance && (existingAttendance.status === 'Leave' || existingAttendance.status === 'Remote')) {
+          await EmployeesAttendance.findOneAndUpdate(
+            { employeeId: leaveRequest.employeeId, date: normalizedDate },
+            { $set: { status: 'Absent', leave_type: null } }
+          );
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+    }
+
+    await LeaveRequest.findByIdAndDelete(req.params.id);
+    console.log(`✅ Deleted leave request: id: ${req.params.id}, employeeId: ${leaveRequest.employeeId}`);
+
+    // Log delete (non-blocking)
+    const userInfo = activityLogService.extractUserInfo(req);
+    const ipAddress = activityLogService.extractIpAddress(req);
+    const userAgent = activityLogService.extractUserAgent(req);
+    if (userInfo && userInfo.userId) {
+      const leaveEmployee = await Employee.findById(leaveRequest.employeeId).catch(() => null);
+      activityLogService.logActivity({
+        userId: userInfo.userId,
+        employeeId: req.user.employeeId,
+        companyId: leaveRequest.companyId,
+        action: 'DELETE_LEAVE',
+        entityType: 'Leave',
+        entityId: leaveRequest._id,
+        description: `Deleted ${leaveRequest.type} request for ${leaveEmployee?.fullName || leaveRequest.employeeId} from ${moment(leaveRequest.startDate).format('YYYY-MM-DD')} to ${moment(leaveRequest.endDate).format('YYYY-MM-DD')}`,
+        ipAddress,
+        userAgent,
+        metadata: {
+          leaveRequestId: leaveRequest._id,
+          employeeId: leaveRequest.employeeId,
+          leaveType: leaveRequest.type,
+          startDate: leaveRequest.startDate,
+          endDate: leaveRequest.endDate,
+          previousStatus: leaveRequest.status
+        },
+        status: 'SUCCESS'
+      }).catch(() => {});
+    }
+
+    res.status(200).json({ success: true, message: 'Leave request deleted successfully.' });
+  } catch (error) {
+    console.error(`❌ Error deleting leave request: ${error.message}`);
+    const userInfo = activityLogService.extractUserInfo(req);
+    if (userInfo && userInfo.userId) {
+      activityLogService.logError(
+        userInfo.userId,
+        'DELETE_LEAVE',
+        'Leave',
+        'Failed to delete leave request',
+        error.message,
+        {
+          entityId: req.params.id,
+          ipAddress: activityLogService.extractIpAddress(req),
+          userAgent: activityLogService.extractUserAgent(req)
+        }
+      ).catch(() => {});
+    }
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+
 exports.denyLeaveRequest = async (req, res) => {
   try {
     const leaveRequest = await LeaveRequest.findById(req.params.id);

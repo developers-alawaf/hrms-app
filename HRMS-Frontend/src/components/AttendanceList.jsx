@@ -1,8 +1,10 @@
 import { useState, useEffect, useContext } from "react";
+import { Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { getEmployeeAttendance } from "../api/attendance";
 import { getEmployees } from "../api/employee";
 import * as XLSX from "xlsx";
+import "../styles/Dashboard.css";
 import "../styles/Attendance.css";
 
 const AttendanceList = () => {
@@ -18,7 +20,7 @@ const AttendanceList = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 10;
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const allowedRoles = ["Super Admin", "C-Level Executive", "Company Admin", "HR Manager"];
 
   const getStatusClass = (status) => {
@@ -180,17 +182,20 @@ const AttendanceList = () => {
   };
 
   // Pagination
-  const indexOfLast = currentPage * recordsPerPage;
-  const indexOfFirst = indexOfLast - recordsPerPage;
+  const indexOfLast = currentPage * rowsPerPage;
+  const indexOfFirst = indexOfLast - rowsPerPage;
   const currentRecords = filteredData.slice(indexOfFirst, indexOfLast);
-  const totalPages = Math.ceil(filteredData.length / recordsPerPage);
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
 
   if (loading) return <div className="employee-message">Loading...</div>;
   if (error) return <div className="employee-message employee-error">{error}</div>;
 
   return (
     <div className="attendance-container">
-      <h2 className="employee-title">Attendance</h2>
+      <header className="dashboard-header" style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+        <Link to="/dashboard" className="dashboard-card__link" style={{ fontSize: "0.875rem" }}>← Back to Dashboard</Link>
+        <h1 className="dashboard-title" style={{ margin: 0 }}>Attendance</h1>
+      </header>
 
       <div className="attendance-filters">
         <div className="form-group">
@@ -297,8 +302,23 @@ const AttendanceList = () => {
         </table>
       </div>
 
-      {filteredData.length > recordsPerPage && (
+      {filteredData.length > 0 && (
         <div className="pagination-controls">
+          <label htmlFor="rowsPerPageAttendance" className="rows-per-page-label">Rows per page</label>
+          <select
+            id="rowsPerPageAttendance"
+            value={rowsPerPage}
+            onChange={(e) => {
+              setRowsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+            className="employee-input rows-per-page-select"
+          >
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
@@ -306,7 +326,7 @@ const AttendanceList = () => {
           >
             Previous
           </button>
-          <span>Page {currentPage} of {totalPages}</span>
+          <span className="pagination-info">Page {currentPage} of {totalPages}</span>
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}

@@ -4,11 +4,10 @@ import { AuthContext, DEFAULT_AVATAR } from '../context/AuthContext';
 import { ThemeContext } from '../context/ThemeContext';
 import { Users, Calendar, FileText, Lock, LogOut, Menu, X, Briefcase, LayoutDashboard, ClipboardList, ChevronDown, Mail, Moon, Sun } from 'lucide-react';
 import '../styles/Sidebar.css';
-import logoImg from '../assets/kloud_tech.png';
+import logoDark from '../assets/kloud_tech_white.png';
+import logoLight from '../assets/kloud_tech.png';
 
 const defaultAvatar = '/default-avatar.png';
-
-const sidebarLogo = { src: logoImg, alt: 'Company Logo' };
 
 const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
   const authContext = useContext(AuthContext);
@@ -47,6 +46,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
 
   const { user, logout, loading } = authContext;
   const { theme, setTheme } = useContext(ThemeContext) || {};
+  const logoImg = theme === 'light' ? logoLight : logoDark;
 
   // Show loading state or return null if user is not available
   if (loading) {
@@ -75,7 +75,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
       <div className="sidebar-inner">
       <div className="sidebar-header">
         <Link to="/dashboard" onClick={handleLinkClick}>
-          <img src={sidebarLogo.src} alt={sidebarLogo.alt} className="sidebar-logo" />
+          <img src={logoImg} alt="Company Logo" className="sidebar-logo" />
         </Link>
         {!isDesktop && (
           <button className="close-sidebar" onClick={toggleSidebar}>
@@ -88,12 +88,6 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
           <Link to="/dashboard" className={`sidebar-link ${isActive('/dashboard') ? 'active' : ''}`} onClick={handleLinkClick}>
             <LayoutDashboard className="nav-icon" />
             Dashboard
-          </Link>
-        </li>
-        <li>
-          <Link to="/company-policies" className={`sidebar-link ${isActive('/company-policies') ? 'active' : ''}`} onClick={handleLinkClick}>
-            <FileText className="nav-icon" />
-            Company Policies
           </Link>
         </li>
         {/* <li>
@@ -299,7 +293,15 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
           
         </li>
 
+        <li>
+          <Link to="/company-policies" className={`sidebar-link ${isActive('/company-policies') ? 'active' : ''}`} onClick={handleLinkClick}>
+            <FileText className="nav-icon" />
+            Company Policies
+          </Link>
+        </li>
+        
         {(user?.role === 'Super Admin' || user?.role === 'HR Manager' || user?.role === 'Company Admin' || user?.role === 'C-Level Executive') && (
+          
           <li>
             <Link to="/documents" className={`sidebar-link ${isActive('/documents') ? 'active' : ''}`} onClick={handleLinkClick}>
               <FileText className="nav-icon" />

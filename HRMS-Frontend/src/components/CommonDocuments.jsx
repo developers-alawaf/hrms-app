@@ -1,6 +1,8 @@
 import { useState, useEffect, useContext } from 'react';
+import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { getCommonDocuments, uploadCommonDocument, deleteDocument } from '../api/document';
+import '../styles/Dashboard.css';
 import '../styles/Employee.css';
 import { Eye, Trash2, LayoutGrid, List, FileText, FileSpreadsheet, File } from 'lucide-react';
 const CommonDocuments = () => {
@@ -131,7 +133,10 @@ const CommonDocuments = () => {
 
   return (
     <div className="employee-container">
-      <h2 className="employee-title">Company Policies</h2>
+      <header className="dashboard-header" style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+        <Link to="/dashboard" className="dashboard-card__link" style={{ fontSize: "0.875rem" }}>← Back to Dashboard</Link>
+        <h1 className="dashboard-title" style={{ margin: 0 }}>Company Policies</h1>
+      </header>
 
       {canUpload && (
         <div className="section-card common-docs-upload-section">

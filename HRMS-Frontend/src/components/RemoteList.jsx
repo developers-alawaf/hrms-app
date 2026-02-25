@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { createLeaveRequest, getLeaveRequests, approveLeaveRequest, denyLeaveRequest } from '../api/leave';
+import { createLeaveRequest, getLeaveRequests, approveLeaveRequest, denyLeaveRequest, deleteLeaveRequest } from '../api/leave';
+import { Trash2 } from 'lucide-react';
 import '../styles/Leave.css';
 
 const RemoteList = () => {
@@ -22,6 +23,7 @@ const RemoteList = () => {
   const [loadingList, setLoadingList] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
     fetchRemoteRequests();
@@ -142,6 +144,27 @@ const RemoteList = () => {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this remote request? This action cannot be undone.')) return;
+    try {
+      setError('');
+      setSuccess('');
+      setDeletingId(id);
+      const token = localStorage.getItem('token');
+      const data = await deleteLeaveRequest(id, token);
+      if (data.success) {
+        setSuccess('Remote request deleted successfully!');
+        await fetchRemoteRequests();
+      } else {
+        setError(data.error || 'Failed to delete remote request');
+      }
+    } catch (err) {
+      setError(err.response?.data?.error || err.message || 'Failed to delete remote request');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   // Pagination logic
   const indexOfLastRequest = currentPage * rowsPerPage;
   const indexOfFirstRequest = indexOfLastRequest - rowsPerPage;
@@ -251,6 +274,18 @@ const RemoteList = () => {
                                 Deny
                               </button>
                             </>
+                          )}
+                          {user?.role === 'Super Admin' && (
+                            <button
+                              onClick={() => handleDelete(request._id)}
+                              disabled={deletingId === request._id}
+                              className="employee-button leave-delete-button"
+                              title="Delete remote request"
+                              style={{ marginLeft: canApproveDeny ? '0.5rem' : 0 }}
+                            >
+                              <Trash2 size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                              {deletingId === request._id ? 'Deleting…' : 'Delete'}
+                            </button>
                           )}
                         </td>
                       )}

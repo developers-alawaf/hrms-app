@@ -137,6 +137,15 @@
   color: #fca5a5;
 }
 
+.leave-delete-button {
+  background: #7f1d1d;
+}
+
+.leave-delete-button:hover {
+  background: #450a0a;
+  color: #fecaca;
+}
+
 .leave-header {
   display: flex;
   justify-content: space-between;

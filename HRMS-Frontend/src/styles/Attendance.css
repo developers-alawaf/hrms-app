@@ -7,16 +7,20 @@
   font-family: var(--app-font);
 }
 
-.attendance-container .employee-title {
-  font-size: clamp(1.5rem, 3.5vw, 2rem);
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  text-align: center;
-  background: linear-gradient(135deg, #60a5fa 0%, #93c5fd 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+.attendance-container .dashboard-header {
   margin-bottom: 20px;
+}
+
+.attendance-container .dashboard-header .dashboard-title {
+  color: var(--app-text);
+}
+
+.attendance-container .dashboard-header .dashboard-card__link {
+  color: var(--app-accent);
+}
+
+.attendance-container .dashboard-header .dashboard-card__link:hover {
+  color: var(--app-accent-light);
 }
 
 .attendance-filters {
@@ -130,6 +134,29 @@
 
 .attendance-table tbody tr:hover td {
   background: rgba(51, 65, 85, 0.25);
+}
+
+.attendance-container .rows-per-page-label {
+  font-size: 0.9375rem;
+  color: var(--app-text-muted);
+  white-space: nowrap;
+}
+
+.attendance-container .rows-per-page-select {
+  width: auto;
+  min-width: 70px;
+  padding: 8px 12px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+}
+
+.attendance-container .pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 1rem;
 }
 
 .attendance-container .pagination-button {

@@ -1,11 +1,15 @@
 /**
  * Centralized Email Service for HRMS
  * Supports Laravel-style MAIL_* vars and ZOHO_* vars for backward compatibility.
- * Uses Zoho SMTP (smtp.zoho.com or smtppro.zoho.com for Mail Pro).
+ * Uses Zoho SMTP - host depends on region:
+ *   - smtppro.zoho.com  (US/global, paid org with custom domain)
+ *   - smtppro.zoho.in   (India/Asia - use this if 535 auth fails with .com)
+ *   - smtppro.zoho.eu   (Europe)
+ * See Zoho Mail Settings > Server Configuration Details for your exact host.
  */
 const nodemailer = require('nodemailer');
 
-const mailHost = process.env.MAIL_HOST || process.env.EMAIL_HOST || 'smtppro.zoho.com';
+const mailHost = process.env.MAIL_HOST || process.env.EMAIL_HOST || process.env.ZOHO_SMTP_HOST || 'smtppro.zoho.com';
 const mailPort = parseInt(process.env.MAIL_PORT || process.env.EMAIL_PORT || '465', 10);
 const mailUser = process.env.MAIL_USERNAME || process.env.MAIL_FROM_ADDRESS || process.env.ZOHO_EMAIL || process.env.EMAIL_USER;
 const mailPass = process.env.MAIL_PASSWORD || process.env.ZOHO_PASSWORD || process.env.EMAIL_PASS;

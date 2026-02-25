@@ -30,6 +30,13 @@ export const denyLeaveRequest = async (id, token) => {
   return response.data;
 };
 
+export const deleteLeaveRequest = async (id, token) => {
+  const response = await axios.delete(`${API_URL}/api/leave/${id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.data;
+};
+
 export const getLeavePolicy = async (token, companyId, year) => {
   try {
     const response = await axios.get(`${API_URL}/api/leave/policy`, {

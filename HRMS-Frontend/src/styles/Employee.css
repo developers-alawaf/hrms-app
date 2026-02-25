@@ -7,6 +7,22 @@
   font-family: var(--app-font);
 }
 
+.employee-container .dashboard-header {
+  margin-bottom: 20px;
+}
+
+.employee-container .dashboard-header .dashboard-title {
+  color: var(--app-text);
+}
+
+.employee-container .dashboard-header .dashboard-card__link {
+  color: var(--app-accent);
+}
+
+.employee-container .dashboard-header .dashboard-card__link:hover {
+  color: var(--app-accent-light);
+}
+
 .employee-header {
   display: flex;
   flex-wrap: wrap;
@@ -368,9 +384,27 @@
 
 .pagination-controls {
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
+  flex-wrap: wrap;
   margin-top: 20px;
+}
+
+.rows-per-page-label {
+  font-size: 0.9375rem;
+  color: var(--app-text-muted);
+  white-space: nowrap;
+}
+
+.rows-per-page-select {
+  width: auto;
+  min-width: 70px;
+  padding: 8px 12px;
+  background: var(--app-surface);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  border-radius: 8px;
 }
 
 .pagination-button {

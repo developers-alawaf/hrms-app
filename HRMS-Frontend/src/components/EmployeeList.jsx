@@ -21,10 +21,10 @@ const EmployeeList = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [showModal, setShowModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
-  const employeesPerPage = 10;
   const authorized = user?.role === 'Super Admin' || user?.role === 'HR Manager';
   const tableContainerRef = useRef(null);
   const topScrollRef = useRef(null);
@@ -105,7 +105,7 @@ const EmployeeList = () => {
     const ro = new ResizeObserver(updateSpacerWidth);
     ro.observe(tableEl);
     return () => ro.disconnect();
-  }, [filteredEmployees, currentPage, employeesPerPage]);
+  }, [filteredEmployees, currentPage, rowsPerPage]);
 
   const syncScrollFromTable = () => {
     if (scrollSyncRef.current) return;
@@ -252,10 +252,10 @@ const EmployeeList = () => {
     XLSX.writeFile(wb, 'employees.xlsx');
   };
 
-  const indexOfLastEmployee = currentPage * employeesPerPage;
-  const indexOfFirstEmployee = indexOfLastEmployee - employeesPerPage;
+  const indexOfLastEmployee = currentPage * rowsPerPage;
+  const indexOfFirstEmployee = indexOfLastEmployee - rowsPerPage;
   const currentEmployees = filteredEmployees.slice(indexOfFirstEmployee, indexOfLastEmployee);
-  const totalPages = Math.ceil(filteredEmployees.length / employeesPerPage);
+  const totalPages = Math.ceil(filteredEmployees.length / rowsPerPage) || 1;
 
   const handlePrevious = () => {
     if (currentPage > 1) setCurrentPage(currentPage - 1);
@@ -397,8 +397,23 @@ const EmployeeList = () => {
             </table>
             </div>
           </div>
-          {filteredEmployees.length > employeesPerPage && (
+          {filteredEmployees.length > 0 && (
             <div className="pagination-controls">
+              <label htmlFor="rowsPerPageEmployee" className="rows-per-page-label">Rows per page</label>
+              <select
+                id="rowsPerPageEmployee"
+                value={rowsPerPage}
+                onChange={(e) => {
+                  setRowsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="employee-input rows-per-page-select"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
               <button
                 onClick={handlePrevious}
                 disabled={currentPage === 1}
