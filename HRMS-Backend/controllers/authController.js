@@ -243,7 +243,7 @@ exports.requestPasswordReset = async (req, res) => {
         from: `"${process.env.MAIL_FROM_NAME || 'HRMS'}" <${process.env.MAIL_FROM_ADDRESS || process.env.MAIL_USERNAME || process.env.ZOHO_EMAIL}>`,
         to: user.email,
         subject: 'HRMS Password Reset',
-        html: `You have requested a password reset. Please reset your password: <a href="${process.env.FRONTEND_URL}/reset-password?token=${token}">Reset Password</a><br>This link expires in 7 days.`
+        html: `You have requested a password reset. Please reset your password: <a href="${(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '')}/reset-password?token=${token}">Reset Password</a><br>This link expires in 7 days.`
       });
       console.log('requestPasswordReset - Email sent to:', user.email);
       res.status(200).json({ success: true, message: 'Password reset link sent' });
@@ -319,7 +319,7 @@ exports.resendInvitation = async (req, res) => {
     user.invitationExpires = invitationExpires;
     await user.save();
 
-    const invitationLink = `${process.env.FRONTEND_URL}/accept-invitation?token=${invitationToken}`;
+    const invitationLink = `${(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '')}/accept-invitation?token=${invitationToken}`;
     const transport = emailService.getTransporter();
     if (!transport) throw new Error('Email service not configured');
     await transport.sendMail({
@@ -382,7 +382,7 @@ exports.forceResendInvitation = async (req, res) => {
     user.isActive = false; // Deactivate user until they accept the new invitation
     await user.save();
 
-    const invitationLink = `${process.env.FRONTEND_URL}/accept-invitation?token=${invitationToken}`;
+    const invitationLink = `${(process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/+$/, '')}/accept-invitation?token=${invitationToken}`;
     const transport = emailService.getTransporter();
     if (!transport) throw new Error('Email service not configured');
     await transport.sendMail({
