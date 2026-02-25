@@ -113,8 +113,15 @@ const ChangePassword = () => {
         </div>
         {error && <p className="error">{error}</p>}
         {success && <p className="success">{success}</p>}
-        <button type="submit" disabled={loading}>
-          {loading ? 'Changing...' : 'Change Password'}
+        <button type="submit" disabled={loading} className="login-button change-password-btn">
+          {loading ? (
+            <>
+              <span className="btn-spinner" />
+              Changing...
+            </>
+          ) : (
+            'Change Password'
+          )}
         </button>
       </form>
     </div>

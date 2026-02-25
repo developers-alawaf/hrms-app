@@ -120,3 +120,29 @@
 .login-button:hover::before {
   left: 100%;
 }
+
+.auth-form .change-password-btn {
+  width: 100%;
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.auth-form .change-password-btn:disabled {
+  transform: none;
+}
+
+.auth-form .change-password-btn .btn-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btn-spin 0.7s linear infinite;
+}
+
+@keyframes btn-spin {
+  to { transform: rotate(360deg); }
+}
