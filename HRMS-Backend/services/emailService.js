@@ -45,9 +45,9 @@ function getTransporter() {
 }
 
 /**
- * Send leave/remote request notification to manager
+ * Send leave/remote request notification to manager (or HR/Admin if no manager)
  * @param {Object} options
- * @param {string} options.managerEmail - Manager's email address
+ * @param {string|string[]} options.managerEmail - Manager/approver email(s) - single or array
  * @param {string} options.employeeName - Name of employee who requested
  * @param {string} options.type - 'leave' | 'remote' (leave type: casual, sick, remote, etc.)
  * @param {Date} options.startDate - Start date
@@ -57,8 +57,10 @@ function getTransporter() {
  */
 async function sendLeaveRequestNotificationToManager(options) {
   const { managerEmail, employeeName, type, startDate, endDate, isHalfDay, remarks } = options;
-  if (!managerEmail || !managerEmail.trim()) {
-    console.warn('[EmailService] Cannot send notification: manager email is empty.');
+  const emails = Array.isArray(managerEmail) ? managerEmail : (managerEmail ? [managerEmail] : []);
+  const validEmails = emails.map(e => (e || '').trim()).filter(Boolean);
+  if (validEmails.length === 0) {
+    console.warn('[EmailService] Cannot send notification: no approver email(s) provided.');
     return { sent: false, reason: 'no_manager_email' };
   }
 
@@ -130,12 +132,12 @@ async function sendLeaveRequestNotificationToManager(options) {
   try {
     await transport.sendMail({
       from: `"${mailFromName}" <${mailFrom}>`,
-      to: managerEmail,
+      to: validEmails.join(', '),
       subject,
       text,
       html
     });
-    console.log(`[EmailService] Notification sent to manager ${managerEmail} for ${requestType} request from ${employeeName}`);
+    console.log(`[EmailService] Notification sent to ${validEmails.join(', ')} for ${requestType} request from ${employeeName}`);
     return { sent: true };
   } catch (err) {
     console.error('[EmailService] Failed to send manager notification:', err.message);
