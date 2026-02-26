@@ -120,6 +120,114 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
             </Link>
           </li>
         )}
+        {(user?.role === 'Super Admin' || user?.role === 'HR Manager' || user?.role === 'Company Admin' || user?.department?.name?.toLowerCase().includes('noc')) && (
+            <li className="dropdown">
+                <div className="sidebar-link dropdown-toggle" onClick={() => toggleDropdown('shiftingRoster')}>
+                    <ClipboardList className="nav-icon" />
+                    Shifting Roster
+                    <ChevronDown className="dropdown-chevron" size={18} />
+                </div>
+                {openDropdown === 'shiftingRoster' && (
+                    <ul className="dropdown-menu">
+                        {/* <li>
+                            <Link to="/shift-management/shifts" className={`dropdown-item ${isActive('/shift-management/shifts') ? 'active' : ''}`} onClick={handleLinkClick}>
+                                Shift Management
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/shift-management/roster" className={`dropdown-item ${isActive('/shift-management/roster') ? 'active' : ''}`} onClick={handleLinkClick}>
+                                Roster Management
+                            </Link>
+                        </li> */}
+                        <li>
+                            <Link to="/shift-management/roster-duty/shifts" className={`dropdown-item ${isActive('/shift-management/roster-duty/shifts') ? 'active' : ''}`} onClick={handleLinkClick}>
+                                Shift Definitions
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/shift-management/roster-duty/schedule" className={`dropdown-item ${isActive('/shift-management/roster-duty/schedule') ? 'active' : ''}`} onClick={handleLinkClick}>
+                                Employee Weekly Schedule
+                            </Link>
+                        </li>
+                        {/* <li>
+                            <Link to="/shift-management/attendance" className={`dropdown-item ${isActive('/shift-management/attendance') ? 'active' : ''}`} onClick={handleLinkClick}>
+                                Roster Attendance
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/shift-management/wfh" className={`dropdown-item ${isActive('/shift-management/wfh') ? 'active' : ''}`} onClick={handleLinkClick}>
+                                WFH Requests
+                            </Link>
+                        </li>
+                        <li>
+                            <Link to="/shift-management/outside-work" className={`dropdown-item ${isActive('/shift-management/outside-work') ? 'active' : ''}`} onClick={handleLinkClick}>
+                                Outside Work Requests
+                            </Link>
+                        </li> */}
+                        {/* <li>
+                            <Link to="/shifting-roster/employee-roster" className="dropdown-item" onClick={handleLinkClick}>
+                                Employee Roster
+                            </Link>
+                        </li> */}
+                    </ul>
+                )}
+            </li>
+        )}
+        
+        <li className="dropdown">
+          <div className="sidebar-link dropdown-toggle" onClick={() => toggleDropdown('requests')}>
+            <Briefcase className="nav-icon" />
+            Requests
+            <ChevronDown className="dropdown-chevron" size={18} />
+          </div>
+          {openDropdown === 'requests' && (
+            <ul className="dropdown-menu">
+              <li>
+                <Link to="/leave" className={`dropdown-item ${isActiveExact('/leave') ? 'active' : ''}`} onClick={handleLinkClick}>
+                  Leave Requests {pendingLeaveCount > 0 && <span className="sidebar-pending-count">{pendingLeaveCount}</span>}
+                </Link>
+              </li>
+              <li>
+                <Link to="/remote" className={`dropdown-item ${isActiveExact('/remote') ? 'active' : ''}`} onClick={handleLinkClick}>
+                  Remote Requests {pendingRemoteCount > 0 && <span className="sidebar-pending-count">{pendingRemoteCount}</span>}
+                </Link>
+              </li>
+              {/* {user?.role === 'HR Manager' && (
+                <li>
+                  <Link to="/leave/all" className="dropdown-item" onClick={handleLinkClick}>
+                    All Requests
+                  </Link>
+                </li>
+              )} */}
+              {/* <li>
+                <Link to="/leave/summary" className="dropdown-item" onClick={handleLinkClick}>
+                  Leave Summary
+                </Link>
+              </li> */}
+              {(user?.role === 'Super Admin' || user?.role === 'Company Admin' || user?.role === 'HR Manager' || user?.role === 'C-Level Executive') && (
+                <>
+                  
+                  {(user?.role === 'HR Manager') && (
+                    <li>
+                      <Link to="/leave/balance" className={`dropdown-item ${isActiveExact('/leave/balance') ? 'active' : ''}`} onClick={handleLinkClick}>
+                        All Employee Leave Balance
+                      </Link>
+                    </li>
+                  )}
+                </>
+              )}
+              {(user?.role === 'Employee' || user?.role === 'Manager' || user?.role === 'HR Manager' || user?.role === 'Super Admin' || user?.role === 'Company Admin' || user?.role === 'C-Level Executive') && (
+                <li>
+                  <Link to="/my-leave-balance" className={`dropdown-item ${isActiveExact('/my-leave-balance') ? 'active' : ''}`} onClick={handleLinkClick}>
+                    My Leave Balance
+                  </Link>
+                </li>
+              )}
+            </ul>
+          )}
+          
+        </li>
+
         {(user?.role === 'Super Admin' || user?.role === 'HR Manager' || user?.role === 'Company Admin' || user?.role === 'C-Level Executive') && (
           <li>
             <Link to="/company" className={`sidebar-link ${isActive('/company') ? 'active' : ''}`} onClick={handleLinkClick}>
@@ -128,6 +236,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
             </Link>
           </li>
         )}
+
         {(user?.role === 'Super Admin' || user?.role === 'HR Manager' || user?.role === 'Company Admin') && (
           <li className="dropdown">
             <div className="sidebar-link dropdown-toggle" onClick={() => toggleDropdown('admin')}>
@@ -197,103 +306,6 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
             )}
           </li>
         )}
-        {(user?.role === 'Super Admin' || user?.role === 'HR Manager' || user?.role === 'Company Admin' || user?.department?.name?.toLowerCase().includes('noc')) && (
-            <li className="dropdown">
-                <div className="sidebar-link dropdown-toggle" onClick={() => toggleDropdown('shiftingRoster')}>
-                    <ClipboardList className="nav-icon" />
-                    Shifting Roster
-                    <ChevronDown className="dropdown-chevron" size={18} />
-                </div>
-                {openDropdown === 'shiftingRoster' && (
-                    <ul className="dropdown-menu">
-                        <li>
-                            <Link to="/shift-management/shifts" className={`dropdown-item ${isActive('/shift-management/shifts') ? 'active' : ''}`} onClick={handleLinkClick}>
-                                Shift Management
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/shift-management/roster" className={`dropdown-item ${isActive('/shift-management/roster') ? 'active' : ''}`} onClick={handleLinkClick}>
-                                Roster Management
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/shift-management/attendance" className={`dropdown-item ${isActive('/shift-management/attendance') ? 'active' : ''}`} onClick={handleLinkClick}>
-                                Roster Attendance
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/shift-management/wfh" className={`dropdown-item ${isActive('/shift-management/wfh') ? 'active' : ''}`} onClick={handleLinkClick}>
-                                WFH Requests
-                            </Link>
-                        </li>
-                        <li>
-                            <Link to="/shift-management/outside-work" className={`dropdown-item ${isActive('/shift-management/outside-work') ? 'active' : ''}`} onClick={handleLinkClick}>
-                                Outside Work Requests
-                            </Link>
-                        </li>
-                        {/* <li>
-                            <Link to="/shifting-roster/employee-roster" className="dropdown-item" onClick={handleLinkClick}>
-                                Employee Roster
-                            </Link>
-                        </li> */}
-                    </ul>
-                )}
-            </li>
-        )}
-        
-        <li className="dropdown">
-          <div className="sidebar-link dropdown-toggle" onClick={() => toggleDropdown('requests')}>
-            <Briefcase className="nav-icon" />
-            Requests
-            <ChevronDown className="dropdown-chevron" size={18} />
-          </div>
-          {openDropdown === 'requests' && (
-            <ul className="dropdown-menu">
-              <li>
-                <Link to="/leave" className={`dropdown-item ${isActiveExact('/leave') ? 'active' : ''}`} onClick={handleLinkClick}>
-                  Leave Requests {pendingLeaveCount > 0 && <span className="sidebar-pending-count">{pendingLeaveCount}</span>}
-                </Link>
-              </li>
-              <li>
-                <Link to="/remote" className={`dropdown-item ${isActiveExact('/remote') ? 'active' : ''}`} onClick={handleLinkClick}>
-                  Remote Requests {pendingRemoteCount > 0 && <span className="sidebar-pending-count">{pendingRemoteCount}</span>}
-                </Link>
-              </li>
-              {/* {user?.role === 'HR Manager' && (
-                <li>
-                  <Link to="/leave/all" className="dropdown-item" onClick={handleLinkClick}>
-                    All Requests
-                  </Link>
-                </li>
-              )} */}
-              {/* <li>
-                <Link to="/leave/summary" className="dropdown-item" onClick={handleLinkClick}>
-                  Leave Summary
-                </Link>
-              </li> */}
-              {(user?.role === 'Super Admin' || user?.role === 'Company Admin' || user?.role === 'HR Manager' || user?.role === 'C-Level Executive') && (
-                <>
-                  
-                  {(user?.role === 'HR Manager') && (
-                    <li>
-                      <Link to="/leave/balance" className={`dropdown-item ${isActiveExact('/leave/balance') ? 'active' : ''}`} onClick={handleLinkClick}>
-                        All Employee Leave Balance
-                      </Link>
-                    </li>
-                  )}
-                </>
-              )}
-              {(user?.role === 'Employee' || user?.role === 'Manager' || user?.role === 'HR Manager' || user?.role === 'Super Admin' || user?.role === 'Company Admin' || user?.role === 'C-Level Executive') && (
-                <li>
-                  <Link to="/my-leave-balance" className={`dropdown-item ${isActiveExact('/my-leave-balance') ? 'active' : ''}`} onClick={handleLinkClick}>
-                    My Leave Balance
-                  </Link>
-                </li>
-              )}
-            </ul>
-          )}
-          
-        </li>
 
         <li>
           <Link to="/company-policies" className={`sidebar-link ${isActive('/company-policies') ? 'active' : ''}`} onClick={handleLinkClick}>

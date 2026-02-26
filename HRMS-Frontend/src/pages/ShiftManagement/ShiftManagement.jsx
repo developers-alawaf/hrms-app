@@ -183,25 +183,27 @@ const ShiftManagement = () => {
 
                     <div className="form-row">
                         <div className="form-group">
-                            <label htmlFor="officeStartTime">Office Start Time: *</label>
+                            <label htmlFor="officeStartTime">Office Start Time {!formData.isOffDay && '*'}</label>
                             <input
                                 type="time"
                                 id="officeStartTime"
                                 name="officeStartTime"
                                 value={formData.officeStartTime}
                                 onChange={handleFormChange}
-                                required
+                                required={!formData.isOffDay}
+                                disabled={formData.isOffDay}
                             />
                         </div>
                         <div className="form-group">
-                            <label htmlFor="officeEndTime">Office End Time: *</label>
+                            <label htmlFor="officeEndTime">Office End Time {!formData.isOffDay && '*'}</label>
                             <input
                                 type="time"
                                 id="officeEndTime"
                                 name="officeEndTime"
                                 value={formData.officeEndTime}
                                 onChange={handleFormChange}
-                                required
+                                required={!formData.isOffDay}
+                                disabled={formData.isOffDay}
                             />
                         </div>
                     </div>

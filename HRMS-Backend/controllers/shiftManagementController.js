@@ -9,17 +9,19 @@ const moment = require('moment-timezone');
 exports.createShift = async (req, res) => {
     try {
         const { name, shiftCode, officeStartTime, officeEndTime, wfhStartTime, wfhEndTime, isFingerprintRequired, isApprovalRequired, isOffDay } = req.body;
+        // For Off-Day shifts, times are optional (no start/end time)
+        const isOff = !!isOffDay;
         const shift = new ShiftManagement({
             recordType: 'ShiftDefinition',
             name,
             shiftCode,
-            officeStartTime,
-            officeEndTime,
-            wfhStartTime,
-            wfhEndTime,
-            isFingerprintRequired,
-            isApprovalRequired,
-            isOffDay
+            officeStartTime: isOff ? (officeStartTime || null) : officeStartTime,
+            officeEndTime: isOff ? (officeEndTime || null) : officeEndTime,
+            wfhStartTime: wfhStartTime || null,
+            wfhEndTime: wfhEndTime || null,
+            isFingerprintRequired: !!isFingerprintRequired,
+            isApprovalRequired: !!isApprovalRequired,
+            isOffDay: isOff
         });
         await shift.save();
         res.status(201).json({ message: 'Shift created successfully', shift });
@@ -1376,5 +1378,271 @@ exports.getShiftBasedAttendance = async (req, res) => {
             message: 'Error fetching shift-based attendance', 
             error: error.message 
         });
+    }
+};
+
+// ==================== ROSTER DUTY (Weekly Schedule) ====================
+// Access: Super Admin, Manager in NOC (full), Employee in NOC (read-only)
+// Data: NOC department employees only
+
+const isEmployeeInNoc = async (req) => {
+    if (!req.user?.employeeId) return false;
+    const emp = await Employee.findById(req.user.employeeId).populate('department').lean();
+    if (!emp?.department) return false;
+    const deptName = (emp.department?.name || '').toLowerCase();
+    return deptName.includes('noc');
+};
+
+/** Full access: Super Admin or Manager in NOC */
+const isRosterDutyAuthorized = async (req) => {
+    if (req.user.role === 'Super Admin') return true;
+    if (req.user.role === 'Manager' && (await isEmployeeInNoc(req))) return true;
+    return false;
+};
+
+/** Read-only access: full access OR Employee in NOC (view table only) */
+const isRosterDutyReadAuthorized = async (req) => {
+    if (await isRosterDutyAuthorized(req)) return true;
+    if (req.user.role === 'Employee' && (await isEmployeeInNoc(req))) return true;
+    return false;
+};
+
+const getNocDepartmentAndEmployees = async () => {
+    const Department = require('../models/department');
+    const nocDept = await Department.findOne({ name: { $regex: /noc/i }, isActive: true });
+    if (!nocDept) return { nocDepartment: null, employees: [] };
+    const nocEmployees = await Employee.find({ department: nocDept._id })
+        .populate('department', 'name')
+        .select('_id fullName newEmployeeCode department')
+        .lean();
+    return { nocDepartment: nocDept, employees: nocEmployees };
+};
+
+exports.getRosterDutyShifts = async (req, res) => {
+    try {
+        if (!(await isRosterDutyReadAuthorized(req))) {
+            return res.status(403).json({ success: false, message: 'Access denied. Super Admin, NOC Manager, or NOC Employee can access.' });
+        }
+        const shifts = await ShiftManagement.find({ recordType: 'ShiftDefinition' }).lean();
+        res.status(200).json(shifts);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching shifts', error: error.message });
+    }
+};
+
+exports.createRosterDutyShift = async (req, res) => {
+    try {
+        if (!(await isRosterDutyAuthorized(req))) {
+            return res.status(403).json({ success: false, message: 'Access denied. Only Super Admin or NOC Manager can create shifts.' });
+        }
+        const { name, shiftCode, officeStartTime, officeEndTime, isOffDay } = req.body;
+        const isOff = !!isOffDay;
+        const shift = new ShiftManagement({
+            recordType: 'ShiftDefinition',
+            name: name || 'Unnamed',
+            shiftCode: shiftCode || (name || 'shift').replace(/\s+/g, '-').toLowerCase(),
+            officeStartTime: isOff ? null : (officeStartTime || null),
+            officeEndTime: isOff ? null : (officeEndTime || null),
+            isOffDay: isOff
+        });
+        await shift.save();
+        res.status(201).json({ message: 'Shift created successfully', shift });
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'Shift code already exists.', error: error.message });
+        }
+        res.status(500).json({ message: 'Error creating shift', error: error.message });
+    }
+};
+
+exports.updateRosterDutyShift = async (req, res) => {
+    try {
+        if (!(await isRosterDutyAuthorized(req))) {
+            return res.status(403).json({ success: false, message: 'Access denied.' });
+        }
+        const { id } = req.params;
+        const { name, shiftCode, officeStartTime, officeEndTime, isOffDay } = req.body;
+        const isOff = !!isOffDay;
+        const updateData = {
+            name: name || 'Unnamed',
+            shiftCode: shiftCode || (name || 'shift').replace(/\s+/g, '-').toLowerCase(),
+            officeStartTime: isOff ? null : (officeStartTime || null),
+            officeEndTime: isOff ? null : (officeEndTime || null),
+            isOffDay: isOff
+        };
+        const shift = await ShiftManagement.findOneAndUpdate(
+            { _id: id, recordType: 'ShiftDefinition' },
+            updateData,
+            { new: true }
+        );
+        if (!shift) return res.status(404).json({ message: 'Shift not found' });
+        res.status(200).json({ message: 'Shift updated successfully', shift });
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(400).json({ message: 'Shift code already exists.', error: error.message });
+        }
+        res.status(500).json({ message: 'Error updating shift', error: error.message });
+    }
+};
+
+exports.deleteRosterDutyShift = async (req, res) => {
+    try {
+        if (!(await isRosterDutyAuthorized(req))) {
+            return res.status(403).json({ success: false, message: 'Access denied.' });
+        }
+        const { id } = req.params;
+        const shift = await ShiftManagement.findOneAndDelete({ _id: id, recordType: 'ShiftDefinition' });
+        if (!shift) return res.status(404).json({ message: 'Shift not found' });
+        res.status(200).json({ message: 'Shift deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting shift', error: error.message });
+    }
+};
+
+exports.getRosterDutyNocEmployees = async (req, res) => {
+    try {
+        if (!(await isRosterDutyReadAuthorized(req))) {
+            return res.status(403).json({ success: false, message: 'Access denied.' });
+        }
+        const { employees } = await getNocDepartmentAndEmployees();
+        res.status(200).json(employees);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching employees', error: error.message });
+    }
+};
+
+exports.getRosterDutySchedules = async (req, res) => {
+    try {
+        if (!(await isRosterDutyReadAuthorized(req))) {
+            return res.status(403).json({ success: false, message: 'Access denied.' });
+        }
+        const RosterDutySchedule = require('../models/rosterDutySchedule');
+        const { employees } = await getNocDepartmentAndEmployees();
+        const empIds = employees.map(e => e._id);
+        const schedules = await RosterDutySchedule.find({ employee: { $in: empIds } })
+            .populate('employee', 'fullName newEmployeeCode')
+            .populate('sunday monday tuesday wednesday thursday friday saturday')
+            .lean();
+        res.status(200).json(schedules);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching roster duty schedules', error: error.message });
+    }
+};
+
+exports.upsertRosterDutySchedule = async (req, res) => {
+    try {
+        if (!(await isRosterDutyAuthorized(req))) {
+            return res.status(403).json({ success: false, message: 'Access denied.' });
+        }
+        const RosterDutySchedule = require('../models/rosterDutySchedule');
+        const { employeeId, sunday, monday, tuesday, wednesday, thursday, friday, saturday } = req.body;
+        if (!employeeId) {
+            return res.status(400).json({ message: 'Employee ID is required.' });
+        }
+        const { employees } = await getNocDepartmentAndEmployees();
+        const empIds = employees.map(e => e._id.toString());
+        if (!empIds.includes(employeeId.toString())) {
+            return res.status(403).json({ message: 'Employee must be in NOC department.' });
+        }
+        const schedule = await RosterDutySchedule.findOneAndUpdate(
+            { employee: employeeId },
+            {
+                sunday: sunday || null,
+                monday: monday || null,
+                tuesday: tuesday || null,
+                wednesday: wednesday || null,
+                thursday: thursday || null,
+                friday: friday || null,
+                saturday: saturday || null
+            },
+            { upsert: true, new: true }
+        )
+            .populate('employee', 'fullName newEmployeeCode')
+            .populate('sunday monday tuesday wednesday thursday friday saturday');
+        res.status(200).json({ message: 'Roster duty schedule saved.', schedule });
+    } catch (error) {
+        res.status(500).json({ message: 'Error saving roster duty schedule', error: error.message });
+    }
+};
+
+exports.deleteRosterDutySchedule = async (req, res) => {
+    try {
+        if (!(await isRosterDutyAuthorized(req))) {
+            return res.status(403).json({ success: false, message: 'Access denied.' });
+        }
+        const RosterDutySchedule = require('../models/rosterDutySchedule');
+        const { employeeId } = req.params;
+        const { employees } = await getNocDepartmentAndEmployees();
+        const empIds = employees.map(e => e._id.toString());
+        if (!empIds.includes(employeeId.toString())) {
+            return res.status(403).json({ message: 'Employee must be in NOC department.' });
+        }
+        await RosterDutySchedule.findOneAndDelete({ employee: employeeId });
+        res.status(200).json({ message: 'Roster duty schedule removed.' });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting schedule', error: error.message });
+    }
+};
+
+exports.generateRosterFromDuty = async (req, res) => {
+    try {
+        if (!(await isRosterDutyAuthorized(req))) {
+            return res.status(403).json({ success: false, message: 'Access denied.' });
+        }
+        const RosterDutySchedule = require('../models/rosterDutySchedule');
+        const { month } = req.body; // YYYY-MM
+        if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+            return res.status(400).json({ message: 'Invalid month format. Use YYYY-MM.' });
+        }
+        const { employees } = await getNocDepartmentAndEmployees();
+        const empIds = employees.map(e => e._id);
+        const schedules = await RosterDutySchedule.find({ employee: { $in: empIds } }).lean();
+        const [y, m] = month.split('-').map(Number);
+        const firstDay = new Date(Date.UTC(y, m - 1, 1));
+        const lastDay = new Date(Date.UTC(y, m, 0));
+        const rosters = [];
+        const dayToField = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+        schedules.forEach((sched) => {
+            const empId = sched.employee?.toString?.() || sched.employee;
+            const d = new Date(firstDay);
+            while (d <= lastDay) {
+                const dayOfWeek = d.getUTCDay();
+                const shiftId = sched[dayToField[dayOfWeek]];
+                if (shiftId) {
+                    const dateStr = d.toISOString().slice(0, 10);
+                    rosters.push({
+                        employeeId: empId,
+                        date: dateStr,
+                        shiftId: shiftId.toString?.(),
+                        isOff: false
+                    });
+                }
+                d.setUTCDate(d.getUTCDate() + 1);
+            }
+        });
+        if (rosters.length === 0) {
+            return res.status(200).json({ message: 'No roster entries to generate from duty schedules.', generated: 0 });
+        }
+        const normalizeDate = (dateStr) => {
+            const parts = String(dateStr).split('-');
+            if (parts.length === 3) {
+                return new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)));
+            }
+            return new Date(dateStr);
+        };
+        const operations = rosters.map((r) => {
+            const rosterDate = normalizeDate(r.date);
+            return {
+                updateOne: {
+                    filter: { recordType: 'Roster', employee: r.employeeId, date: rosterDate },
+                    update: { $set: { month, recordType: 'Roster', employee: r.employeeId, date: rosterDate, shift: r.shiftId, isOff: false } },
+                    upsert: true
+                }
+            };
+        });
+        await ShiftManagement.bulkWrite(operations);
+        res.status(200).json({ message: `Roster generated for ${month}.`, generated: rosters.length });
+    } catch (error) {
+        res.status(500).json({ message: 'Error generating roster', error: error.message });
     }
 };

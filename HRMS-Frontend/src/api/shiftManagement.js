@@ -155,3 +155,43 @@ export const getShiftBasedAttendance = async (startDate, endDate, employeeId = n
     params 
   });
 };
+
+// ==================== ROSTER DUTY (Weekly Schedule) ====================
+// Access: Super Admin + NOC Manager only. Data: NOC employees only.
+
+export const getRosterDutyShifts = async () => {
+  return axios.get(`${API_URL}/roster-duty/shifts`, authHeaders());
+};
+
+export const createRosterDutyShift = async (shiftData) => {
+  return axios.post(`${API_URL}/roster-duty/shifts`, shiftData, authHeaders());
+};
+
+export const updateRosterDutyShift = async (id, shiftData) => {
+  return axios.put(`${API_URL}/roster-duty/shifts/${id}`, shiftData, authHeaders());
+};
+
+export const deleteRosterDutyShift = async (id) => {
+  return axios.delete(`${API_URL}/roster-duty/shifts/${id}`, authHeaders());
+};
+
+export const getRosterDutyNocEmployees = async () => {
+  return axios.get(`${API_URL}/roster-duty/employees`, authHeaders());
+};
+
+export const getRosterDutySchedules = async () => {
+  return axios.get(`${API_URL}/roster-duty/schedules`, authHeaders());
+};
+
+export const upsertRosterDutySchedule = async (scheduleData) => {
+  return axios.post(`${API_URL}/roster-duty/schedules`, scheduleData, authHeaders());
+};
+
+export const deleteRosterDutySchedule = async (employeeId) => {
+  return axios.delete(`${API_URL}/roster-duty/schedules/${employeeId}`, authHeaders());
+};
+
+/** Generate monthly roster from roster duty weekly schedules (Super Admin / NOC Manager) */
+export const generateRosterFromDuty = async (month) => {
+  return axios.post(`${API_URL}/roster-duty/generate-roster`, { month }, authHeaders());
+};

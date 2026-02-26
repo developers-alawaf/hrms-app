@@ -41,4 +41,15 @@ router.put('/outside-work-requests/:id/status', auth.restrictTo('HR Manager', 'S
 // Shift-based Attendance
 router.get('/attendance', shiftManagementController.getShiftBasedAttendance);
 
+// Roster Duty (Super Admin + NOC Manager only, NOC employees only)
+router.get('/roster-duty/shifts', auth.authenticateJwt, shiftManagementController.getRosterDutyShifts);
+router.post('/roster-duty/shifts', auth.authenticateJwt, shiftManagementController.createRosterDutyShift);
+router.put('/roster-duty/shifts/:id', auth.authenticateJwt, shiftManagementController.updateRosterDutyShift);
+router.delete('/roster-duty/shifts/:id', auth.authenticateJwt, shiftManagementController.deleteRosterDutyShift);
+router.get('/roster-duty/employees', auth.authenticateJwt, shiftManagementController.getRosterDutyNocEmployees);
+router.get('/roster-duty/schedules', auth.authenticateJwt, shiftManagementController.getRosterDutySchedules);
+router.post('/roster-duty/schedules', auth.authenticateJwt, shiftManagementController.upsertRosterDutySchedule);
+router.delete('/roster-duty/schedules/:employeeId', auth.authenticateJwt, shiftManagementController.deleteRosterDutySchedule);
+router.post('/roster-duty/generate-roster', auth.authenticateJwt, shiftManagementController.generateRosterFromDuty);
+
 module.exports = router;

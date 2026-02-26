@@ -37,6 +37,8 @@ import DesignationListPage from './pages/DesignationListPage';
 import ShiftingRoster from './pages/ShiftingRoster';
 import ShiftManagement from './pages/ShiftManagement/ShiftManagement';
 import RosterManagement from './pages/ShiftManagement/RosterManagement';
+import ShiftDefinitionsPage from './pages/ShiftManagement/ShiftDefinitionsPage';
+import EmployeeWeeklySchedulePage from './pages/ShiftManagement/EmployeeWeeklySchedulePage';
 import ShiftAttendance from './pages/ShiftManagement/ShiftAttendance';
 import WFHRequests from './pages/ShiftManagement/WFHRequests';
 import OutsideWorkRequests from './pages/ShiftManagement/OutsideWorkRequests';
@@ -388,6 +390,26 @@ const router = createBrowserRouter([
             <RosterManagement />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: '/shift-management/roster-duty/shifts',
+        element: (
+          <ProtectedRoute allowedRoles={['Super Admin']} allowedDepartments={['noc']}>
+            <ShiftDefinitionsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/shift-management/roster-duty/schedule',
+        element: (
+          <ProtectedRoute allowedRoles={['Super Admin']} allowedDepartments={['noc']}>
+            <EmployeeWeeklySchedulePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: '/shift-management/roster-duty',
+        element: <Navigate to="/shift-management/roster-duty/shifts" replace />,
       },
       {
         path: '/shift-management/attendance',
