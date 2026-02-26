@@ -259,6 +259,125 @@
   cursor: not-allowed;
 }
 
+.leave-balance-employee-name {
+  font-size: 0.9375rem;
+  color: var(--app-text-muted);
+  margin: 0.5rem 0 0 0;
+}
+
+/* Super Admin: Employee leave balance section */
+.leave-balance-admin-section {
+  max-width: 900px;
+  margin-bottom: 2rem;
+}
+
+.leave-balance-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.leave-balance-section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--app-text);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.leave-balance-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.leave-balance-employee-select {
+  font-size: 0.9375rem;
+}
+
+.leave-balance-employee-select .leave-balance-select__control {
+  border-radius: 10px;
+  border-color: var(--app-border);
+  background: var(--app-surface);
+  min-height: 40px;
+}
+
+.leave-balance-employee-select .leave-balance-select__control:hover {
+  border-color: var(--app-accent);
+}
+
+.leave-balance-employee-select .leave-balance-select__control--is-focused {
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 1px var(--app-accent);
+}
+
+.leave-balance-employee-select .leave-balance-select__indicator-separator {
+  background: var(--app-border);
+}
+
+.leave-balance-employee-select .leave-balance-select__dropdown-indicator,
+.leave-balance-employee-select .leave-balance-select__clear-indicator {
+  color: var(--app-text-muted);
+}
+
+.leave-balance-employee-select .leave-balance-select__dropdown-indicator:hover,
+.leave-balance-employee-select .leave-balance-select__clear-indicator:hover {
+  color: var(--app-text);
+}
+
+.leave-balance-employee-select .leave-balance-select__menu {
+  z-index: 100;
+}
+
+.leave-balance-year-select {
+  min-width: 100px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  color: var(--app-text);
+  font-size: 0.9375rem;
+  cursor: pointer;
+  font-family: var(--app-font);
+}
+
+.leave-balance-year-select:focus {
+  outline: none;
+  border-color: var(--app-accent);
+}
+
+.leave-balance-loading-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  color: var(--app-text-muted);
+  font-size: 0.9375rem;
+}
+
+.leave-balance-loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--app-border);
+  border-top-color: var(--app-accent);
+  border-radius: 50%;
+  animation: leave-balance-spin 0.75s linear infinite;
+}
+
+@keyframes leave-balance-spin {
+  to { transform: rotate(360deg); }
+}
+
+.leave-balance-empty-state {
+  font-size: 0.9375rem;
+  color: var(--app-text-muted);
+  margin: 0;
+  padding: 1rem 0;
+}
+
 .leave-balance-refresh-wrap {
   margin-top: 0.75rem;
 }
