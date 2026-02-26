@@ -13,6 +13,12 @@ export default defineConfig(({ mode }) => {
         usePolling: true,
         interval: 500,
       },
+      proxy: {
+        '/api': {
+          target: 'http://localhost:5000',
+          changeOrigin: true,
+        },
+      },
     },
   }
 })

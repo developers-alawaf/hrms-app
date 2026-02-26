@@ -11,7 +11,10 @@ const defaultMonthSummary = () => ({
   absentDays: 0,
   remoteDays: 0,
   leaveDays: 0,
-  totalLateByMinutes: 0,
+  monthWorkMinutes: 0,
+  expectedWorkMinutes: 0,
+  totalArrivalLateMinutes: 0,
+  totalShortfallMinutes: 0,
   totalOvertimeMinutes: 0,
   month: new Date().toISOString().slice(0, 7),
 });
@@ -339,43 +342,76 @@ const Dashboard = () => {
                 <span>Loading report...</span>
               </div>
             ) : selectedEmployeeMonthSummary != null ? (
-              <div className="dashboard-stats">
-                <Link to="/attendance" className="stat-card stat-card--total stat-card--link">
-                  <span className="stat-card__label">Working days this month</span>
-                  <span className="stat-card__value">{selectedEmployeeMonthSummary.workingDays ?? 0}</span>
-                  <span className="stat-card__sublabel">days</span>
-                </Link>
-                <Link to="/attendance" className="stat-card stat-card--present stat-card--link">
-                  <span className="stat-card__label">Present this month</span>
-                  <span className="stat-card__value">{selectedEmployeeMonthSummary.presentDays ?? 0}</span>
-                  <span className="stat-card__sublabel">days</span>
-                </Link>
-                <Link to="/attendance" className="stat-card stat-card--absent stat-card--link">
-                  <span className="stat-card__label">Absent this month</span>
-                  <span className="stat-card__value">{selectedEmployeeMonthSummary.absentDays ?? 0}</span>
-                  <span className="stat-card__sublabel">days</span>
-                </Link>
-                <Link to="/attendance" className="stat-card stat-card--remote stat-card--link">
-                  <span className="stat-card__label">Remote this month</span>
-                  <span className="stat-card__value">{selectedEmployeeMonthSummary.remoteDays ?? 0}</span>
-                  <span className="stat-card__sublabel">days</span>
-                </Link>
-                <Link to="/attendance" className="stat-card stat-card--leave stat-card--link">
-                  <span className="stat-card__label">Leave this month</span>
-                  <span className="stat-card__value">{selectedEmployeeMonthSummary.leaveDays ?? 0}</span>
-                  <span className="stat-card__sublabel">days</span>
-                </Link>
-                {/* <Link to="/attendance" className="stat-card stat-card--late stat-card--link">
-                  <span className="stat-card__label">Late by this month</span>
-                  <span className="stat-card__value">{formatMinutesToHoursMinutes(selectedEmployeeMonthSummary.totalLateByMinutes ?? 0)}</span>
-                  <span className="stat-card__sublabel">total</span>
-                </Link>
-                <Link to="/attendance" className="stat-card stat-card--overtime stat-card--link">
-                  <span className="stat-card__label">Overtime this month</span>
-                  <span className="stat-card__value">{formatMinutesToHoursMinutes(selectedEmployeeMonthSummary.totalOvertimeMinutes ?? 0)}</span>
-                  <span className="stat-card__sublabel">total</span>
-                </Link> */}
-              </div>
+              <>
+                <div className="dashboard-stats">
+                  <Link to="/attendance" className="stat-card stat-card--total stat-card--link">
+                    <span className="stat-card__label">Working days this month</span>
+                    <span className="stat-card__value">{selectedEmployeeMonthSummary.workingDays ?? 0}</span>
+                    <span className="stat-card__sublabel">days</span>
+                  </Link>
+                  <Link to="/attendance" className="stat-card stat-card--present stat-card--link">
+                    <span className="stat-card__label">Present this month</span>
+                    <span className="stat-card__value">{selectedEmployeeMonthSummary.presentDays ?? 0}</span>
+                    <span className="stat-card__sublabel">days</span>
+                  </Link>
+                  <Link to="/attendance" className="stat-card stat-card--absent stat-card--link">
+                    <span className="stat-card__label">Absent this month</span>
+                    <span className="stat-card__value">{selectedEmployeeMonthSummary.absentDays ?? 0}</span>
+                    <span className="stat-card__sublabel">days</span>
+                  </Link>
+                  <Link to="/attendance" className="stat-card stat-card--remote stat-card--link">
+                    <span className="stat-card__label">Remote this month</span>
+                    <span className="stat-card__value">{selectedEmployeeMonthSummary.remoteDays ?? 0}</span>
+                    <span className="stat-card__sublabel">days</span>
+                  </Link>
+                  <Link to="/attendance" className="stat-card stat-card--leave stat-card--link">
+                    <span className="stat-card__label">Leave this month</span>
+                    <span className="stat-card__value">{selectedEmployeeMonthSummary.leaveDays ?? 0}</span>
+                    <span className="stat-card__sublabel">days</span>
+                  </Link>
+                </div>
+                <h3 className="dashboard-stats-subtitle">Work hours (1st – today)</h3>
+                <div className="dashboard-stats">
+                  <Link to="/attendance" className="stat-card stat-card--expected stat-card--link">
+                    <span className="stat-card__label">Expected hours</span>
+                    <span className="stat-card__value">{formatMinutesToHoursMinutes(selectedEmployeeMonthSummary.expectedWorkMinutes ?? 0)}</span>
+                    <span className="stat-card__sublabel">should work this month</span>
+                  </Link>
+                  <Link to="/attendance" className="stat-card stat-card--work stat-card--link">
+                    <span className="stat-card__label">Hours worked</span>
+                    <span className="stat-card__value">{formatMinutesToHoursMinutes(selectedEmployeeMonthSummary.monthWorkMinutes ?? 0)}</span>
+                    <span className="stat-card__sublabel">total office time</span>
+                  </Link>
+                  {(selectedEmployeeMonthSummary.totalOvertimeMinutes ?? 0) > 0 ? (
+                    <Link to="/attendance" className="stat-card stat-card--overtime stat-card--link">
+                      <span className="stat-card__label">Overtime</span>
+                      <span className="stat-card__value">{formatMinutesToHoursMinutes(selectedEmployeeMonthSummary.totalOvertimeMinutes ?? 0)}</span>
+                      <span className="stat-card__sublabel">extra hours worked</span>
+                    </Link>
+                  ) : (selectedEmployeeMonthSummary.totalShortfallMinutes ?? 0) > 0 ? (
+                    <>
+                      {((selectedEmployeeMonthSummary.totalArrivalLateMinutes ?? 0) > 0) && (
+                        <Link to="/attendance" className="stat-card stat-card--late stat-card--link">
+                          <span className="stat-card__label">Arrival late</span>
+                          <span className="stat-card__value">{formatMinutesToHoursMinutes(selectedEmployeeMonthSummary.totalArrivalLateMinutes ?? 0)}</span>
+                          <span className="stat-card__sublabel">total late check-ins</span>
+                        </Link>
+                      )}
+                      <Link to="/attendance" className="stat-card stat-card--shortfall stat-card--link">
+                        <span className="stat-card__label">Shortfall</span>
+                        <span className="stat-card__value">{formatMinutesToHoursMinutes(selectedEmployeeMonthSummary.totalShortfallMinutes ?? 0)}</span>
+                        <span className="stat-card__sublabel">deficit vs expected</span>
+                      </Link>
+                    </>
+                  ) : ((selectedEmployeeMonthSummary.totalArrivalLateMinutes ?? 0) > 0) ? (
+                    <Link to="/attendance" className="stat-card stat-card--late stat-card--link">
+                      <span className="stat-card__label">Arrival late</span>
+                      <span className="stat-card__value">{formatMinutesToHoursMinutes(selectedEmployeeMonthSummary.totalArrivalLateMinutes ?? 0)}</span>
+                      <span className="stat-card__sublabel">total late check-ins</span>
+                    </Link>
+                  ) : null}
+                </div>
+              </>
             ) : null
           )}
           {selectedEmployeeId && !loadingEmployeeSummary && selectedEmployeeMonthSummary == null && (
@@ -386,6 +422,7 @@ const Dashboard = () => {
 
       {/* Regular users: own attendance this month */}
       {user.role !== "Super Admin" && monthSummary != null && (
+        <>
         <section className="dashboard-stats-section" aria-label="This month summary">
           <h2 className="dashboard-section-title">Your attendance this month</h2>
           <div className="dashboard-stats">
@@ -414,18 +451,53 @@ const Dashboard = () => {
               <span className="stat-card__value">{monthSummary.leaveDays ?? 0}</span>
               <span className="stat-card__sublabel">days</span>
             </Link>
-            {/* <Link to="/attendance" className="stat-card stat-card--late stat-card--link">
-              <span className="stat-card__label">Late by this month</span>
-              <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalLateByMinutes ?? 0)}</span>
-              <span className="stat-card__sublabel">total</span>
-            </Link>
-            <Link to="/attendance" className="stat-card stat-card--overtime stat-card--link">
-              <span className="stat-card__label">Overtime this month</span>
-              <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalOvertimeMinutes ?? 0)}</span>
-              <span className="stat-card__sublabel">total</span>
-            </Link> */}
           </div>
         </section>
+        <section className="dashboard-stats-section" aria-label="My work overview">
+          <h2 className="dashboard-section-title">My work overview this month</h2>
+          <p className="dashboard-section-desc">Clear breakdown of hours worked, late arrivals, shortfall, and overtime (1st – today)</p>
+          <div className="dashboard-stats dashboard-stats--overview">
+            <Link to="/attendance" className="stat-card stat-card--expected stat-card--link">
+              <span className="stat-card__label">Expected hours</span>
+              <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.expectedWorkMinutes ?? 0)}</span>
+              <span className="stat-card__sublabel">should work this month</span>
+            </Link>
+            <Link to="/attendance" className="stat-card stat-card--work stat-card--link">
+              <span className="stat-card__label">Hours worked</span>
+              <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.monthWorkMinutes ?? 0)}</span>
+              <span className="stat-card__sublabel">total office time</span>
+            </Link>
+            {(monthSummary.totalOvertimeMinutes ?? 0) > 0 ? (
+              <Link to="/attendance" className="stat-card stat-card--overtime stat-card--link">
+                <span className="stat-card__label">Overtime</span>
+                <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalOvertimeMinutes ?? 0)}</span>
+                <span className="stat-card__sublabel">extra hours worked</span>
+              </Link>
+            ) : (monthSummary.totalShortfallMinutes ?? 0) > 0 ? (
+              <>
+                {((monthSummary.totalArrivalLateMinutes ?? 0) > 0) && (
+                  <Link to="/attendance" className="stat-card stat-card--late stat-card--link">
+                    <span className="stat-card__label">Arrival late</span>
+                    <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalArrivalLateMinutes ?? 0)}</span>
+                    <span className="stat-card__sublabel">total late check-ins</span>
+                  </Link>
+                )}
+                <Link to="/attendance" className="stat-card stat-card--shortfall stat-card--link">
+                  <span className="stat-card__label">Shortfall</span>
+                  <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalShortfallMinutes ?? 0)}</span>
+                  <span className="stat-card__sublabel">deficit vs expected</span>
+                </Link>
+              </>
+            ) : ((monthSummary.totalArrivalLateMinutes ?? 0) > 0) ? (
+              <Link to="/attendance" className="stat-card stat-card--late stat-card--link">
+                <span className="stat-card__label">Arrival late</span>
+                <span className="stat-card__value">{formatMinutesToHoursMinutes(monthSummary.totalArrivalLateMinutes ?? 0)}</span>
+                <span className="stat-card__sublabel">total late check-ins</span>
+              </Link>
+            ) : null}
+          </div>
+        </section>
+        </>
       )}
 
     </div>

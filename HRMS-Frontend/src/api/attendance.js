@@ -2,12 +2,16 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+/**
+ * Fetches attendance from main /api/attendance endpoint.
+ * Uses company office hours (and special schedules like Ramadan) for late/overtime calculation.
+ */
 export const getEmployeeAttendance = async (startDate, endDate, employeeId, token) => {
   try {
     const params = { startDate, endDate };
     if (employeeId) params.employeeId = employeeId;
 
-    const response = await axios.get(`${API_URL}/api/attendance`, {
+    const response = await axios.get(`${API_URL || ''}/api/attendance`, {
       params,
       headers: { Authorization: `Bearer ${token}` },
     });

@@ -3,8 +3,9 @@ const AttendanceAdjustmentRequest = require('../models/attendanceAdjustmentReque
 const timezone = require('../utils/timezoneHelper');
 const moment = require('moment-timezone');
 const Employee = require('../models/employee');
-const HolidayCalendar = require('../models/holidayCalendar'); // Import HolidayCalendar model
-const LeaveRequest = require('../models/leaveRequest'); // Import LeaveRequest model
+const HolidayCalendar = require('../models/holidayCalendar');
+const LeaveRequest = require('../models/leaveRequest');
+const companyScheduleService = require('../services/companyScheduleService');
 const activityLogService = require('../services/activityLogService');
 
 exports.getAttendance = async (req, res) => {
@@ -142,6 +143,22 @@ exports.getAttendance = async (req, res) => {
       }).lean()
     ]);
 
+    // 5b. Preload company schedules for date range (dynamic per company/date)
+    const scheduleCache = new Map();
+    const companyIds = [...new Set(employees.map(e => e.companyId?.toString()).filter(Boolean))];
+    let d = start.clone();
+    while (d.isSameOrBefore(end, 'day')) {
+      const dateStr = d.format('YYYY-MM-DD');
+      const dayDate = d.toDate();
+      for (const cid of companyIds) {
+        const key = `${cid}_${dateStr}`;
+        if (!scheduleCache.has(key)) {
+          scheduleCache.set(key, await companyScheduleService.getEffectiveSchedule(cid, dayDate));
+        }
+      }
+      d.add(1, 'day');
+    }
+
     // 6. Build Maps for Fast Lookup
     const attendanceMap = new Map();
     rawAttendanceRecords.forEach(rec => {
@@ -200,6 +217,7 @@ exports.getAttendance = async (req, res) => {
           earlyDepartureBy: 0,
           isOvertime: false,
           overtimeHours: 0,
+          workShortfall: '0h 0m',
           shift: employee.shiftId
             ? {
                 name: employee.shiftId.name,
@@ -248,44 +266,82 @@ exports.getAttendance = async (req, res) => {
           }
         }
 
-        // Calculate Late & Overtime (only for Present/Incomplete days with shift)
-        if (rec?.check_in && employee.shiftId && ['Present', 'Incomplete'].includes(record.status)) {
+        // Calculate Late, Shortfall, Overtime (use dynamic company schedule; fallback to shift)
+        if (rec?.check_in && ['Present', 'Incomplete'].includes(record.status)) {
+          const empCompanyId = employee.companyId?.toString();
+          const scheduleKey = empCompanyId ? `${empCompanyId}_${dateStr}` : null;
+          const companySchedule = scheduleKey ? scheduleCache.get(scheduleKey) : null;
           const shift = employee.shiftId;
-          // Use the actual UTC time from database, not the formatted display time
-          const checkInMoment = timezone.fromUTC(rec.check_in);
-          const [sh, sm] = shift.startTime.split(':').map(Number);
-          const scheduledStart = timezone.parse(dateStr).set({ hour: sh, minute: sm, second: 0 });
-          const lateThreshold = scheduledStart.clone().add(shift.gracePeriod || 0, 'minutes');
+          const startTime = companySchedule?.startTime ?? shift?.startTime ?? '09:00';
+          const endTime = companySchedule?.endTime ?? shift?.endTime ?? '18:00';
+          const gracePeriod = companySchedule?.gracePeriod ?? shift?.gracePeriod ?? 0;
+          const workingHours = companySchedule?.workingHours ?? shift?.workingHours ?? 8;
+          const overtimeThreshold = shift?.overtimeThreshold ?? 0;
 
+          const checkInMoment = timezone.fromUTC(rec.check_in);
+          const [sh, sm] = startTime.split(':').map(Number);
+          const [eh, em] = endTime.split(':').map(Number);
+          const scheduledStart = timezone.parse(dateStr).set({ hour: sh, minute: sm, second: 0 });
+          const scheduledEnd = timezone.parse(dateStr).set({ hour: eh, minute: em, second: 0 });
+          if (scheduledEnd.isSameOrBefore(scheduledStart)) scheduledEnd.add(1, 'day');
+          const lateThreshold = scheduledStart.clone().add(gracePeriod, 'minutes');
+
+          // Late by: check-in after office start + grace
           if (checkInMoment.isAfter(lateThreshold)) {
             record.isLate = true;
-            record.lateBy = checkInMoment.diff(lateThreshold, 'minutes');
+            record.lateBy = Math.max(0, checkInMoment.diff(lateThreshold, 'minutes'));
           }
 
           if (rec.check_out) {
-            // Use the actual UTC time from database, not the formatted display time
             const checkOutMoment = timezone.fromUTC(rec.check_out);
             const workMinutes = checkOutMoment.diff(checkInMoment, 'minutes');
-            
-            // Format work hours as "9h 04m" format
-            const workHours = Math.floor(workMinutes / 60);
+            const workHoursVal = Math.floor(workMinutes / 60);
             const workMinsRemainder = workMinutes % 60;
-            record.work_hours = `${workHours}h ${workMinsRemainder}m`;
+            record.work_hours = `${workHoursVal}h ${workMinsRemainder}m`;
 
-            const expectedMinutes = (shift.workingHours || 8) * 60;
-            const thresholdMinutes = expectedMinutes + (shift.overtimeThreshold || 0);
+            const expectedMinutes = workingHours * 60;
+            const thresholdMinutes = expectedMinutes + overtimeThreshold;
 
+            // Overtime: worked more than expected
             if (workMinutes > thresholdMinutes) {
               record.isOvertime = true;
-              // Calculate overtime: total work minutes - expected threshold
               const overtimeMinutes = workMinutes - thresholdMinutes;
-              const overtimeHours = Math.floor(overtimeMinutes / 60);
-              const overtimeMinsRemainder = overtimeMinutes % 60;
-              record.overtimeHours = `${overtimeHours}h ${overtimeMinsRemainder}m`;
+              record.overtimeHours = `${Math.floor(overtimeMinutes / 60)}h ${overtimeMinutes % 60}m`;
             } else {
               record.overtimeHours = '0h 0m';
             }
+
+            // Work shortfall: worked less than expected (e.g. left early, deficit in hours)
+            if (workMinutes < expectedMinutes) {
+              const shortfallMinutes = expectedMinutes - workMinutes;
+              record.workShortfall = `${Math.floor(shortfallMinutes / 60)}h ${shortfallMinutes % 60}m`;
+            }
+
+            // Early departure: left before office end time
+            if (checkOutMoment.isBefore(scheduledEnd)) {
+              record.isEarlyDeparture = true;
+              record.earlyDepartureBy = scheduledEnd.diff(checkOutMoment, 'minutes');
+            }
           }
+
+          // Show effective schedule in shift display (company or shift)
+          if (record.shift) {
+            record.shift.startTime = startTime;
+            record.shift.endTime = companySchedule?.endTime ?? shift?.endTime ?? record.shift.endTime ?? '18:00';
+            record.shift.workingHours = workingHours;
+            record.shift.gracePeriod = gracePeriod;
+          }
+        }
+
+        // Remote (approved): credit full office hours for that day (dynamic schedule, e.g. Ramadan 6h)
+        if (record.status === 'Remote') {
+          const empCompanyId = employee.companyId?.toString();
+          const scheduleKey = empCompanyId ? `${empCompanyId}_${dateStr}` : null;
+          const companySchedule = scheduleKey ? scheduleCache.get(scheduleKey) : null;
+          const workingHours = companySchedule?.workingHours ?? employee.shiftId?.workingHours ?? 8;
+          const h = Math.floor(workingHours);
+          const m = Math.round((workingHours - h) * 60);
+          record.work_hours = m > 0 ? `${h}h ${m}m` : `${h}h 0m`;
         }
 
         finalAttendance.push(record);
@@ -414,27 +470,38 @@ exports.getEmployeeAttendance = async (req, res) => {
       return `${h}.${m.toString().padStart(2, '0')} hr`;
     };
 
+    // Preload company schedules for date range
+    const scheduleCacheEmp = new Map();
+    const empCompanyIds = [...new Set(attendanceRecords.map(r => r.employeeId?.companyId?.toString()).filter(Boolean))];
+    for (const cid of empCompanyIds) {
+      let cur = timezone.fromUTC(start).startOf('day').clone();
+      while (cur.isSameOrBefore(endMoment, 'day')) {
+        const key = `${cid}_${cur.format('YYYY-MM-DD')}`;
+        if (!scheduleCacheEmp.has(key)) {
+          scheduleCacheEmp.set(key, await companyScheduleService.getEffectiveSchedule(cid, cur.toDate()));
+        }
+        cur.add(1, 'day');
+      }
+    }
+
     // === PROCESS EXISTING RECORDS ===
     for (const rec of attendanceRecords) {
       const emp = rec.employeeId;
       if (!emp) continue;
 
-      const shift = emp.shiftId || {
-        name: 'No Shift',
-        startTime: '00:00',
-        endTime: '00:00',
-        gracePeriod: 0,
-        overtimeThreshold: 0,
-        workingHours: 0
-      };
-
       const dateStr = moment(rec.date).tz('Asia/Dhaka').format('YYYY-MM-DD');
+      const empCompanyId = emp.companyId?.toString();
+      const schedKey = empCompanyId ? `${empCompanyId}_${dateStr}` : null;
+      const companySched = schedKey ? scheduleCacheEmp.get(schedKey) : null;
+      const shift = emp.shiftId || { startTime: '09:00', endTime: '18:00', gracePeriod: 0, overtimeThreshold: 0, workingHours: 8 };
+      const startTime = companySched?.startTime ?? shift.startTime ?? '09:00';
+      const endTime = companySched?.endTime ?? shift.endTime ?? '18:00';
+      const grace = companySched?.gracePeriod ?? shift.gracePeriod ?? 0;
+      const otThreshold = shift.overtimeThreshold ?? 0;
+      const expectedMins = (companySched?.workingHours ?? shift.workingHours ?? 8) * 60;
 
-      const shiftStart = timeToMinutes(shift.startTime);
-      const shiftEnd = timeToMinutes(shift.endTime);
-      const grace = shift.gracePeriod || 0;
-      const otThreshold = shift.overtimeThreshold || 0;
-      const expectedMins = shift.workingHours * 60;
+      const shiftStart = timeToMinutes(startTime);
+      const shiftEnd = timeToMinutes(endTime);
 
       const inMins = rec.check_in ? dateToMinutes(rec.check_in) : null;
       const outMins = rec.check_out ? dateToMinutes(rec.check_out) : null;
@@ -483,12 +550,12 @@ exports.getEmployeeAttendance = async (req, res) => {
         isOvertime: otMins > 0,
         overtimeHours: formatMinutes(otMins),
         shift: {
-          name: shift.name,
-          startTime: shift.startTime,
-          endTime: shift.endTime,
-          workingHours: shift.workingHours,
-          gracePeriod: shift.gracePeriod,
-          overtimeThreshold: shift.overtimeThreshold
+          name: shift.name || 'Default',
+          startTime,
+          endTime,
+          workingHours: expectedMins / 60,
+          gracePeriod: grace,
+          overtimeThreshold: otThreshold
         }
       });
     }

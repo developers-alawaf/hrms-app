@@ -101,6 +101,13 @@
   margin: 0 auto 2rem;
 }
 
+.dashboard-section-desc {
+  font-size: 0.875rem;
+  color: var(--dash-text-muted);
+  margin: -0.5rem 0 1rem 0;
+  line-height: 1.4;
+}
+
 .dashboard-section-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -148,6 +155,14 @@
   margin: 0;
   padding: 0;
   border: none;
+}
+
+.dashboard-stats-subtitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--dash-text-muted);
+  margin: 1.5rem 0 0.75rem 0;
+  letter-spacing: -0.01em;
 }
 .dashboard-employee-select {
   font-size: 0.9375rem;
@@ -215,7 +230,10 @@
 [data-theme="light"] .stat-card--remote .stat-card__value { color: #7c3aed; }
 [data-theme="light"] .stat-card--leave .stat-card__value { color: #d97706; }
 [data-theme="light"] .stat-card--absent .stat-card__value { color: #dc2626; }
+[data-theme="light"] .stat-card--work .stat-card__value { color: #0d9488; }
+[data-theme="light"] .stat-card--expected .stat-card__value { color: #4f46e5; }
 [data-theme="light"] .stat-card--late .stat-card__value { color: #d97706; }
+[data-theme="light"] .stat-card--shortfall .stat-card__value { color: #dc2626; }
 [data-theme="light"] .stat-card--overtime .stat-card__value { color: #0891b2; }
 
 .stat-card {
@@ -285,8 +303,17 @@
 .stat-card--absent:hover { border-color: rgba(239, 68, 68, 0.5); }
 .stat-card--absent .stat-card__value { color: #f87171; }
 
+.stat-card--work:hover { border-color: rgba(13, 148, 136, 0.5); }
+.stat-card--work .stat-card__value { color: #2dd4bf; }
+
+.stat-card--expected:hover { border-color: rgba(79, 70, 229, 0.5); }
+.stat-card--expected .stat-card__value { color: #a5b4fc; }
+
 .stat-card--late:hover { border-color: rgba(245, 158, 11, 0.5); }
 .stat-card--late .stat-card__value { color: #fbbf24; }
+
+.stat-card--shortfall:hover { border-color: rgba(239, 68, 68, 0.5); }
+.stat-card--shortfall .stat-card__value { color: #f87171; }
 
 .stat-card--overtime:hover { border-color: rgba(6, 182, 212, 0.5); }
 .stat-card--overtime .stat-card__value { color: #22d3ee; }

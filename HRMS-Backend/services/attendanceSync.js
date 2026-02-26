@@ -4,6 +4,7 @@ const EmployeesAttendance = require('../models/employeesAttendance');
 const LeaveRequest = require('../models/leaveRequest');
 const HolidayCalendar = require('../models/holidayCalendar');
 const Log = require('../models/log');
+const companyScheduleService = require('./companyScheduleService');
 
 async function syncAttendance(companyId, startDate, endDate) {
   try {
@@ -97,33 +98,38 @@ async function syncAttendance(companyId, startDate, endDate) {
           if (check_out) {
             work_hours = punches[punches.length - 1].diff(punches[0], 'hours', true);
 
-            if (employee.shiftId) {
-              const shift = employee.shiftId;
-              const [shiftStartHour, shiftStartMinute] = shift.startTime.split(':').map(Number);
-              const [shiftEndHour, shiftEndMinute] = shift.endTime.split(':').map(Number);
+            // Use dynamic company schedule (handles Ramadan etc); fallback to shift
+            const sched = await companyScheduleService.getEffectiveSchedule(employee.companyId, windowStart.toDate());
+            const shift = employee.shiftId;
+            const startTime = sched.startTime;
+            const endTime = sched.endTime;
+            const gracePeriod = sched.gracePeriod;
+            const expectedHours = sched.workingHours;
 
-              let scheduledShiftStart = windowStart.clone().set({ hour: shiftStartHour, minute: shiftStartMinute, second: 0, millisecond: 0 });
-              let scheduledShiftEnd = windowStart.clone().set({ hour: shiftEndHour, minute: shiftEndMinute, second: 0, millisecond: 0 });
+            const [shiftStartHour, shiftStartMinute] = startTime.split(':').map(Number);
+            const [shiftEndHour, shiftEndMinute] = endTime.split(':').map(Number);
 
-              if (scheduledShiftEnd.isBefore(scheduledShiftStart)) {
-                scheduledShiftEnd.add(1, 'day');
-              }
+            let scheduledShiftStart = windowStart.clone().set({ hour: shiftStartHour, minute: shiftStartMinute, second: 0, millisecond: 0 });
+            let scheduledShiftEnd = windowStart.clone().set({ hour: shiftEndHour, minute: shiftEndMinute, second: 0, millisecond: 0 });
 
-              if (punches[0].isAfter(scheduledShiftStart.clone().add(shift.gracePeriod, 'minutes'))) {
-                isLate = true;
-                lateBy = punches[0].diff(scheduledShiftStart, 'minutes');
-              }
+            if (scheduledShiftEnd.isBefore(scheduledShiftStart)) {
+              scheduledShiftEnd.add(1, 'day');
+            }
 
-              if (punches[punches.length - 1].isBefore(scheduledShiftEnd)) {
-                isEarlyDeparture = true;
-                earlyDepartureBy = scheduledShiftEnd.diff(punches[punches.length - 1], 'minutes');
-              }
+            if (punches[0].isAfter(scheduledShiftStart.clone().add(gracePeriod, 'minutes'))) {
+              isLate = true;
+              lateBy = punches[0].diff(scheduledShiftStart, 'minutes');
+            }
 
-              if (work_hours > shift.workingHours) {
-                isOvertime = true;
-                overtimeHours = work_hours - shift.workingHours;
-                if (overtimeHours < 0) overtimeHours = 0;
-              }
+            if (punches[punches.length - 1].isBefore(scheduledShiftEnd)) {
+              isEarlyDeparture = true;
+              earlyDepartureBy = scheduledShiftEnd.diff(punches[punches.length - 1], 'minutes');
+            }
+
+            if (work_hours > expectedHours) {
+              isOvertime = true;
+              overtimeHours = work_hours - expectedHours;
+              if (overtimeHours < 0) overtimeHours = 0;
             }
           }
         }

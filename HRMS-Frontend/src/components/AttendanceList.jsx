@@ -44,17 +44,41 @@ const AttendanceList = () => {
     }
   };
 
-  // Show only in minutes (e.g., 98 minutes)
-  const formatToMinutesOnly = (value, unit = "minutes") => {
-    if (!value || value <= 0) return "0 minutes";
+  // Format total minutes as "Xh Ym" (e.g. 98 -> "1h 38m", 0 -> "0h 0m")
+  const formatMinutesToHoursMinutes = (totalMinutes) => {
+    const mins = Math.max(0, Math.round(Number(totalMinutes) || 0));
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h}h ${m}m`;
+  };
 
-    const totalMinutes =
-      unit === "minutes"
-        ? Math.round(value)
-        : Math.round(value * 60);
+  // Parse "Xh Ym" string to total minutes (for Excel/display normalization)
+  const parseHoursMinutesToMinutes = (val) => {
+    if (val == null || val === '') return 0;
+    if (typeof val === 'number' && !Number.isNaN(val)) return Math.round(val);
+    if (typeof val === 'string') {
+      const match = val.match(/(\d+)\s*h\s*(\d+)\s*m/i);
+      if (match) return parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+    }
+    return 0;
+  };
 
-    const mins = Math.round(totalMinutes);
-    return `${mins} minute${mins !== 1 ? "s" : ""}`;
+  // Display late by: backend sends minutes (number). Show as "Xh Ym"
+  const formatLateBy = (val) => formatMinutesToHoursMinutes(val);
+
+  // Display overtime/shortfall: backend sends "Xh Ym" string. Normalize and show hours + minutes
+  const formatOvertime = (val) => {
+    if (val == null || val === '') return '0h 0m';
+    if (typeof val === 'string' && /^\d+\s*h\s*\d+\s*m$/i.test(val.trim())) return val.trim();
+    const mins = parseHoursMinutesToMinutes(val);
+    return formatMinutesToHoursMinutes(mins);
+  };
+
+  // Check if time value is non-zero (has meaningful data to show)
+  const hasTimeValue = (val, isMinutes = false) => {
+    if (val == null || val === '') return false;
+    const mins = isMinutes ? Math.round(Number(val) || 0) : parseHoursMinutesToMinutes(val);
+    return mins > 0;
   };
 
   // Extract original time (no timezone conversion)
@@ -161,7 +185,7 @@ const AttendanceList = () => {
     fetchAttendance();
   };
 
-  // Excel Export — minutes only
+  // Excel Export — hours and minutes (Xh Ym format)
   const exportToExcel = () => {
     const exportData = filteredData.map((record) => ({
       "Employee Name": record.fullName,
@@ -171,8 +195,9 @@ const AttendanceList = () => {
       "Check Out": extractOriginalTime(record.check_out),
       "Work Hours": typeof record.work_hours === 'string' ? record.work_hours : (record.work_hours?.toFixed(2) || "0.00"),
       Status: record.status,
-      "Late By": formatToMinutesOnly(record.lateBy, "minutes"),
-      "Overtime": typeof record.overtimeHours === 'string' ? record.overtimeHours : formatToMinutesOnly(record.overtimeHours, "hours"),
+      "Late By": formatLateBy(record.lateBy),
+      "Shortfall": formatOvertime(record.workShortfall),
+      "Overtime": formatOvertime(record.overtimeHours),
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
@@ -257,7 +282,7 @@ const AttendanceList = () => {
         <table className="attendance-table">
           <thead>
             <tr>
-              <th>HRMS ID</th>
+              {/* <th>HRMS ID</th> */}
               <th>Name</th>
               
               <th>Date</th>
@@ -267,20 +292,21 @@ const AttendanceList = () => {
               <th>Hours</th>
               <th>Status</th>
               <th>Late By</th>
+              <th>Shortfall</th>
               <th>Overtime</th>
             </tr>
           </thead>
           <tbody>
             {currentRecords.length === 0 ? (
               <tr>
-                <td colSpan="9" style={{ textAlign: "center", padding: "20px" }}>
+                <td colSpan={11} style={{ textAlign: "center", padding: "20px" }}>
                   No attendance records found.
                 </td>
               </tr>
             ) : (
               currentRecords.map((record, idx) => (
                 <tr key={`${record.employeeId}-${record.date}-${idx}`}>
-                  <td>{record.employeeCode}</td>
+                  {/* <td>{record.employeeCode}</td> */}
                   <td>{record.fullName}</td>
                   
                   <td>{record.date}</td>
@@ -293,8 +319,33 @@ const AttendanceList = () => {
                       {record.status}
                     </span>
                   </td>
-                  <td>{formatToMinutesOnly(record.lateBy, "minutes")}</td>
-                  <td>{typeof record.overtimeHours === 'string' ? record.overtimeHours : formatToMinutesOnly(record.overtimeHours, "hours")}</td>
+                  <td className="attendance-time-cell">
+                    {hasTimeValue(record.lateBy, true) ? (
+                      <span className="time-badge time-badge--late">
+                        {formatLateBy(record.lateBy)}
+                      </span>
+                    ) : (
+                      <span className="attendance-empty">—</span>
+                    )}
+                  </td>
+                  <td className="attendance-time-cell">
+                    {hasTimeValue(record.workShortfall) ? (
+                      <span className="time-badge time-badge--shortfall">
+                        {formatOvertime(record.workShortfall)}
+                      </span>
+                    ) : (
+                      <span className="attendance-empty">—</span>
+                    )}
+                  </td>
+                  <td className="attendance-time-cell">
+                    {hasTimeValue(record.overtimeHours) ? (
+                      <span className="time-badge time-badge--overtime">
+                        {formatOvertime(record.overtimeHours)}
+                      </span>
+                    ) : (
+                      <span className="attendance-empty">—</span>
+                    )}
+                  </td>
                 </tr>
               ))
             )}
