@@ -1,11 +1,13 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { usePendingRequests } from '../context/PendingRequestsContext';
 import { createLeaveRequest, getLeaveRequests, approveLeaveRequest, denyLeaveRequest, deleteLeaveRequest } from '../api/leave';
 import { Trash2 } from 'lucide-react';
 import '../styles/Leave.css';
 
 const RemoteList = () => {
   const { user } = useContext(AuthContext);
+  const { refreshPendingCounts } = usePendingRequests() || {};
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [remoteRequests, setRemoteRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
@@ -99,6 +101,7 @@ const RemoteList = () => {
         setShowCreateModal(false);
         setError('');
         await fetchRemoteRequests();
+        refreshPendingCounts?.();
         setTimeout(() => setSuccess(''), 3000);
       }
     } catch (err) {

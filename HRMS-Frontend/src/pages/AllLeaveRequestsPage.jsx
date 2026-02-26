@@ -1,10 +1,12 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { usePendingRequests } from '../context/PendingRequestsContext';
 import { getLeaveRequests, approveLeaveRequest, denyLeaveRequest } from '../api/leave';
 import '../styles/Leave.css';
 
 const AllLeaveRequestsPage = () => {
   const { user } = useContext(AuthContext);
+  const { refreshPendingCounts } = usePendingRequests() || {};
   const [allRequests, setAllRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,6 +61,7 @@ const AllLeaveRequestsPage = () => {
       if (data.success) {
         setSuccess('Request approved successfully!');
         await fetchAllRequests();
+        refreshPendingCounts?.();
       } else {
         setError(data.error || 'Something went wrong');
       }
@@ -79,6 +82,7 @@ const AllLeaveRequestsPage = () => {
       if (data.success) {
         setSuccess('Request denied successfully!');
         await fetchAllRequests();
+        refreshPendingCounts?.();
       } else {
         setError(data.error || 'Something went wrong');
       }

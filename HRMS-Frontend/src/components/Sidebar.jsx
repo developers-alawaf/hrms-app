@@ -2,6 +2,7 @@ import React, { useContext, useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AuthContext, DEFAULT_AVATAR } from '../context/AuthContext';
 import { ThemeContext } from '../context/ThemeContext';
+import { usePendingRequests } from '../context/PendingRequestsContext';
 import { Users, Calendar, FileText, Lock, LogOut, Menu, X, Briefcase, LayoutDashboard, ClipboardList, ChevronDown, Mail, Moon, Sun } from 'lucide-react';
 import '../styles/Sidebar.css';
 import logoDark from '../assets/kloud_tech_white.png';
@@ -46,6 +47,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
 
   const { user, logout, loading } = authContext;
   const { theme, setTheme } = useContext(ThemeContext) || {};
+  const { pendingLeaveCount, pendingRemoteCount } = usePendingRequests() || { pendingLeaveCount: 0, pendingRemoteCount: 0 };
   const logoImg = theme === 'light' ? logoLight : logoDark;
 
   // Show loading state or return null if user is not available
@@ -249,12 +251,12 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
             <ul className="dropdown-menu">
               <li>
                 <Link to="/leave" className={`dropdown-item ${isActiveExact('/leave') ? 'active' : ''}`} onClick={handleLinkClick}>
-                  Leave Requests
+                  Leave Requests {pendingLeaveCount > 0 && <span className="sidebar-pending-count">{pendingLeaveCount}</span>}
                 </Link>
               </li>
               <li>
                 <Link to="/remote" className={`dropdown-item ${isActiveExact('/remote') ? 'active' : ''}`} onClick={handleLinkClick}>
-                  Remote Requests
+                  Remote Requests {pendingRemoteCount > 0 && <span className="sidebar-pending-count">{pendingRemoteCount}</span>}
                 </Link>
               </li>
               {/* {user?.role === 'HR Manager' && (

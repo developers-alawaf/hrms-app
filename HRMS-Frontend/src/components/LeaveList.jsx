@@ -1,11 +1,13 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { usePendingRequests } from '../context/PendingRequestsContext';
 import { createLeaveRequest, getLeaveRequests, approveLeaveRequest, denyLeaveRequest, deleteLeaveRequest, getLeaveSummary } from '../api/leave';
 import { Trash2 } from 'lucide-react';
 import '../styles/Leave.css';
 
 const LeaveList = () => {
   const { user } = useContext(AuthContext);
+  const { refreshPendingCounts } = usePendingRequests() || {};
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [leaveRequests, setLeaveRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
@@ -122,6 +124,7 @@ const LeaveList = () => {
         setShowCreateModal(false);
         setError('');
         await fetchLeaveRequests();
+        refreshPendingCounts?.();
         setTimeout(() => setSuccess(''), 3000);
       } else {
         setError(data.error || 'Something went wrong');
