@@ -497,6 +497,84 @@
   background: var(--app-accent-soft);
 }
 
+.employee-select {
+  font-size: 0.95rem;
+}
+
+.employee-select .react-select__control {
+  border-radius: 10px;
+  border: 1px solid var(--app-border);
+  background: var(--app-surface);
+  min-height: 46px;
+  box-shadow: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.employee-select .react-select__control:hover {
+  border-color: var(--app-accent);
+}
+
+.employee-select .react-select__control--is-focused {
+  border-color: var(--app-accent);
+  box-shadow: 0 0 0 2px var(--app-accent-soft);
+}
+
+.employee-select .react-select__value-container {
+  padding: 2px 10px;
+}
+
+.employee-select .react-select__placeholder {
+  color: var(--app-text-muted);
+}
+
+.employee-select .react-select__single-value {
+  color: var(--app-text);
+}
+
+.employee-select .react-select__input-container {
+  color: var(--app-text);
+}
+
+.employee-select .react-select__indicator-separator {
+  background: var(--app-border);
+}
+
+.employee-select .react-select__dropdown-indicator,
+.employee-select .react-select__clear-indicator {
+  color: var(--app-text-muted);
+}
+
+.employee-select .react-select__dropdown-indicator:hover,
+.employee-select .react-select__clear-indicator:hover {
+  color: var(--app-text);
+}
+
+.employee-select .react-select__menu {
+  background: var(--app-surface-solid);
+  border: 1px solid var(--app-border);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: 200;
+}
+
+.employee-select .react-select__option {
+  background: transparent;
+  color: var(--app-text);
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.employee-select .react-select__option--is-focused {
+  background: var(--app-accent-soft);
+  color: var(--app-text);
+}
+
+.employee-select .react-select__option--is-selected {
+  background: var(--app-accent);
+  color: #fff;
+}
+
 .employee-search {
   max-width: 320px;
 }

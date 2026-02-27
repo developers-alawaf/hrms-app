@@ -315,11 +315,19 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
         </li>
         
         {(user?.role === 'Super Admin' || user?.role === 'HR Manager' || user?.role === 'Company Admin' || user?.role === 'C-Level Executive') && (
-          
           <li>
             <Link to="/documents" className={`sidebar-link ${isActive('/documents') ? 'active' : ''}`} onClick={handleLinkClick}>
               <FileText className="nav-icon" />
               Documents
+            </Link>
+          </li>
+        )}
+
+        {user?.role === 'Super Admin' && (
+          <li>
+            <Link to="/reports/employee/search" className={`sidebar-link ${isActive('/reports/employee') ? 'active' : ''}`} onClick={handleLinkClick}>
+              <FileText className="nav-icon" />
+              Employee Report
             </Link>
           </li>
         )}

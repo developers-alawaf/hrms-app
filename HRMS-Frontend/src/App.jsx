@@ -122,6 +122,7 @@ function App() {
 
   const publicRoutes = ['/', '/login', '/accept-invitation', '/forgot-password', '/reset-password'];
   const isPublicRoute = publicRoutes.includes(location.pathname);
+  const isReportViewRoute = location.pathname.startsWith('/reports/employee/view');
 
   useEffect(() => {
     const handleResize = () => {
@@ -144,7 +145,7 @@ function App() {
 
   return (
     <div className="app">
-      {!isPublicRoute && (
+      {!isPublicRoute && !isReportViewRoute && (
         <>
           <Sidebar
             isSidebarOpen={isSidebarOpen}
@@ -163,10 +164,16 @@ function App() {
           )}
         </>
       )}
-      <main className={!isPublicRoute ? `main-content ${isDesktop && isSidebarOpen ? 'main-content-shifted' : 'main-content-expanded'}` : ''}>
+      <main
+        className={
+          !isPublicRoute && !isReportViewRoute
+            ? `main-content ${isDesktop && isSidebarOpen ? 'main-content-shifted' : 'main-content-expanded'}`
+            : ''
+        }
+      >
         <Outlet />
       </main>
-      {!isPublicRoute && <Footer />}
+      {!isPublicRoute && !isReportViewRoute && <Footer />}
     </div>
   );
 }

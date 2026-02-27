@@ -1,0 +1,180 @@
+/* Employee report (A4) */
+.employee-report-page {
+  min-height: 100vh;
+  padding: 24px;
+  background: #f5f6f8;
+  color: #111;
+}
+
+.employee-report-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.employee-report-btn {
+  border: 1px solid #1b5cff;
+  background: #1b5cff;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.employee-report-btn.secondary {
+  background: #fff;
+  color: #1b5cff;
+}
+
+.employee-report-sheet {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  padding: 5mm;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.employee-report-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 6px;
+}
+
+.employee-report-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.employee-report-subtitle {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.employee-report-meta {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: #374151;
+}
+
+.employee-report-meta .label {
+  font-weight: 600;
+  margin-right: 6px;
+}
+
+.employee-report-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+}
+
+.employee-report-section-title {
+  margin: 0;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #374151;
+}
+
+.employee-report-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 12px;
+  font-size: 11px;
+}
+
+.employee-report-grid .label,
+.employee-report-summary .label {
+  display: block;
+  color: #6b7280;
+  font-size: 11px;
+  margin-bottom: 2px;
+}
+
+.employee-report-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0px 5px;
+  font-size: 11px;
+}
+
+.employee-report-table-wrapper {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.employee-report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.employee-report-table thead {
+  background: #f3f4f6;
+  text-align: left;
+}
+
+.employee-report-table th,
+.employee-report-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.employee-report-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.employee-report-empty {
+  text-align: center;
+  padding: 8px;
+  color: #6b7280;
+}
+
+.employee-report-message {
+  padding: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: #374151;
+}
+
+.employee-report-message.error {
+  color: #b91c1c;
+}
+
+@media print {
+  body {
+    background: #fff !important;
+  }
+
+  .employee-report-page {
+    padding: 0;
+    background: #fff;
+  }
+
+  .employee-report-actions {
+    display: none !important;
+  }
+
+  .employee-report-sheet {
+    box-shadow: none;
+    margin: 0;
+    width: 210mm;
+    min-height: 297mm;
+  }
+
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+}
