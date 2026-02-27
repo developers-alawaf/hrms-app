@@ -92,6 +92,16 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
             Dashboard
           </Link>
         </li>
+
+        {user?.role === 'Super Admin' && (
+          <li>
+            <Link to="/reports/employee/search" className={`sidebar-link ${isActive('/reports/employee') ? 'active' : ''}`} onClick={handleLinkClick}>
+              <FileText className="nav-icon" />
+              Employee Report
+            </Link>
+          </li>
+        )}
+        
         {/* <li>
           <Link to="/documents/common" className="sidebar-link" onClick={handleLinkClick}>
             <FileText className="nav-icon" />
@@ -323,15 +333,6 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar, isDesktop }) => {
           </li>
         )}
 
-        {user?.role === 'Super Admin' && (
-          <li>
-            <Link to="/reports/employee/search" className={`sidebar-link ${isActive('/reports/employee') ? 'active' : ''}`} onClick={handleLinkClick}>
-              <FileText className="nav-icon" />
-              Employee Report
-            </Link>
-          </li>
-        )}
-        
         {user?.role === 'Super Admin' && (
           <li>
             <Link to="/send-email" className={`sidebar-link ${isActive('/send-email') ? 'active' : ''}`} onClick={handleLinkClick}>

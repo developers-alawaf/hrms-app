@@ -77,6 +77,23 @@
   opacity: 0.7;
 }
 
+.company-input option {
+  background: #0f172a;
+  color: var(--app-text);
+}
+
+.company-input option:checked {
+  background: var(--app-accent);
+  color: #fff;
+}
+
+.company-input option:hover,
+.company-input option:focus,
+.company-input option:active {
+  background: var(--app-accent-soft);
+  color: var(--app-text);
+}
+
 .company-input:focus {
   outline: none;
   border-color: var(--app-accent);
@@ -172,9 +189,9 @@
   transition: background 0.15s;
 }
 
-.company-table tbody tr:hover td {
-  background: rgba(59, 130, 246, 0.08);
-}
+/* .company-table tbody tr:hover td {
+  background: rgba(59, 130, 246, 1);
+} */
 
 .company-table tbody tr:last-child td {
   border-bottom: none;
@@ -185,6 +202,49 @@
   width: 1%;
   white-space: nowrap;
   text-align: right;
+}
+
+/* Employee weekly schedule table */
+.company-schedule-table-container {
+  overflow-x: auto;
+}
+
+.company-schedule-table {
+  min-width: 980px;
+  table-layout: fixed;
+}
+
+.company-schedule-table th:first-child,
+.company-schedule-table td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--app-surface-solid);
+}
+
+.company-schedule-table th:first-child {
+  z-index: 3;
+  background: rgba(15, 23, 42, 1);
+}
+
+.company-schedule-day-header {
+  text-align: center;
+}
+
+.company-schedule-day-cell {
+  text-align: center;
+}
+
+.company-schedule-select {
+  min-width: 130px;
+  max-width: 180px;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .company-schedule-table {
+    min-width: 880px;
+  }
 }
 
 .company-header {
@@ -547,6 +607,28 @@
   .company-table td {
     padding: 0.625rem 0.75rem;
     font-size: 0.8125rem;
+  }
+
+  .company-schedule-table {
+    min-width: 760px;
+  }
+
+  .company-schedule-select {
+    min-width: 110px;
+  }
+
+  .company-schedule-table td:last-child {
+    text-align: center;
+  }
+
+  .company-schedule-table td:last-child .company-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .company-schedule-table td:last-child .company-button + .company-button {
+    margin-left: 0 !important;
+    margin-top: 0.5rem;
   }
 
   .company-modal {

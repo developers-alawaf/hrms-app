@@ -25,11 +25,9 @@ const to12Hour = (time) => {
 
 const getShiftOptionLabel = (s) => {
   if (s.isOffDay || (!s.officeStartTime && !s.officeEndTime)) {
-    return s.name ? `${s.name} (Off Day)` : 'Off Day';
+    return s.name || 'Off Day';
   }
-  const start = to12Hour(s.officeStartTime);
-  const end = to12Hour(s.officeEndTime);
-  return start && end ? `${s.name} (${start} - ${end})` : s.name || '-';
+  return s.name || '-';
 };
 
 const EmployeeWeeklySchedulePage = () => {
@@ -47,9 +45,17 @@ const EmployeeWeeklySchedulePage = () => {
   const [generating, setGenerating] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const isAuthorized =
-    user?.role === 'Super Admin' ||
-    (user?.role === 'Manager' && user?.department?.name?.toLowerCase().includes('noc'));
+  const isInNoc = user?.department?.name?.toLowerCase().includes('noc');
+  const canEdit = user?.role === 'Super Admin' || (user?.role === 'Manager' && isInNoc);
+  const isEmployeeView = user?.role === 'Employee' && isInNoc;
+  const isAuthorized = canEdit || isEmployeeView;
+
+  const currentEmployeeId = (() => {
+    const raw = user?.employeeId;
+    if (!raw) return user?._id || '';
+    if (typeof raw === 'object' && raw !== null) return raw._id || raw.id || '';
+    return raw;
+  })();
 
   const fetchData = async () => {
     try {
@@ -198,7 +204,7 @@ const EmployeeWeeklySchedulePage = () => {
     return (
       <div className="company-container">
         <p className="company-message company-error">
-          Access denied. Only Super Admin or Manager in NOC department can access.
+          Access denied. Only Super Admin, NOC Manager, or NOC Employee can access.
         </p>
       </div>
     );
@@ -230,61 +236,65 @@ const EmployeeWeeklySchedulePage = () => {
         <p className="company-message company-success company-message--inline">{success}</p>
       )}
 
-      <div className="company-header">
-        <h3 className="company-section-title">Generate Roster</h3>
-        <div className="company-controls" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          <label htmlFor="generate-month" style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--app-text-muted)' }}>
-            Month:
-          </label>
-          <input
-            id="generate-month"
-            type="month"
-            value={generateMonth}
-            onChange={(e) => setGenerateMonth(e.target.value)}
-            className="company-input"
-            style={{ width: 'auto', minWidth: '160px' }}
-          />
-          <button
-            type="button"
-            className="company-button"
-            onClick={handleGenerateRoster}
-            disabled={generating || scheduleEntries.length === 0}
-          >
-            {generating ? 'Generating...' : 'Generate Roster'}
-          </button>
-        </div>
-      </div>
-
-      <div className="company-header">
-        <h3 className="company-section-title">Add Employee</h3>
-        <div className="company-controls" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <div className="form-group" style={{ marginBottom: 0, minWidth: '220px' }}>
-            <label htmlFor="add-employee" style={{ marginBottom: '0.375rem' }}>Employee</label>
-            <select
-              id="add-employee"
-              value={selectedEmployeeId}
-              onChange={(e) => setSelectedEmployeeId(e.target.value)}
-              className="company-input company-schedule-select"
+      {!isEmployeeView && (
+        <div className="company-header">
+          <h3 className="company-section-title">Generate Roster</h3>
+          <div className="company-controls" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <label htmlFor="generate-month" style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--app-text-muted)' }}>
+              Month:
+            </label>
+            <input
+              id="generate-month"
+              type="month"
+              value={generateMonth}
+              onChange={(e) => setGenerateMonth(e.target.value)}
+              className="company-input"
+              style={{ width: 'auto', minWidth: '160px' }}
+            />
+            <button
+              type="button"
+              className="company-button"
+              onClick={handleGenerateRoster}
+              disabled={generating || scheduleEntries.length === 0}
             >
-              <option value="">Select employee...</option>
-              {availableToAdd.map((e) => (
-                <option key={e._id} value={e._id}>
-                  {e.fullName} ({e.newEmployeeCode || '-'})
-                </option>
-              ))}
-            </select>
+              {generating ? 'Generating...' : 'Generate Roster'}
+            </button>
           </div>
-          <button
-            type="button"
-            className="company-button company-button--create"
-            onClick={handleAddEmployee}
-            disabled={!selectedEmployeeId}
-          >
-            <Plus size={18} aria-hidden />
-            Add Employee
-          </button>
         </div>
-      </div>
+      )}
+
+      {!isEmployeeView && (
+        <div className="company-header">
+          <h3 className="company-section-title">Add Employee</h3>
+          <div className="company-controls" style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <div className="form-group" style={{ marginBottom: 0, minWidth: '220px' }}>
+              <label htmlFor="add-employee" style={{ marginBottom: '0.375rem' }}>Employee</label>
+              <select
+                id="add-employee"
+                value={selectedEmployeeId}
+                onChange={(e) => setSelectedEmployeeId(e.target.value)}
+                className="company-input company-schedule-select"
+              >
+                <option value="">Select employee...</option>
+                {availableToAdd.map((e) => (
+                  <option key={e._id} value={e._id}>
+                    {e.fullName} ({e.newEmployeeCode || '-'})
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              type="button"
+              className="company-button company-button--create"
+              onClick={handleAddEmployee}
+              disabled={!selectedEmployeeId}
+            >
+              <Plus size={18} aria-hidden />
+              Add Employee
+            </button>
+          </div>
+        </div>
+      )}
 
       {employees.length === 0 ? (
         <div className="company-message">No NOC employees found.</div>
@@ -315,7 +325,7 @@ const EmployeeWeeklySchedulePage = () => {
                       {d}
                     </th>
                   ))}
-                  <th style={{ minWidth: '120px', textAlign: 'center' }}>Actions</th>
+                  {canEdit && <th style={{ minWidth: '120px', textAlign: 'center' }}>Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -324,43 +334,53 @@ const EmployeeWeeklySchedulePage = () => {
                     <td>{getEmpName(empId)}</td>
                     {DAYS.map((day) => (
                       <td key={day} className="company-schedule-day-cell">
-                        <select
-                          value={sched[day] || ''}
-                          onChange={(e) => handleDayChange(empId, day, e.target.value)}
-                          className="company-input company-schedule-select"
-                          aria-label={`${day} shift for ${getEmpName(empId)}`}
-                          title={sched[day] ? getShiftOptionLabel(shifts.find((x) => x._id === sched[day]) || {}) : 'Select shift'}
-                        >
-                          <option value="">—</option>
-                          {shifts.map((s) => (
-                            <option key={s._id} value={s._id} title={getShiftOptionLabel(s)}>
-                              {getShiftOptionLabel(s)}
-                            </option>
-                          ))}
-                        </select>
+                        {isEmployeeView ? (
+                          <span>
+                            {sched[day]
+                              ? getShiftOptionLabel(shifts.find((x) => x._id === sched[day]) || {})
+                              : '—'}
+                          </span>
+                        ) : (
+                          <select
+                            value={sched[day] || ''}
+                            onChange={(e) => handleDayChange(empId, day, e.target.value)}
+                            className="company-input company-schedule-select"
+                            aria-label={`${day} shift for ${getEmpName(empId)}`}
+                            title={sched[day] ? getShiftOptionLabel(shifts.find((x) => x._id === sched[day]) || {}) : 'Select shift'}
+                          >
+                            <option value="">—</option>
+                            {shifts.map((s) => (
+                              <option key={s._id} value={s._id} title={getShiftOptionLabel(s)}>
+                                {getShiftOptionLabel(s)}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </td>
                     ))}
-                    <td style={{ textAlign: 'center' }}>
-                      <button
-                        type="button"
-                        className="company-button company-button--small"
-                        onClick={() => handleSaveSchedule(empId)}
-                        disabled={savingEmployeeId === empId}
-                      >
-                        <Save size={14} aria-hidden />
-                        {savingEmployeeId === empId ? 'Saving...' : 'Save'}
-                      </button>
-                      <button
-                        type="button"
-                        className="company-button company-button--danger company-button--small"
-                        onClick={() => handleDeleteSchedule(empId)}
-                        title="Remove schedule"
-                        aria-label="Remove schedule"
-                        style={{ marginLeft: '0.5rem' }}
-                      >
-                        <Trash2 size={14} aria-hidden />
-                      </button>
-                    </td>
+                    {canEdit && (
+                      <td style={{ textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          className="company-button company-button--small"
+                          onClick={() => handleSaveSchedule(empId)}
+                          disabled={savingEmployeeId === empId}
+                        >
+                          <Save size={14} aria-hidden />
+                          {savingEmployeeId === empId ? 'Saving...' : 'Save'}
+                        </button>
+                        <button
+                          type="button"
+                          className="company-button company-button--danger company-button--small"
+                          onClick={() => handleDeleteSchedule(empId)}
+                          title="Remove schedule"
+                          aria-label="Remove schedule"
+                          style={{ marginLeft: '0.5rem' }}
+                        >
+                          <Trash2 size={14} aria-hidden />
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
