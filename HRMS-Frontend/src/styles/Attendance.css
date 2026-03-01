@@ -195,10 +195,89 @@
   background: var(--app-surface);
 }
 
+/* Attendance adjustment list table (employee-table inside Attendance) */
+.attendance-container .table-wrapper .employee-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+  background: var(--app-surface);
+  font-size: 0.875rem;
+}
+
+.attendance-container .table-wrapper .employee-table th,
+.attendance-container .table-wrapper .employee-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--app-border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+}
+
+.attendance-container .table-wrapper .employee-table th {
+  background: rgba(15, 23, 42, 0.7);
+  color: var(--app-text-muted);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.attendance-container .table-wrapper .employee-table tbody tr:hover td {
+  background: rgba(51, 65, 85, 0.25);
+}
+
+.attendance-container .comment-box {
+  display: inline-block;
+  max-width: 220px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.35);
+  border: 1px solid var(--app-border);
+  color: var(--app-text);
+  font-size: 0.8125rem;
+}
+
+@media (max-width: 768px) {
+  .attendance-container .table-wrapper {
+    border-radius: 10px;
+  }
+
+  .attendance-container .table-wrapper .employee-table {
+    min-width: 720px;
+    font-size: 0.8125rem;
+  }
+
+  .attendance-container .table-wrapper .employee-table th,
+  .attendance-container .table-wrapper .employee-table td {
+    padding: 0.6rem 0.75rem;
+  }
+
+  .attendance-container .comment-box {
+    max-width: 160px;
+  }
+}
+
+@media (max-width: 480px) {
+  .attendance-container .table-wrapper .employee-table {
+    min-width: 640px;
+  }
+
+  .attendance-container .table-wrapper .employee-table th,
+  .attendance-container .table-wrapper .employee-table td {
+    padding: 0.55rem 0.65rem;
+  }
+}
+
 .review-actions {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
   min-width: 120px;
 }
 
@@ -214,7 +293,21 @@
 }
 
 .review-actions button {
-  width: 100%;
+  width: auto;
+  white-space: nowrap;
+}
+
+/* Keep action buttons on one line */
+.attendance-container .table-wrapper .employee-table td .action-buttons {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.attendance-container .table-wrapper .employee-table td .action-buttons br {
+  display: none;
 }
 
 /* Status Badge Styles – aligned with Dashboard badges */

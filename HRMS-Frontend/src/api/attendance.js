@@ -65,3 +65,14 @@ export const hrReviewAdjustment = async (id, reviewData, token) => {
     throw error.response?.data || { success: false, error: 'Network error' };
   }
 };
+
+export const deleteAdjustmentRequest = async (id, token) => {
+  try {
+    const response = await axios.delete(`${API_URL}/api/attendance/adjustments/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { success: false, error: 'Network error' };
+  }
+};

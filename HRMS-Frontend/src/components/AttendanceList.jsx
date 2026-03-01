@@ -81,11 +81,30 @@ const AttendanceList = () => {
     return mins > 0;
   };
 
-  // Extract original time (no timezone conversion)
+  // Extract original time without timezone conversion
   const extractOriginalTime = (ts) => {
     if (!ts) return "-";
-    const match = ts.match(/(\d{2}:\d{2})/);
+    const match = String(ts).match(/(\d{2}:\d{2})/);
     return match ? match[1] : "-";
+  };
+
+  const getDateKey = (value) => {
+    if (!value) return null;
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toISOString().slice(0, 10);
+  };
+
+  const normalizeCheckInOut = (checkIn, checkOut) => {
+    if (!checkIn || !checkOut) return { checkIn, checkOut };
+    const inTime = new Date(checkIn).getTime();
+    const outTime = new Date(checkOut).getTime();
+    const inDateKey = getDateKey(checkIn);
+    const outDateKey = getDateKey(checkOut);
+    if (!Number.isNaN(inTime) && !Number.isNaN(outTime) && inTime > outTime && inDateKey === outDateKey) {
+      return { checkIn: checkOut, checkOut: checkIn };
+    }
+    return { checkIn, checkOut };
   };
 
   // Format time as 12-hour with AM/PM (e.g. "09:36 AM", "08:18 PM")
@@ -311,8 +330,15 @@ const AttendanceList = () => {
                   
                   <td>{record.date}</td>
                   <td>{new Date(record.date).toLocaleDateString('en-US', { weekday: 'long' })}</td>
-                  <td>{formatTime12h(record.check_in)}</td>
-                  <td>{formatTime12h(record.check_out)}</td>
+                  {(() => {
+                    const { checkIn, checkOut } = normalizeCheckInOut(record.check_in, record.check_out);
+                    return (
+                      <>
+                        <td>{formatTime12h(checkIn)}</td>
+                        <td>{formatTime12h(checkOut)}</td>
+                      </>
+                    );
+                  })()}
                   <td>{typeof record.work_hours === 'string' ? record.work_hours : (record.work_hours ? record.work_hours.toFixed(2) : "0.00")}</td>
                   <td>
                     <span className={`status-badge ${getStatusClass(record.status)}`}>

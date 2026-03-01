@@ -34,8 +34,8 @@ const AttendanceAdjustmentRequestForm = ({ onFormSubmit }) => {
       const token = localStorage.getItem('token');
       const payload = {
         attendanceDate: formData.attendanceDate,
-        proposedCheckIn: formData.proposedCheckIn ? `${formData.attendanceDate}T${formData.proposedCheckIn}:00.000Z` : undefined,
-        proposedCheckOut: formData.proposedCheckOut ? `${formData.attendanceDate}T${formData.proposedCheckOut}:00.000Z` : undefined,
+        proposedCheckIn: formData.proposedCheckIn ? `${formData.attendanceDate}T${formData.proposedCheckIn}:00` : undefined,
+        proposedCheckOut: formData.proposedCheckOut ? `${formData.attendanceDate}T${formData.proposedCheckOut}:00` : undefined,
         reason: formData.reason,
       };
 

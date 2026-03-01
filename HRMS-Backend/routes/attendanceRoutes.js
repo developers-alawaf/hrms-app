@@ -30,4 +30,10 @@ router.get('/adjustments',
   attendanceController.getAdjustmentRequests
 );
 
+router.delete('/adjustments/:id',
+  authenticate('jwt', { session: false }),
+  restrictTo('Employee', 'Manager', 'HR Manager', 'Super Admin', 'Company Admin', 'C-Level Executive'),
+  attendanceController.deleteAdjustmentRequest
+);
+
 module.exports = router;

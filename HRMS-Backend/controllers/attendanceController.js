@@ -783,25 +783,36 @@ exports.managerReviewAdjustment = async (req, res) => {
     if (!isAssignedManager && !isAuthorizedRole) {
       return res.status(403).json({ success: false, error: 'You are not authorized to review this request' });
     }
-    if (request.status !== 'pending_manager_approval') {
+    if (!['pending_manager_approval', 'pending_hr_approval'].includes(request.status)) {
       return res.status(400).json({ success: false, error: `Request already ${request.status}` });
     }
 
-    request.status = (status === 'approved') ? 'pending_hr_approval' : 'denied_by_manager';
+    request.status = (status === 'approved') ? 'approved' : 'denied_by_manager';
     request.managerApprovalDate = new Date();
     request.managerComment = managerComment;
-    // For HR Approver: find an HR manager in the company
+
     if (status === 'approved') {
-      // const hrManager = await Employee.findOne({ companyId: req.user.companyId, role: 'HR Manager' });
-      const hrManager = await Employee.findOne({  role: 'HR Manager' });
-      if (hrManager) {
-        request.hrApproverId = hrManager._id;
-      } else {
-        // Fallback if no specific HR Manager is found, potentially needs a Super Admin
-        const superAdmin = await Employee.findOne({ role: 'Super Admin' });
-        if (superAdmin) request.hrApproverId = superAdmin._id;
-        else console.warn('⚠️ No HR Manager or Super Admin found for HR approval process.');
+      // Update the actual EmployeesAttendance record (single-step approval)
+      let workHours = 0;
+      if (request.proposedCheckIn && request.proposedCheckOut) {
+        const checkInMoment = timezone.fromUTC(request.proposedCheckIn);
+        const checkOutMoment = timezone.fromUTC(request.proposedCheckOut);
+        const workMinutes = checkOutMoment.diff(checkInMoment, 'minutes');
+        workHours = Number((workMinutes / 60).toFixed(2));
       }
+
+      await EmployeesAttendance.findOneAndUpdate(
+        { employeeId: request.employeeId, date: request.attendanceDate },
+        {
+          $set: {
+            check_in: request.proposedCheckIn,
+            check_out: request.proposedCheckOut,
+            work_hours: workHours,
+            status: (request.proposedCheckIn || request.proposedCheckOut) ? 'Present' : 'Absent',
+          }
+        },
+        { upsert: true, new: true }
+      );
     }
 
     await request.save();
@@ -987,7 +998,7 @@ exports.getAdjustmentRequests = async (req, res) => {
       query.managerApproverId = req.user.employeeId;
       query.status = 'pending_manager_approval'; // Managers only see their pending approvals
     } else if (req.user.role === 'HR Manager') {
-      query.status = 'pending_hr_approval'; // HR Managers only see requests pending HR approval
+      query.status = 'pending_manager_approval'; // Single-step approval
     } else if (req.user.role === 'Super Admin') {
       delete query.companyId; // Super Admin sees all across all companies
     }
@@ -1000,6 +1011,70 @@ exports.getAdjustmentRequests = async (req, res) => {
     res.status(200).json({ success: true, data: requests });
   } catch (error) {
     console.error(`❌ Error getting adjustment requests: ${error.message}`);
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+
+exports.deleteAdjustmentRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const request = await AttendanceAdjustmentRequest.findById(id);
+    if (!request) {
+      return res.status(404).json({ success: false, error: 'Adjustment request not found' });
+    }
+
+    const role = req.user.role;
+    const isSuperAdmin = role === 'Super Admin';
+    const isCompanyAdmin = role === 'Company Admin';
+    const isHR = role === 'HR Manager';
+    const isCLevel = role === 'C-Level Executive';
+    const isPrivileged = isSuperAdmin || isCompanyAdmin || isHR || isCLevel;
+
+    if (!isSuperAdmin && request.companyId?.toString() !== req.user.companyId?.toString()) {
+      return res.status(403).json({ success: false, error: 'Access Denied: Company mismatch.' });
+    }
+
+    const isOwner = request.employeeId?.toString() === req.user.employeeId?.toString();
+    const isAssignedManager = request.managerApproverId?.toString() === req.user.employeeId?.toString();
+
+    const canDelete = isPrivileged || isOwner || (role === 'Manager' && isAssignedManager);
+    if (!canDelete) {
+      return res.status(403).json({ success: false, error: 'You are not authorized to delete this request' });
+    }
+
+    if (!isPrivileged && request.status !== 'pending_manager_approval') {
+      return res.status(400).json({ success: false, error: 'Only pending requests can be deleted' });
+    }
+
+    await AttendanceAdjustmentRequest.deleteOne({ _id: id });
+    res.status(200).json({ success: true });
+
+    // Log deletion (non-blocking)
+    const userInfo = activityLogService.extractUserInfo(req);
+    const ipAddress = activityLogService.extractIpAddress(req);
+    const userAgent = activityLogService.extractUserAgent(req);
+    if (userInfo && userInfo.userId) {
+      activityLogService.logActivity({
+        userId: userInfo.userId,
+        employeeId: req.user.employeeId,
+        companyId: request.companyId,
+        action: 'DELETE_ATTENDANCE_ADJUSTMENT',
+        entityType: 'Attendance',
+        entityId: request._id,
+        description: `Deleted attendance adjustment request for ${timezone.formatDate(request.attendanceDate)}`,
+        ipAddress,
+        userAgent,
+        metadata: {
+          requestId: request._id,
+          employeeId: request.employeeId,
+          attendanceDate: request.attendanceDate,
+          status: request.status
+        },
+        status: 'SUCCESS'
+      }).catch(() => {});
+    }
+  } catch (error) {
+    console.error(`❌ Error deleting adjustment request: ${error.message}`);
     res.status(400).json({ success: false, error: error.message });
   }
 };
